@@ -1,23 +1,26 @@
 import { useState } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import logo from '../assets/logo.png';
 
-export default function SignupPage() {
+export default function LogIn() {
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate(); // Initialize navigate function
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault(); // Prevent page reload
+    navigate("/dashboard"); // Redirect to Dashboard
   };
 
   return (
     <div className="flex justify-center items-center h-screen font-sans">
       <div className="w-full max-w-md p-8 border border-blue-200 rounded-lg bg-blue-100 shadow-lg text-center">
         {/* Logo */}
-        <img
-          src={logo}
-          alt="Logo"
-          className="w-16 h-auto mx-auto mb-4"
-        />
+        <img src={logo} alt="Logo" className="w-16 h-auto mx-auto mb-4" />
 
         {/* Heading */}
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
@@ -28,14 +31,15 @@ export default function SignupPage() {
         </p>
 
         {/* Form */}
-        <form className="w-full">
-          {/* Email or Phone Number Input */}
+        <form className="w-full" onSubmit={handleLogin}>
+          {/* Email Input */}
           <div className="mb-4 text-left">
             <input
               type="text"
               id="emailOrPhone"
               placeholder="Email address or Phone number"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
           </div>
 
@@ -46,6 +50,7 @@ export default function SignupPage() {
               id="password"
               placeholder="Password"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
             />
             <button
               type="button"
@@ -58,33 +63,26 @@ export default function SignupPage() {
 
           {/* Forget Password Option */}
           <div className="text-right mb-6">
-            <a
-              href="#"
-              className="text-blue-500 hover:text-blue-700 text-sm"
-            >
+            <a href="#" className="text-blue-500 hover:text-blue-700 text-sm">
               Forget password?
             </a>
           </div>
 
           {/* Continue Button */}
-          <a
-            href="/dashboard"
+          <button
+            type="submit"
             className="block w-full px-4 py-2 bg-green-500 text-white text-center rounded-md hover:bg-green-600 transition-colors"
           >
             Continue
-          </a>
+          </button>
         </form>
 
         {/* Sign Up Link */}
         <p className="mt-4 text-sm text-gray-600">
-          Don’t have a account?{" "}
-          <a
-            href="/signup"
-            className="text-blue-500 hover:text-blue-700"
-          >
+          Don’t have an account?{" "}
+          <a href="/signup" className="text-blue-500 hover:text-blue-700">
             Sign up
           </a>
-          
         </p>
       </div>
     </div>

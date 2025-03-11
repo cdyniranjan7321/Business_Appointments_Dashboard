@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SignupPage from './pages/signup'; 
 import BusinessSignupScreen from './pages/signup2'; // Import signup2 component
-import LogIn from './pages/login'
+import LogIn from './pages/login';
+import Dashboard from './pages/Dashboard';
 import './App.css';
 
 function App() {
@@ -25,7 +26,8 @@ function App() {
         />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/signup2" element={<BusinessSignupScreen />} /> {/* Add this line */}
-        <Route path="login" element={<LogIn />} />
+        <Route path="/login" element={<LogIn />} />
+        <Route path="/dashboard" element={<Dashboard />} /> {/* Added Dashboard route */}
       </Routes>
     </Router>
   );

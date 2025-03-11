@@ -1,4 +1,5 @@
 
+
 import { useState } from "react";
 import logo from '../assets/logo.png';
 
@@ -415,8 +416,7 @@ export default function BusinessSignupScreen() {
 </select>
             </div>
 
-            <div>
-             
+            <div>             
               <input
                 type="text"
                 name="streetAddress"
