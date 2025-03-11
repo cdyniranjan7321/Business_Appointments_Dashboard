@@ -1,14 +1,17 @@
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+import { useState } from "react";
 
 export default function Dashboard() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <Sidebar />
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
 
-      {/* Main Content */}
-      <div className="flex flex-col flex-1">
+     {/* Main Content */}
+     <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-16"}`}>
         {/* Header */}
         <Navbar />
 
