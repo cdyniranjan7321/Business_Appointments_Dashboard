@@ -1,21 +1,14 @@
 
-import { useState } from "react";
 import PropTypes from "prop-types"; // Import PropTypes
 import { FaBars, FaCalendarAlt, FaChartPie, FaCog, FaHome, FaMoneyBill, FaTags, FaUsers } from "react-icons/fa";
 
-const Sidebar = () => {
-  const [isOpen, setIsOpen] = useState(true);
+const Sidebar = ({ isOpen, setIsOpen }) => {
 
 
-  // Define PropTypes for SidebarItem
-SidebarItem.propTypes = {
-  isOpen: PropTypes.bool.isRequired,  // isOpen should be a boolean
-  icon: PropTypes.node.isRequired,   // icon should be a React node (JSX element)
-  text: PropTypes.string.isRequired, // text should be a string
-};
+  
 
   return (
-    <div className={`fixed left-0 top-0 h-screen ${isOpen ? "w-64" : "w-16"} bg-green-700 text-white transition-all duration-300 pt-16`}>
+    <div className={`fixed left-0 top-0 h-screen ${isOpen ? "w-64" : "w-16"} bg-[#6FB434] text-white transition-all duration-300 pt-16`}>
       <div className="flex items-center justify-between p-4">
         <h1 className={`text-2xl font-bold ${!isOpen && "hidden"}`}>Dashboard</h1>
         <FaBars className="cursor-pointer text-xl" onClick={() => setIsOpen(!isOpen)} />
@@ -40,5 +33,17 @@ const SidebarItem = ({ isOpen, icon, text }) => (
     {isOpen && <span>{text}</span>}
   </div>
 );
+
+Sidebar.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  setIsOpen: PropTypes.func.isRequired
+};
+
+// Define PropTypes for SidebarItem
+SidebarItem.propTypes = {
+  isOpen: PropTypes.bool.isRequired,  // isOpen should be a boolean
+  icon: PropTypes.node.isRequired,   // icon should be a React node (JSX element)
+  text: PropTypes.string.isRequired, // text should be a string
+};
 
 export default Sidebar;
