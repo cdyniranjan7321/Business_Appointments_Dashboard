@@ -1,4 +1,5 @@
 
+
 import PropTypes from "prop-types"; // Import PropTypes
 import { FaBars, FaCalendarAlt, FaChartPie, FaCog, FaHome, FaMoneyBill, FaTags, FaUsers } from "react-icons/fa";
 
@@ -33,6 +34,7 @@ const SidebarItem = ({ isOpen, icon, text }) => (
     {isOpen && <span>{text}</span>}
   </div>
 );
+
 
 Sidebar.propTypes = {
   isOpen: PropTypes.bool.isRequired,
