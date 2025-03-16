@@ -35,6 +35,7 @@ const SidebarItem = ({ isOpen, icon, text }) => (
   </div>
 );
 
+
 Sidebar.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   setIsOpen: PropTypes.func.isRequired
