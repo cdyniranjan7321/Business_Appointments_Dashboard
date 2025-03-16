@@ -1,15 +1,27 @@
 import { useState } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai"; // Importing the eye icons
 import logo from '../assets/logo.png';
-import { Link } from "react-router-dom";
-
+import { useNavigate } from "react-router-dom";
 
 // Declaring and exporting the Signuppage component
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
+  const navigate = useNavigate(); // Initialize navigate function
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev); // Toggle the value of showPassword state
+  };
+
+  const handleSignup = (e) => {
+    e.preventDefault(); // Prevent page reload
+
+    // Check if the form is valid using the browser's built-in validation
+    if (e.target.checkValidity()) {
+      navigate("/signup2"); // Redirect to the next signup page
+    } else {
+      // If the form is invalid, the browser will automatically show validation messages
+      e.target.reportValidity(); // Force the browser to show validation messages
+    }
   };
 
   return (
@@ -40,7 +52,7 @@ export default function SignupPage() {
         </p>
 
         {/* Signup form */}
-        <form className="w-full max-w-md">
+        <form className="w-full max-w-md" onSubmit={handleSignup} noValidate>
           {/* Email or Phone input field */}
           <div className="mb-4 text-left">
             <input
@@ -50,6 +62,7 @@ export default function SignupPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base"
               pattern="(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)|(^\+?[1-9]\d{1,14}$)"
               title="Enter a valid email address or phone number"
+              required
             />
           </div>
 
@@ -60,6 +73,7 @@ export default function SignupPage() {
               id="password"
               placeholder="Password"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base"
+              required
             />
             {/* Button to toggle password visibility */}
             <button
@@ -77,6 +91,7 @@ export default function SignupPage() {
               type="checkbox"
               id="terms"
               className="mr-2"
+              required
             />
             <label htmlFor="terms" className="text-xs sm:text-sm text-gray-800">
               I agree to Calenify&apos;s{" "}
@@ -96,12 +111,12 @@ export default function SignupPage() {
           </div>
 
           {/* Continue button */}
-          <Link
-  to="/signup2"
-  className="w-full block text-center px-4 py-2 sm:py-3 bg-green-500 text-white rounded-md text-sm sm:text-base cursor-pointer no-underline"
->
-  Continue
-</Link>
+          <button
+            type="submit"
+            className="w-full block text-center px-4 py-2 sm:py-3 bg-green-500 text-white rounded-md text-sm sm:text-base cursor-pointer no-underline"
+          >
+            Continue
+          </button>
         </form>
 
         {/* Sign in link */}

@@ -1,6 +1,7 @@
 
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import logo from '../assets/logo.png';
 
 export default function BusinessSignupScreen() {
@@ -18,13 +19,16 @@ export default function BusinessSignupScreen() {
     city: "",
     streetAddress: "",
   });
-  const [error, setError] = useState("");
 
+  const [error, setError] = useState("");
   const [filteredDistricts, setFilteredDistricts] = useState([]);
   const [filteredCities, setFilteredCities] = useState([]);
-  
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const [showErrorPopup, setShowErrorPopup ] = useState(false); // state to control popu visibility
+  const navigate = useNavigate(); // Initialize navigate function.
+
+
+      const handleChange = (e) => {
+           const { name, value } = e.target;
 
      // Filter out non-numeric characters for contactNumber
      if (name === "contactNumber") {
@@ -37,8 +41,8 @@ export default function BusinessSignupScreen() {
       setFormData({ ...formData, [name]: numericValue });
       return;
     }
-  
-
+       
+    // For all other fields (including panNumber), update the state directly
     setFormData({ ...formData, [name]: value });
 
 
@@ -58,7 +62,38 @@ export default function BusinessSignupScreen() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log(formData);
-  };
+
+
+    // Validate required fields
+    if (
+      !formData.businessName ||
+      !formData.panNumber ||
+      !formData.businessType ||
+      !formData.businessCategory ||
+      !formData.established ||
+      !formData.annualRevenue ||
+      !formData.FullName ||
+      !formData.contactNumber ||
+      !formData.province ||
+      !formData.district ||
+      !formData.city ||
+      !formData.streetAddress
+    ) {
+      setError("Please fill in all required fields. ");
+      setShowErrorPopup(true); // show the error popup
+      return;
+    }
+
+    // validate contact number length
+    if(formData.contactNumber.length !== 10)
+{
+  setError("Phone number must be 10 digits. ");
+  setShowErrorPopup(true); // Show the error popup
+  return;
+   }  
+    setError(""); // Clear any previous error
+    navigate("/dashboard"); // Navigate to the Dashboard page
+};
 
 
   const nepalData = {
@@ -166,6 +201,20 @@ export default function BusinessSignupScreen() {
 
   return (
     <div className="flex justify-center items-center min-h-screen">
+
+      {/* Error Popup */}
+      {showErrorPopup && (
+        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg">
+        <p>{error}</p>
+        <button
+          onClick={() => setShowErrorPopup(false)}
+          className="mt-2 bg-white text-red-500 px-3 py-1 rounded"
+        >
+          Close
+        </button>
+      </div>
+      )}
+      
       <div className="bg-blue-50 p-8 rounded-lg shadow-md w-full max-w-2xl">
         
         {/* Logo Centered with Bottom Line */}
@@ -203,7 +252,7 @@ export default function BusinessSignupScreen() {
               <label className="block text-sm font-medium text-gray-700">What is your business PAN number?</label>
               <input
                 type="text"
-                name="Enter your PAN number"
+                name="panNumber"
                 placeholder="Enter your PAN number"
                 value={formData.panNumber}
                 onChange={handleChange}
