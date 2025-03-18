@@ -3,6 +3,7 @@ import SignupPage from './pages/signup';
 import BusinessSignupScreen from './pages/signup2'; // Import signup2 component
 import LogIn from './pages/login';
 import Dashboard from './pages/Dashboard';
+import Apps from './pages/Apps'; // Import the Apps page
 import './App.css';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
         <Route path="/signup2" element={<BusinessSignupScreen />} /> {/* Add this line */}
         <Route path="/login" element={<LogIn />} />
         <Route path="/dashboard" element={<Dashboard />} /> {/* Added Dashboard route */}
+        <Route path="/apps" element={<Apps />} /> {/* Add Apps route */}
       </Routes>
     </Router>
   );
