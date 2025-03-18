@@ -1,5 +1,5 @@
 
-
+import React from "react";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { 
@@ -41,14 +41,17 @@ const optionalItems = [
 
 const Sidebar = ({ isOpen, setIsOpen }) => {
   const [showPopup, setShowPopup] = useState(false); // State for popup visibility
-  const [sidebarItems, setSidebarItems] = useState(defaultItems); // State for sidebar items
+  const [sidebarItems, setSidebarItems] = useState([defaultItems[0], defaultItems[1], defaultItems[2]]);  // State for sidebar items. 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [showNotification, setShowNotification] = useState(false); // State for notification popup
 
   // Load saved items from localStorage on component mount
   useEffect(() => {
     const savedItems = JSON.parse(localStorage.getItem("sidebarItems"));
     if (savedItems) {
-      setSidebarItems([...defaultItems, ...savedItems]);
+      // Ensure Home is first, Settings and Help are last
+      setSidebarItems([defaultItems[0], ...savedItems, defaultItems[1], defaultItems[2]]);
+      // setSidebarItems([...defaultItems, ...savedItems]);
     }
   }, []);
   const togglePopup = () => {
@@ -61,6 +64,31 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
     localStorage.setItem("sidebarItems", JSON.stringify(optionalItems));
   }, [sidebarItems]);
 
+  useEffect(() => {
+    // Check if the user is on the dashboard (you can customize this logic)
+    const isOnDashboard = window.location.pathname === "/dashboard"; // Update the path as needed
+  
+    if (isOnDashboard) {
+      // Show the notification after 3 seconds
+      const showTimeoutId = setTimeout(() => {
+        setShowNotification(true);
+      }, 2000);
+
+      // Hide the notification after 6 seconds
+    const hideTimeoutId = setTimeout(() => {
+      setShowNotification(false);
+    }, 8000); // 2000ms (show) + 6000ms (display duration)
+  
+      
+    // Clear timeouts when the component unmounts
+    return () => {
+      clearTimeout(showTimeoutId);
+      clearTimeout(hideTimeoutId);
+    };
+     
+    }
+  }, []);
+
   // Handle item selection/deselection in the popup
   const handleItemToggle = (id) => {
     const item = optionalItems.find((item) => item.id === id);
@@ -70,8 +98,16 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
         // Remove item from sidebar
         setSidebarItems((prevItems) => prevItems.filter((item) => item.id !== id));
       } else {
+            // Add item to sidebar (between Home and Settings/Help)
+            setSidebarItems((prevItems) => [
+              prevItems[0], // Home
+              ...prevItems.slice(1, -2), // Existing optional items.
+              item, // New optional item
+              prevItems[prevItems.length -2], // Settings
+              prevItems[prevItems.length -1], //Help
+            ]);
         // Add item to sidebar
-        setSidebarItems((prevItems) => [...prevItems, item]);
+        //setSidebarItems((prevItems) => [...prevItems, item]);
       }
     }
   };
@@ -95,12 +131,30 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           />
         </div>
       </div>
-
-      <nav className="flex flex-col gap-4 p-4">
+                 {/* 
+                    <nav className="flex flex-col gap-4 p-4">
         {sidebarItems.map((item) => (
           <SidebarItem key={item.id} isOpen={isOpen} icon={item.icon} text={item.text} />
         ))}
       </nav>
+                      */}
+      
+      <nav className="flex flex-col gap-4 p-4">
+  {/* Always show Home first */}
+  <SidebarItem key={defaultItems[0].id} isOpen={isOpen} icon={defaultItems[0].icon} text={defaultItems[0].text} />
+
+  {/* Show selected optional items */}
+  {sidebarItems
+    .filter((item) => item.id > 3) // Filter out Home, Settings, and Help
+    .map((item) => (
+      <SidebarItem key={item.id} isOpen={isOpen} icon={item.icon} text={item.text} />
+    ))}
+
+  {/* Always show Settings and Help at the end */}
+  <SidebarItem key={defaultItems[1].id} isOpen={isOpen} icon={defaultItems[1].icon} text={defaultItems[1].text} />
+  <SidebarItem key={defaultItems[2].id} isOpen={isOpen} icon={defaultItems[2].icon} text={defaultItems[2].text} />
+</nav>
+
 
       {/* Popup for editing optional items */}
       {showPopup && (
@@ -152,14 +206,39 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
           </div>
         </div>
       )}
+             {showNotification && (
+  <div className="fixed bottom-4 right-4 bg-yellow-200 p-4 rounded-lg shadow-lg flex items-center gap-4">
+    <span className="text-gray-800">Please <strong>Edit</strong> the sidebar to customize your experience.</span>
+    <button 
+              onClick={() => setShowNotification(false)} 
+              className="text-red-600 hover:text-gray-700 transition-colors duration-300">
+      <MdOutlineClear />
+    </button>
+  </div>
+)}
+
     </div>
   );
 };
 
-const SidebarItem = ({ isOpen, icon, text }) => (
-  <div className="flex items-center gap-2 p-2 hover:bg-green-800 rounded cursor-pointer">
-    {icon}
-    {isOpen && <span>{text}</span>}
+const SidebarItem = ({ isOpen, icon, text, isSelectable = true }) => (
+  <div
+    className={`flex items-center gap-2 p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group ${
+      !isSelectable && "opacity-50 cursor-not-allowed"
+    }`}
+  >
+    {React.cloneElement(icon, {
+      className: `w-5 h-5 text-white group-hover:text-[#6FB434] ${icon.props.className || ""}`,
+    })}
+    {isOpen && (
+      <span
+        className={`text-sm font-medium ${
+          !isSelectable ? "text-black" : "text-white"
+        } group-hover:text-[#6FB434] group-hover:font-bold group-hover:text-[15px]`}
+      >
+        {text}
+      </span>
+    )}
   </div>
 );
 
@@ -172,6 +251,7 @@ SidebarItem.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   icon: PropTypes.node.isRequired,
   text: PropTypes.string.isRequired,
+  isSelectable: PropTypes.bool,
 };
 
 export default Sidebar;
