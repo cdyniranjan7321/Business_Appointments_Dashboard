@@ -1,5 +1,8 @@
 
+
 import React from "react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { TbApps } from "react-icons/tb";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { 
@@ -44,6 +47,7 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   const [sidebarItems, setSidebarItems] = useState([defaultItems[0], defaultItems[1], defaultItems[2]]);  // State for sidebar items. 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false); // State for notification popup
+  const navigate = useNavigate(); // Hook for navigation
 
   // Load saved items from localStorage on component mount
   useEffect(() => {
@@ -217,15 +221,25 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
   </div>
 )}
 
+           {/* Bottom section with "App" text */}
+           <div className="border-t border-gray-200 p-4">
+        <SidebarItem
+          isOpen={isOpen}
+          icon={<TbApps />}
+          text="Apps"
+          onClick={() => navigate("/apps")} // Navigate to the Apps page
+        />
+      </div>
     </div>
   );
 };
 
-const SidebarItem = ({ isOpen, icon, text, isSelectable = true }) => (
+const SidebarItem = ({ isOpen, icon, text, isSelectable = true,  onClick }) => (
   <div
     className={`flex items-center gap-2 p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group ${
       !isSelectable && "opacity-50 cursor-not-allowed"
     }`}
+    onClick={onClick} // Add onClick handler
   >
     {React.cloneElement(icon, {
       className: `w-5 h-5 text-white group-hover:text-[#6FB434] ${icon.props.className || ""}`,
@@ -252,6 +266,7 @@ SidebarItem.propTypes = {
   icon: PropTypes.node.isRequired,
   text: PropTypes.string.isRequired,
   isSelectable: PropTypes.bool,
+  onClick: PropTypes.func, // Add onClick prop type
 };
 
 export default Sidebar;
