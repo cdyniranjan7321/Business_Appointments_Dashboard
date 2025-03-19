@@ -13,7 +13,7 @@ const Navbar = ({ toggleSidebar }) => {
         <button onClick={toggleSidebar} className="p-2 rounded-full hover:bg-gray-200 transition-all duration-300">
           <FaBars className="w-6 h-6 text-gray-600" />
         </button>
-        <span className="text-gray-600 font-medium">Business Dashboard</span>
+       
       </div>
 
       {/* Middle Section: Logo */}
@@ -37,6 +37,7 @@ const Navbar = ({ toggleSidebar }) => {
         <button className="p-2 rounded-full hover:bg-gray-200 transition-all duration-300">
           <IoHelpCircleOutline className="w-6 h-6 text-gray-600" />
         </button>
+        <span className="text-black font-medium">Business Appointments</span>
       </div>
     </div>
   );
