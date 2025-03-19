@@ -34,6 +34,27 @@ const Apps = () => {
 
         {/* Website Template Section */}
         <div className="flex-1 p-6 overflow-y-auto bg-gray-200 mt-16">
+          {/* New Content: Professional WordPress Themes & Search Bar */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-800 mb-4">
+              Professional Themes & Website Templates for any project
+            </h1>
+            <p className="text-gray-600 mb-6">
+              Discover thousands of easy to customize themes, templates & CMS products, made by world-class developers.
+            </p>
+            {/* Search Bar */}
+            <div className="flex items-center bg-white rounded-lg shadow-md p-4">
+              <input
+                type="text"
+                placeholder="Search for templates..."
+                className="flex-1 p-2 outline-none"
+              />
+              <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                Search
+              </button>
+            </div>
+          </div>
+
           <h1 className="text-3xl font-bold text-gray-800 mb-6">
             Please select Website Templates
           </h1>
