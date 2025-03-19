@@ -31,7 +31,7 @@ const Navbar = ({ toggleSidebar }) => {
       <div className="flex items-center space-x-1 sm:space-x-1">
         {/* Search Bar - Visible only when isSearchVisible is true */}
         {isSearchVisible && (
-          <div className="flex items-center gap-2 border p-2 rounded-md w-[200px] lg:w-[200px] mr-4">
+          <div className="flex items-center gap-2 border p-1 rounded-md w-[200px] lg:w-[200px] mr-4">
             <FaSearch className="text-gray-500" />
             <input
               type="text"
