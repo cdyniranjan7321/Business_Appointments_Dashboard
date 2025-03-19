@@ -1,5 +1,3 @@
-
-
 import { useState } from "react";
 import Sidebar from "../components/Sidebar"; // Import your Sidebar component
 import Navbar from "../components/Navbar"; // Import your Navbar component
@@ -14,17 +12,31 @@ const Apps = () => {
 
   return (
     <div className="flex h-screen">
-      {/* Sidebar */}
-      <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} /> {/* Pass state and setter */}
+      {/* Sidebar - Fixed position */}
+      <div
+        className={`fixed h-screen ${
+          isOpen ? "w-64" : "w-16"
+        } transition-all duration-300`}
+      >
+        <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
+      </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Navbar - Pass toggleSidebar function */}
-        <Navbar toggleSidebar={toggleSidebar} />
+      <div
+        className={`flex-1 flex flex-col overflow-hidden ${
+          isOpen ? "ml-64" : "ml-16"
+        } transition-all duration-300`}
+      >
+        {/* Navbar - Fixed position */}
+        <div className="fixed w-full z-10">
+          <Navbar toggleSidebar={toggleSidebar} />
+        </div>
 
         {/* Website Template Section */}
-        <div className="flex-1 p-6 overflow-y-auto bg-gray-200 mt-12">
-          <h1 className="text-3xl font-bold text-gray-800 mb-6">Please select Website Templates</h1>
+        <div className="flex-1 p-6 overflow-y-auto bg-gray-200 mt-16">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6">
+            Please select Website Templates
+          </h1>
 
           {/* Template Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -96,5 +108,6 @@ const Apps = () => {
     </div>
   );
 };
+
 
 export default Apps;
