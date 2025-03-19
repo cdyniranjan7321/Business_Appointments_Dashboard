@@ -10,6 +10,7 @@ export default function Dashboard() {
     setIsSidebarOpen((prev) => !prev);
   };
 
+  
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
