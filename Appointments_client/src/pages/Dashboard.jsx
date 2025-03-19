@@ -4,7 +4,13 @@ import { useState } from "react";
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  
+  // Function to toggle sidebar
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev);
+  };
 
+  
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -13,7 +19,7 @@ export default function Dashboard() {
      {/* Main Content */}
      <div className={`flex flex-col flex-1 transition-all duration-300 ${isSidebarOpen ? "ml-64" : "ml-16"}`}>
         {/* Header */}
-        <Navbar />
+        <Navbar toggleSidebar={toggleSidebar} />
 
         {/* Dashboard Content */}
         <div className="p-6 pt-16">

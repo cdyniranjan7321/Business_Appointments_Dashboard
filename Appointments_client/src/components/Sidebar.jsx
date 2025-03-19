@@ -6,7 +6,6 @@ import { TbApps } from "react-icons/tb";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { 
-  FaBars, 
   FaCalendarAlt, 
   FaChartPie, 
   FaCog, 
@@ -42,7 +41,7 @@ const optionalItems = [
   { id: 12, icon: <FcPlanner />, text: "Plan & Price" },
 ];
 
-const Sidebar = ({ isOpen, setIsOpen }) => {
+const Sidebar = ({ isOpen, }) => {
   const [showPopup, setShowPopup] = useState(false); // State for popup visibility
   const [sidebarItems, setSidebarItems] = useState([defaultItems[0], defaultItems[1], defaultItems[2]]);  // State for sidebar items. 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
@@ -128,11 +127,8 @@ const Sidebar = ({ isOpen, setIsOpen }) => {
             onClick={() => setShowPopup(true)}
             title="Edit Sidebar"
           />
-          <FaBars
-            className="cursor-pointer text-xl"
-            onClick={() => setIsOpen(!isOpen)}
-            title="Toggle Sidebar"
-          />
+         
+
         </div>
       </div>
                  {/* 

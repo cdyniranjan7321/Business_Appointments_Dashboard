@@ -1,16 +1,26 @@
 
 
+import { useState } from "react";
+import Sidebar from "../components/Sidebar"; // Import your Sidebar component
 import Navbar from "../components/Navbar"; // Import your Navbar component
 
 const Apps = () => {
+  const [isOpen, setIsOpen] = useState(true); // State to manage sidebar open/close
+
+  // Function to toggle the sidebar
+  const toggleSidebar = () => {
+    setIsOpen((prev) => !prev);
+  };
+
   return (
     <div className="flex h-screen">
-  
+      {/* Sidebar */}
+      <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} /> {/* Pass state and setter */}
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Navbar */}
-        <Navbar />
+        {/* Navbar - Pass toggleSidebar function */}
+        <Navbar toggleSidebar={toggleSidebar} />
 
         {/* Website Template Section */}
         <div className="flex-1 p-6 overflow-y-auto bg-gray-200 mt-12">
