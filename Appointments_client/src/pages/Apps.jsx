@@ -43,9 +43,9 @@ const Apps = () => {
         </div>
 
         {/* Website Template Section */}
-        <div className="flex-1 p-6 overflow-y-auto bg-gray-200 mt-8">
+        <div className="flex-1 p-10 overflow-y-auto">
           {/* New Content: Professional WordPress Themes & Search Bar */}
-          <div className="flex flex-col md:flex-row gap-8 mt-14">
+          <div className="flex flex-col md:flex-row gap-8 mt-10">
             {/* Left Side: Text and Search Bar */}
             <div className="flex-1">
               <h1 className="text-4xl font-bold text-gray-800 mb-4 mt-14">
@@ -68,7 +68,7 @@ const Apps = () => {
             </div>
 
             {/* Right Side: Hero Section */}
-            <div className="flex-2">
+            <div className="flex-2 mt-2">
               <div className="bg-white rounded-lg shadow-md overflow-hidden relative">
                 <img
                   src={Hover} // Replace with your hero image
