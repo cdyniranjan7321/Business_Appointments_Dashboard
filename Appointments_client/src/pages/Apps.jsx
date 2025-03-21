@@ -5,6 +5,11 @@ import Navbar from "../components/Navbar"; // Import your Navbar component
 import template3 from "../assets/template 3.jpg";
 import template4 from "../assets/template4.png";
 import template5 from "../assets/template5.png";
+import Hover from  "../assets/Hover.webp";
+import vantage from "../assets/vantage.webp";
+import canopy from "../assets/canopy.webp";
+import loft from "../assets/loft.webp"
+
 
 const Apps = () => {
   const [isOpen, setIsOpen] = useState(true); // State to manage sidebar open/close
@@ -40,7 +45,7 @@ const Apps = () => {
         {/* Website Template Section */}
         <div className="flex-1 p-6 overflow-y-auto bg-gray-200 mt-8">
           {/* New Content: Professional WordPress Themes & Search Bar */}
-          <div className="flex flex-col md:flex-row gap-8 mt-8">
+          <div className="flex flex-col md:flex-row gap-8 mt-14">
             {/* Left Side: Text and Search Bar */}
             <div className="flex-1">
               <h1 className="text-4xl font-bold text-gray-800 mb-4 mt-14">
@@ -63,10 +68,10 @@ const Apps = () => {
             </div>
 
             {/* Right Side: Hero Section */}
-            <div className="flex-1">
+            <div className="flex-2">
               <div className="bg-white rounded-lg shadow-md overflow-hidden relative">
                 <img
-                  src={template3} // Replace with your hero image
+                  src={Hover} // Replace with your hero image
                   alt="Hero Section"
                   className="w-full h-64 object-cover"
                 />
@@ -198,6 +203,72 @@ const Apps = () => {
                 </button>
               </div>
             </div>
+
+
+            {/* Template 6 */}
+            <div className="bg-white rounded-lg shadow-md overflow-hidden mt-10">
+              <img
+                src={vantage} // Replace with your template image
+                alt="vantage"
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-gray-800">vantage</h2>
+                <p className="text-gray-600 mt-2">
+                A versatile template for e-commerce and online stores.
+                </p>
+                <button
+                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={() => alert("Template 2 selected!")}
+                >
+                  Use This Template
+                </button>
+              </div>
+            </div>
+
+             {/* Template 7 */}
+             <div className="bg-white rounded-lg shadow-md overflow-hidden mt-10">
+              <img
+                src={canopy} // Replace with your template image
+                alt="canopy"
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-gray-800">canopy</h2>
+                <p className="text-gray-600 mt-2">
+                  A versatile template for e-commerce and online stores.
+                </p>
+                <button
+                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={() => alert("Template 3 selected!")}
+                >
+                  Use This Template
+                </button>
+              </div>
+            </div>
+
+
+             {/* Template 8 */}
+             <div className="bg-white rounded-lg shadow-md overflow-hidden mt-10">
+              <img
+                src={loft} // Replace with your template image
+                alt="loft"
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h2 className="text-xl font-semibold text-gray-800">loft</h2>
+                <p className="text-gray-600 mt-2">
+                  A versatile template for e-commerce and online stores.
+                </p>
+                <button
+                  className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                  onClick={() => alert("Template 3 selected!")}
+                >
+                  Use This Template
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
