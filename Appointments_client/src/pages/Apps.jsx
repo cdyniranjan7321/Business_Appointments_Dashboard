@@ -11,7 +11,7 @@ import template5 from "../assets/template5.png";
 import Hover from  "../assets/Hover.webp";
 import vantage from "../assets/vantage.webp";
 import canopy from "../assets/canopy.webp";
-import loft from "../assets/loft.webp"
+import loft from "../assets/loft.webp";
 
 
 const Apps = () => {
