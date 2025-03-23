@@ -58,6 +58,7 @@ const Apps = () => {
       }
     }
   };
+  
 
   // Template data
   const templates = [
