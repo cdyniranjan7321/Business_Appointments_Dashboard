@@ -1,4 +1,5 @@
 
+
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion for animations
 import Sidebar from "../components/Sidebar"; // Import your Sidebar component
@@ -58,7 +59,7 @@ const Apps = () => {
       }
     }
   };
-  
+
 
   // Template data
   const templates = [
