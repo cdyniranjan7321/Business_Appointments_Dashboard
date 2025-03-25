@@ -17,8 +17,7 @@ const Apps = () => {
   const [isOpen, setIsOpen] = useState(true); // State to manage sidebar open/close
   const [searchInput, setSearchInput] = useState(""); // State to manage search input
   const [filteredTemplates, setFilteredTemplates] = useState([]); // State to manage filtered templates
-
-  const templateRefs = useRef([]); // Refs to manage template sections.
+  const templateRefs = useRef([]); // Refs to manage template sections
 
   // Function to toggle the sidebar
   const toggleSidebar = () => {
