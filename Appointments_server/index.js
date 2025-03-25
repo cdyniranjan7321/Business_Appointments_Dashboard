@@ -250,6 +250,63 @@ app.post('/api/auth/login', [
   }
 });
 
+// Business Registration Endpoint
+app.post('/api/business/signup', [
+  check('businessName', 'Business name is required').not().isEmpty(),
+  check('panNumber', 'PAN number is required').not().isEmpty(),
+  check('contactNumber', 'Valid contact number is required').isLength({ min: 10, max: 10 }),
+  check('FullName', 'Full name is required').not().isEmpty()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Connect to MongoDB
+    await client.connect();
+    const database = client.db("Business_Dashboard_DB");
+    const businessesCollection = database.collection("businesses");
+
+    // Check if business already exists with this PAN or contact number
+    const existingBusiness = await businessesCollection.findOne({
+      $or: [
+        { panNumber: req.body.panNumber },
+        { contactNumber: req.body.contactNumber }
+      ]
+    });
+
+    if (existingBusiness) {
+      return res.status(400).json({ 
+        error: 'Business with this PAN or contact number already exists' 
+      });
+    }
+
+    // Create new business document
+    const newBusiness = {
+      ...req.body,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      status: 'active'
+    };
+
+    // Insert into database
+    const result = await businessesCollection.insertOne(newBusiness);
+
+    res.status(201).json({
+      success: true,
+      message: 'Business registered successfully',
+      businessId: result.insertedId
+    });
+
+  } catch (err) {
+    console.error('Business registration error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
 
 // Basic route
 app.get('/', (req, res) => {
