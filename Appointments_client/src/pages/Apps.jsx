@@ -1,5 +1,4 @@
 
-
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion for animations
 import Sidebar from "../components/Sidebar"; // Import your Sidebar component
@@ -40,7 +39,7 @@ const Apps = () => {
   // Function to handle template selection from the search list
   const handleTemplateSelect = (templateName) => {
     setSearchInput(templateName); // Set the search input to the selected template name
-    setFilteredTemplates([]); // Clear the filtered templates list
+    setFilteredTemplates([]);  // Clear the filtered templates lists.
   };
 
   // Function to handle search button click

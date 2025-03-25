@@ -1,35 +1,63 @@
 import { useState } from "react";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai"; // Importing the eye icons
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import logo from '../assets/logo.png';
 import { useNavigate } from "react-router-dom";
 
-// Declaring and exporting the Signuppage component
 export default function SignupPage() {
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-  const navigate = useNavigate(); // Initialize navigate function
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
-    setShowPassword((prev) => !prev); // Toggle the value of showPassword state
+    setShowPassword((prev) => !prev);
   };
 
-  const handleSignup = (e) => {
-    e.preventDefault(); // Prevent page reload
+  const handleSignup = async (e) => {
+    e.preventDefault();
+    setError(null);
+    
+    if (!e.target.checkValidity()) {
+      e.target.reportValidity();
+      return;
+    }
 
-    // Check if the form is valid using the browser's built-in validation
-    if (e.target.checkValidity()) {
+    const formData = {
+      emailOrPhone: e.target.emailOrphone.value,
+      password: e.target.password.value
+    };
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('http://localhost:6001/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.errors?.[0]?.msg || 'Signup failed');
+      }
+
+      // Store user ID for the next step if needed
+      localStorage.setItem('tempUserId', data.userId);
+      
       navigate("/signup2"); // Redirect to the next signup page
-    } else {
-      // If the form is invalid, the browser will automatically show validation messages
-      e.target.reportValidity(); // Force the browser to show validation messages
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    // Main wrapper div with Tailwind classes for centering and background
     <div className="flex justify-center items-center h-screen font-sans">
-      {/* Container div for the form */}
       <div className="w-[90%] sm:w-[80%] md:w-[700px] lg:w-[800px] xl:w-[1000px] h-auto md:h-[500px] lg:h-[550px] mx-auto flex flex-col justify-center items-center border border-[rgba(135,206,235,0.3)] rounded-lg bg-[rgba(135,206,235,0.3)] shadow-lg p-4 sm:p-6 md:p-8">
-        {/* Logo section */}
         <div className="mb-4">
           <img
             src={logo}
@@ -38,26 +66,29 @@ export default function SignupPage() {
             height={40}
             className="mb-4"
           />
-          {/* Horizontal line */}
           <hr className="border-none border-t border-gray-500 w-full m-0" />
         </div>
 
-        {/* Heading for the signup form */}
         <h1 className="text-xl sm:text-2xl font-bold mb-2 text-gray-800 text-center">
-          Let’s create your account.
+          Let&apos;s create your account.
         </h1>
         <p className="text-xs sm:text-sm text-gray-700 mb-5 text-center">
           Signing up for Calenify is fast and free. No commitments or long-term
           contracts required.
         </p>
 
-        {/* Signup form */}
+        {error && (
+          <div className="mb-4 p-2 bg-red-100 text-red-700 rounded text-sm w-full max-w-md">
+            {error}
+          </div>
+        )}
+
         <form className="w-full max-w-md" onSubmit={handleSignup} noValidate>
-          {/* Email or Phone input field */}
           <div className="mb-4 text-left">
             <input
               type="text"
               id="emailOrphone"
+              name="emailOrphone"
               placeholder="Email address or Phone number"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base"
               pattern="(^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$)|(^\+?[1-9]\d{1,14}$)"
@@ -66,16 +97,16 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* Password input field */}
           <div className="mb-4 relative text-left">
             <input
               type={showPassword ? "text" : "password"}
               id="password"
+              name="password"
               placeholder="Password"
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm sm:text-base"
               required
+              minLength="6"
             />
-            {/* Button to toggle password visibility */}
             <button
               type="button"
               onClick={togglePasswordVisibility}
@@ -85,7 +116,6 @@ export default function SignupPage() {
             </button>
           </div>
 
-          {/* Terms & conditions checkbox */}
           <div className="mb-4 flex items-center text-left">
             <input
               type="checkbox"
@@ -110,16 +140,15 @@ export default function SignupPage() {
             </label>
           </div>
 
-          {/* Continue button */}
           <button
             type="submit"
-            className="w-full block text-center px-4 py-2 sm:py-3 bg-green-500 text-white rounded-md text-sm sm:text-base cursor-pointer no-underline"
+            className="w-full block text-center px-4 py-2 sm:py-3 bg-green-500 text-white rounded-md text-sm sm:text-base cursor-pointer no-underline disabled:opacity-50"
+            disabled={isLoading}
           >
-            Continue
+            {isLoading ? 'Processing...' : 'Continue'}
           </button>
         </form>
 
-        {/* Sign in link */}
         <p className="mt-4 text-xs sm:text-sm text-gray-600 text-center">
           Already have a account?{" "}
           <a href="/login" className="text-blue-500 no-underline">
