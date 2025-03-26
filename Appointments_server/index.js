@@ -9,8 +9,8 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // enable CORS for all routes
+app.use(express.json());  //Parse JSON bodies in requests
 
 // MongoDB Config
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@business-dashboard-clus.rhao9.mongodb.net/?retryWrites=true&w=majority&appName=Business-Dashboard-Cluster`;
