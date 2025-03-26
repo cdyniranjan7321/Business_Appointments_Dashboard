@@ -1,3 +1,4 @@
+
 const mongoose = require('mongoose'); // Importing Mongoose for creating MongoDB schemas and models
 const bcrypt = require('bcryptjs'); // Importing bcryptjs for hashing passwords
 
