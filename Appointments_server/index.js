@@ -18,35 +18,38 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@bus
 // Create a MongoClient with a MongoClientOptions object
 const client = new MongoClient(uri, {
   serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+    version: ServerApiVersion.v1,  // Use stable API version
+    strict: true,                  // Enable strict mode
+    deprecationErrors: true,        // Throw errors for deprecated features
   }
 });
 
-// Database and Collection references
+// Global variable to hold Database and Collection references
 let usersCollection;
 
+// ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
-    // Connect the client to the server
+    // Connect the client to the server(Connect to MongoDB cluster)
     await client.connect();
     
     // Get references to database and collection
     const database = client.db("Business_Dashboard_DB"); // Replace with your database name
-    usersCollection = database.collection("users");
+    usersCollection = database.collection("users");      // User collection
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } catch (err) {
     console.error("MongoDB connection error:", err);
-    process.exit(1);
+    process.exit(1);  // Exit process on connection failure
   }
 }
+
+// Start database connection and log any errors
 run().catch(console.dir);
 
-// User Registration Endpoint
+// POST /api/auth/signup - User Registration Endpoint
 app.post('/api/auth/signup', [
   check('emailOrPhone', 'Please include a valid email or phone').isLength({ min: 5 }),
   check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
@@ -56,6 +59,7 @@ app.post('/api/auth/signup', [
     return res.status(400).json({ errors: errors.array() });
   }
 
+   // Destructure request body
   const { emailOrPhone, password } = req.body;
 
   try {
@@ -72,24 +76,25 @@ app.post('/api/auth/signup', [
       });
     }
 
-    // Hash password
+    // Hash password with bcrypt
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
+    // Create new user document
     const newUser = {
-      [field]: value,
-      password: hashedPassword,
-      createdAt: new Date(),
-      verified: false
+      [field]: value,               // Email or Phone feild
+      password: hashedPassword,     // Hashed password
+      createdAt: new Date(),        // Current timestamp
+      verified: false               // Default verification status
     };
 
-    // Insert user into database
+    // Insert new user into database
     const result = await usersCollection.insertOne(newUser);
 
+    // Return success response
     res.status(201).json({ 
       message: 'User registered successfully. Please verify your email.',
-      userId: result.insertedId 
+      userId: result.insertedId        // Return MngoDB-generated ID
     });
 
   } catch (err) {
@@ -98,21 +103,25 @@ app.post('/api/auth/signup', [
   }
 });
 
-// Get User by ID
+// GET /api/auth/user/:id - Get User by ID
 app.get('/api/auth/user/:id', async (req, res) => {
   try {
+    // Find user by ID, excluding password field
     const user = await usersCollection.findOne(
-      { _id: new ObjectId(req.params.id) },
-      { projection: { password: 0 } } // Exclude password from results
+      { _id: new ObjectId(req.params.id) },             // Convert string ID to ObjectId
+      { projection: { password: 0 } }                  // Exclude password from results
     );
     
+    // Handle user not found
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
     
+    // Return user data
     res.json(user);
   } catch (err) {
     console.error(err.message);
+    // Hnadle invalid ObjectId format
     if (err.message.includes('hex string')) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -120,8 +129,9 @@ app.get('/api/auth/user/:id', async (req, res) => {
   }
 });
 
-// Update User
+// PUT /api/auth/user/:id - Update User
 app.put('/api/auth/user/:id', [
+  // Optional email validation
   check('email', 'Please include a valid email').optional().isEmail(),
   check('phone', 'Please include a valid phone number').optional().isMobilePhone()
 ], async (req, res) => {
@@ -130,9 +140,11 @@ app.put('/api/auth/user/:id', [
     return res.status(400).json({ errors: errors.array() });
   }
 
+  // Destructure request body
   const { email, phone, password } = req.body;
-  const updateFields = {};
+  const updateFields = {};      // Object to hold fields to update
   
+  // Add fields to update if provided
   if (email) updateFields.email = email.toLowerCase().trim();
   if (phone) updateFields.phone = phone.trim();
   
@@ -143,17 +155,18 @@ app.put('/api/auth/user/:id', [
       updateFields.password = await bcrypt.hash(password, salt);
     }
 
-    // Check for duplicate email/phone
+    // Check for duplicate email/phone (excluding current user)
     if (email) {
       const existingUser = await usersCollection.findOne({ 
         email: email.toLowerCase().trim(),
-        _id: { $ne: new ObjectId(req.params.id) }
+        _id: { $ne: new ObjectId(req.params.id) }   //$ne = not equal
       });
       if (existingUser) {
         return res.status(400).json({ msg: 'Email already in use' });
       }
     }
-    
+
+     // Check for duplicate phone (excluding current user)
     if (phone) {
       const existingUser = await usersCollection.findOne({ 
         phone: phone.trim(),
@@ -164,11 +177,13 @@ app.put('/api/auth/user/:id', [
       }
     }
 
+     // Perform update operation
     const result = await usersCollection.updateOne(
-      { _id: new ObjectId(req.params.id) },
-      { $set: updateFields }
+      { _id: new ObjectId(req.params.id) },        // Filter by ID
+      { $set: updateFields }                      // Update specified fields
     );
 
+    // Handle user not found
     if (result.matchedCount === 0) {
       return res.status(404).json({ msg: 'User not found' });
     }
@@ -179,6 +194,7 @@ app.put('/api/auth/user/:id', [
       { projection: { password: 0 } }
     );
 
+     // Return updated user data
     res.json(updatedUser);
   } catch (err) {
     console.error(err.message);
@@ -186,20 +202,24 @@ app.put('/api/auth/user/:id', [
   }
 });
 
-// Delete User
+// DELETE /api/auth/user/:id - Delete User
 app.delete('/api/auth/user/:id', async (req, res) => {
   try {
+    // Delete user by ID
     const result = await usersCollection.deleteOne({ 
       _id: new ObjectId(req.params.id) 
     });
     
+    // Handle user not found
     if (result.deletedCount === 0) {
       return res.status(404).json({ msg: 'User not found' });
     }
-    
+
+     // Return success message
     res.json({ msg: 'User removed' });
   } catch (err) {
     console.error(err.message);
+    // Handle invalid ObjectId format
     if (err.message.includes('hex string')) {
       return res.status(404).json({ msg: 'User not found' });
     }
