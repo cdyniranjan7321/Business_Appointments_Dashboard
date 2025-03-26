@@ -1,3 +1,4 @@
+
 const express = require('express');  // Importing Express framework
 const router = express.Router();   // Creating an Express router instance
 const User = require('../models/User');   // Importing the user model to interact with the database
