@@ -223,11 +223,11 @@ export default function BusinessSignupScreen() {
 
       {/* Error Popup */}
       {showErrorPopup && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg">
+        <div className="fixed top-4 right-4 bg-sky-400 text-white p-4 rounded-lg shadow-lg">
         <p>{error}</p>
         <button
           onClick={() => setShowErrorPopup(false)}
-          className="mt-2 bg-white text-red-500 px-3 py-1 rounded"
+          className="mt-2 bg-white text-red-500 px-3 py-1 rounded hover:bg-slate-300"
         >
           Close
         </button>
@@ -418,7 +418,7 @@ export default function BusinessSignupScreen() {
                 pattern="[0-9]{10}"  // Ensures exactly 10 digits (optional)
                 className="w-full p-2 border rounded bg-white"
               />
-              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
+              
             </div>
           </div>
 
@@ -512,7 +512,7 @@ export default function BusinessSignupScreen() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Signing in...
+                Creating in...
               </span>
             ) : 'Continue'}
           </button>
