@@ -223,7 +223,7 @@ export default function BusinessSignupScreen() {
 
       {/* Error Popup */}
       {showErrorPopup && (
-        <div className="fixed top-4 right-4 bg-sky-400 text-white p-4 rounded-lg shadow-lg">
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg">
         <p>{error}</p>
         <button
           onClick={() => setShowErrorPopup(false)}
