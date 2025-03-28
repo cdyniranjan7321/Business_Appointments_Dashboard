@@ -103,6 +103,9 @@ export default function BusinessSignupScreen() {
         throw new Error(data.message || 'Failed to register business');
       }
 
+      // Store business name in localStorage
+      localStorage.setItem('businessName', formData.businessName);
+
       // On successful registration
       navigate("/dashboard");
     } catch (err) {
