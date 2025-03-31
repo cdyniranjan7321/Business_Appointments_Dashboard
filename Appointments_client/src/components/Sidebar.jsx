@@ -1,8 +1,9 @@
 
-
 import React from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { TbApps } from "react-icons/tb";
+import { LuMessagesSquare } from "react-icons/lu";
+import { SiCreatereactapp } from "react-icons/si";
 import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { 
@@ -12,7 +13,10 @@ import {
   FaHome, 
   FaMoneyBill, 
   FaTags, 
-  FaEdit } from "react-icons/fa";
+  FaEdit,
+  FaNewspaper,
+  FaNotesMedical,
+  FaThumbtack} from "react-icons/fa";
 
 import { FiHelpCircle } from "react-icons/fi";
 import { HiOutlineSpeakerphone } from "react-icons/hi";
@@ -23,7 +27,7 @@ import { FcPlanner } from "react-icons/fc";
 
 // Default items (always visible)
 const defaultItems = [
-  { id: 1, icon: <FaHome />, text: "Home" },
+  { id: 1, icon: <FaHome />, text: "Home", description: "Dashboard overview" },
   { id: 2, icon: <FaCog />, text: "Settings" },
   { id: 3, icon: <FiHelpCircle />, text: "Help" },
 ];
@@ -41,31 +45,52 @@ const optionalItems = [
   { id: 12, icon: <FcPlanner />, text: "Plan & Price" },
 ];
 
+   // App items for Apps section
+   const appItems = [
+    { id: 'messages', icon: <LuMessagesSquare />, text: "Messages", description: "Chat and notifications" },
+    { id: 'projects', icon: <SiCreatereactapp />, text:"Projects", description: " Create website & projects ", path:"/apps"},
+    { id: 'news', icon: <FaNewspaper />, text:"News", description: "Latest updates" },
+    { id: 'notes', icon: <FaNotesMedical />, text:"Notes", description: "Documents and files"},
+
+   ];
+
 const Sidebar = ({ isOpen, }) => {
   const [showPopup, setShowPopup] = useState(false); // State for popup visibility
   const [sidebarItems, setSidebarItems] = useState([defaultItems[0], defaultItems[1], defaultItems[2]]);  // State for sidebar items. 
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false); // State for notification popup
+  const [pinnedApps, setPinnedApps] = useState({
+      messages:false,
+      projects: false,
+      news: false,
+      notes: false
+  });
   const navigate = useNavigate(); // Hook for navigation
 
   // Load saved items from localStorage on component mount
   useEffect(() => {
     const savedItems = JSON.parse(localStorage.getItem("sidebarItems"));
+    const savedPinnedApps = JSON.parse(localStorage.getItem("pinnedApps"));
     if (savedItems) {
       // Ensure Home is first, Settings and Help are last
       setSidebarItems([defaultItems[0], ...savedItems, defaultItems[1], defaultItems[2]]);
       // setSidebarItems([...defaultItems, ...savedItems]);
     }
+    if (savedPinnedApps){
+      setPinnedApps(savedPinnedApps);
+    }
   }, []);
+
   const togglePopup = () => {
     setIsPopupOpen(!isPopupOpen);
   };
 
-  // Save items to localStorage whenever sidebarItems changes
+  // Save items to localStorage whenever sidebarItems changes or pinnedApps changes
   useEffect(() => {
     const optionalItems = sidebarItems.filter((item) => item.id > 3); // Only save optional items
     localStorage.setItem("sidebarItems", JSON.stringify(optionalItems));
-  }, [sidebarItems]);
+    localStorage.setItem("pinnedApps", JSON.stringify(pinnedApps));
+  }, [sidebarItems, pinnedApps]);
 
   useEffect(() => {
     // Check if the user is on the dashboard (you can customize this logic)
@@ -115,6 +140,22 @@ const Sidebar = ({ isOpen, }) => {
     }
   };
 
+  const togglePin = (app) => {
+    setPinnedApps(prev => ({
+      ...prev,
+      [app]: !prev[app]
+    }));
+  };
+
+  // Separate piined and unpinned apps
+  const pinnedAppItems = appItems.filter(item => pinnedApps[item.id]);
+  const unpinnedAppItems = appItems.filter(item => !pinnedApps[item.id]);
+
+  const handleAppClick = (path) => {
+    navigate(path);
+  };
+  
+
   return (
     
     <div className={`fixed left-0 top-0 h-screen ${isOpen ? "w-64" : "w-17"} bg-[#6FB434] text-white transition-all duration-300 pt-16 overflow-y-auto`}> 
@@ -131,13 +172,6 @@ const Sidebar = ({ isOpen, }) => {
 
         </div>
       </div>
-                 {/* 
-                    <nav className="flex flex-col gap-4 p-4">
-        {sidebarItems.map((item) => (
-          <SidebarItem key={item.id} isOpen={isOpen} icon={item.icon} text={item.text} />
-        ))}
-      </nav>
-                      */}
       
       <nav className="flex flex-col gap-4 p-4">
   {/* Always show Home first */}
@@ -153,8 +187,51 @@ const Sidebar = ({ isOpen, }) => {
   {/* Always show Settings and Help at the end */}
   <SidebarItem key={defaultItems[1].id} isOpen={isOpen} icon={defaultItems[1].icon} text={defaultItems[1].text} />
   <SidebarItem key={defaultItems[2].id} isOpen={isOpen} icon={defaultItems[2].icon} text={defaultItems[2].text} />
-</nav>
 
+
+  {/* Pinned Apps Section  */}
+  {pinnedAppItems.length > 0 && (
+            <div className={`mb-4 ${!isOpen && "hidden" }`}>
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">
+              Pinned Apps
+              </h3>
+              {pinnedAppItems.map((item) =>(
+                <div 
+                     key={item.id} 
+                     className="flex items-center justify-between p-2 rounded-l-3xl bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group cursor-pointer"
+                     onClick={() => handleAppClick(item.path)}
+                     >
+                  <div className="flex items-center gap-2">
+                    {React.cloneElement(item.icon, {
+                      className: `w-5 h-5 text-white group-hover:text-[#6FB434]`,
+                    })}
+                     {isOpen && (
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium text-white group-hover:text-[#6FB434] group-hover:font-bold">
+                        {item.text}
+                      </span>
+                      <span className="text-xs text-white/70 group-hover:text-[#6FB434]/70">
+                        {item.description}
+                      </span>
+                    </div>
+                  )}
+                  </div>
+                  <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePin(item.id);
+                  }}
+                  className="text-yellow-300 hover:text-[#6FB434]"
+                  title="Unpin"
+                >
+                  <FaThumbtack className="w-4 h-4" />
+                </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+</nav>
 
       {/* Popup for editing optional items */}
       {showPopup && (
@@ -217,14 +294,48 @@ const Sidebar = ({ isOpen, }) => {
   </div>
 )}
 
-           {/* Bottom section with "App" text */}
-           <div className="border-t border-gray-200 p-4">
-        <SidebarItem
-          isOpen={isOpen}
-          icon={<TbApps />}
-          text="Apps"
-          onClick={() => navigate("/apps")} // Navigate to the Apps page
-        />
+          {/* Bottom Apps section with Available Apps */}
+      <div className="border-t border-gray-200 p-4">
+        <div className="group">
+          <div className="flex items-center p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300">
+            <TbApps className="w-5 h-5 text-white group-hover:text-[#6FB434]" />
+            {isOpen && (
+              <span className="text-sm font-medium text-white group-hover:text-[#6FB434] group-hover:font-bold ml-2">
+                Apps
+              </span>
+            )}
+          </div>
+          
+          {/* Available Apps Section */}
+          {unpinnedAppItems.length > 0 && isOpen && (
+            <div className="ml-7 mt-1">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">
+                Available Apps
+              </h3>
+              {unpinnedAppItems.map((item) => (
+                <div 
+                key={item.id} 
+                className="flex items-center justify-between group-hover:bg-white/10 px-2 py-1 rounded"
+                onClick={() => handleAppClick(item.path)}
+                >
+                  <span className="text-xs text-white/70 hover:text-black">
+                    {item.text}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      togglePin(item.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 transition-opacity text-white hover:text-yellow-300"
+                    title="Pin"
+                  >
+                    <FaThumbtack className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -261,6 +372,7 @@ SidebarItem.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   icon: PropTypes.node.isRequired,
   text: PropTypes.string.isRequired,
+  description: PropTypes.string,
   isSelectable: PropTypes.bool,
   onClick: PropTypes.func, // Add onClick prop type
 };
