@@ -356,6 +356,7 @@ const Sidebar = ({ isOpen }) => {
         )}
       </div>
 
+
       {/* Edit Sidebar Popup */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 mt-12 z-50">
@@ -451,10 +452,12 @@ const Sidebar = ({ isOpen }) => {
                   </button>
                 </div>
               ))}
+
             </div>
           </div>
         </div>
       )}
+
 
       {/* Welcome Notification */}
       {showNotification && (
