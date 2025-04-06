@@ -36,7 +36,7 @@ const defaultItems = [
 // Optional items (can be added via the edit popup)
 const optionalItems = [
   { id: 4, icon: <FaCalendarAlt />, text: "Appointments" },
-  { id: 5, icon: <FaTags />, text: "Products" },
+  { id: 5, icon: <FaTags />, text: "Products", path:"/products" },
   { id: 6, icon: <FaChartPie />, text: "Reports" },
   { id: 7, icon: <FaMoneyBill />, text: "Payments" },
   { id: 8, icon: <HiOutlineSpeakerphone />, text: "Marketing Suite" },

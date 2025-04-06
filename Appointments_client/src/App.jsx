@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Apps from './pages/Apps'; // Import the Apps page
 import './App.css';
 import Orders from './pages/Orders';
+import ProductPage from './pages/ProductPage';
 
 function App() {
   return (
@@ -37,7 +38,8 @@ function App() {
         <Route path="/login" element={<LogIn />} />
         <Route path="/dashboard" element={<Dashboard />} /> {/* Added Dashboard route */}
         <Route path="/apps" element={<Apps />} /> {/* Add Apps route */}
-        < Route path="/orders" element={<Orders />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/products" element={<ProductPage />} />
       </Routes>
     </Router>
   );
