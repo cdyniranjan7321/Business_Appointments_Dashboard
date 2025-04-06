@@ -87,6 +87,7 @@ const Orders = () => {
   const [orders, setOrders] = useState(initialOrders);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
+  const [searchTerm, setSearchTerm ] = useState('');
   const [newOrder, setNewOrder] = useState({
     customer: '',
     salesChannel: 'Online Store',
@@ -98,6 +99,28 @@ const Orders = () => {
   const [editingOrder, setEditingOrder] = useState(null);
   const menuRef = useRef(null);
 
+
+    // Filter orders based on search term
+     // Improved search function
+  const filteredOrders = orders.filter(order => {
+    if (!searchTerm.trim()) return true; // Show all orders when search is empty
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    // Check each field for a match
+    return (
+      (order.id && order.id.toLowerCase().includes(searchLower)) ||
+      (order.customer && order.customer.toLowerCase().includes(searchLower)) ||
+      (order.salesChannel && order.salesChannel.toLowerCase().includes(searchLower)) ||
+      (order.paymentStatus && order.paymentStatus.toLowerCase().includes(searchLower)) ||
+      (order.fulfillmentStatus && order.fulfillmentStatus.toLowerCase().includes(searchLower)) ||
+      (order.deliveryMethod && order.deliveryMethod.toLowerCase().includes(searchLower)) ||
+      (order.items && order.items.some(item => 
+        item.name && item.name.toLowerCase().includes(searchLower)
+      )) ||
+      (order.total && order.total.toString().includes(searchTerm))
+    );
+  });
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -291,6 +314,8 @@ const Orders = () => {
             type="text"
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm"
             placeholder="Search orders..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <button className="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
@@ -300,6 +325,11 @@ const Orders = () => {
 
       {/* Orders Table */}
       <div className="bg-white shadow overflow-hidden rounded-lg">
+      {filteredOrders.length === 0 ? (
+        <div className="p-4 text-center text-gray-500">
+        No orders found matching your search criteria.
+      </div>
+    ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -333,8 +363,9 @@ const Orders = () => {
                 </th>
               </tr>
             </thead>
+
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <React.Fragment key={order.id}>
                   <tr 
                     className="hover:bg-green-200 cursor-pointer" 
@@ -465,6 +496,7 @@ const Orders = () => {
             </tbody>
           </table>
         </div>
+    )}
       </div>
 
       {/* Pagination */}
