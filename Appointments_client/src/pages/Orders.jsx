@@ -100,9 +100,8 @@ const Orders = () => {
   const menuRef = useRef(null);
 
 
-    // Filter orders based on search term
-     // Improved search function
-  const filteredOrders = orders.filter(order => {
+    // Filter orders based on search term(Improved search function)
+   const filteredOrders = orders.filter(order => {
     if (!searchTerm.trim()) return true; // Show all orders when search is empty
     
     const searchLower = searchTerm.toLowerCase();
@@ -326,7 +325,7 @@ const Orders = () => {
       {/* Orders Table */}
       <div className="bg-white shadow overflow-hidden rounded-lg">
       {filteredOrders.length === 0 ? (
-        <div className="p-4 text-center text-gray-500">
+        <div className="p-4 text-center text-red-500">
         No orders found matching your search criteria.
       </div>
     ) : (
