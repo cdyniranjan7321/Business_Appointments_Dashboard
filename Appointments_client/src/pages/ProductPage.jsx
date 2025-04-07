@@ -195,7 +195,7 @@ const ProductPages = () => {
               <div className="col-span-1">
                 {product.status && (
                   <span className={`px-2 py-1 rounded-full text-xs ${
-                    product.status === 'active' ? 'bg-green-200 text-green-800' : 
+                    product.status === 'active' ? 'bg-green-100 text-green-800' : 
                     product.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
                     'bg-gray-100 text-gray-800'
                   }`}>
