@@ -472,6 +472,7 @@ const Orders = () => {
                               ))}
                             </ul>
                           </div>
+                          
                           <div>
                             <h3 className="text-sm font-medium text-gray-900 mb-2">Delivery Details</h3>
                             <div className="border rounded-md p-3 text-sm">
