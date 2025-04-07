@@ -21,6 +21,7 @@ import {
   FaStore,
   FaBoxOpen
 } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 
 const Orders = () => {
   // Sample order data
@@ -87,7 +88,7 @@ const Orders = () => {
   const [orders, setOrders] = useState(initialOrders);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
-  const [searchTerm, setSearchTerm ] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [newOrder, setNewOrder] = useState({
     customer: '',
     salesChannel: 'Online Store',
@@ -97,29 +98,54 @@ const Orders = () => {
   });
   const [openMenuId, setOpenMenuId] = useState(null);
   const [editingOrder, setEditingOrder] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    paymentStatus: '',
+    fulfillmentStatus: '',
+    deliveryMethod: '',
+    dateFrom: '',
+    dateTo: '',
+    minAmount: '',
+    maxAmount: ''
+  });
   const menuRef = useRef(null);
 
+  // Filter orders based on search term and filters
+  const filteredOrders = orders.filter(order => {
+    // Search term filtering
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = (
+        (order.id && order.id.toLowerCase().includes(searchLower)) ||
+        (order.customer && order.customer.toLowerCase().includes(searchLower)) ||
+        (order.salesChannel && order.salesChannel.toLowerCase().includes(searchLower)) ||
+        (order.paymentStatus && order.paymentStatus.toLowerCase().includes(searchLower)) ||
+        (order.fulfillmentStatus && order.fulfillmentStatus.toLowerCase().includes(searchLower)) ||
+        (order.deliveryMethod && order.deliveryMethod.toLowerCase().includes(searchLower)) ||
+        (order.items && order.items.some(item => 
+          item.name && item.name.toLowerCase().includes(searchLower)
+        )) ||
+        (order.total && order.total.toString().includes(searchTerm))
+      );
+      if (!matchesSearch) return false;
+    }
 
-    // Filter orders based on search term(Improved search function)
-   const filteredOrders = orders.filter(order => {
-    if (!searchTerm.trim()) return true; // Show all orders when search is empty
+    // Apply filters
+    if (filters.paymentStatus && order.paymentStatus !== filters.paymentStatus) return false;
+    if (filters.fulfillmentStatus && order.fulfillmentStatus !== filters.fulfillmentStatus) return false;
+    if (filters.deliveryMethod && order.deliveryMethod !== filters.deliveryMethod) return false;
     
-    const searchLower = searchTerm.toLowerCase();
+    // Date range filter
+    if (filters.dateFrom && new Date(order.date) < new Date(filters.dateFrom)) return false;
+    if (filters.dateTo && new Date(order.date) > new Date(filters.dateTo)) return false;
     
-    // Check each field for a match
-    return (
-      (order.id && order.id.toLowerCase().includes(searchLower)) ||
-      (order.customer && order.customer.toLowerCase().includes(searchLower)) ||
-      (order.salesChannel && order.salesChannel.toLowerCase().includes(searchLower)) ||
-      (order.paymentStatus && order.paymentStatus.toLowerCase().includes(searchLower)) ||
-      (order.fulfillmentStatus && order.fulfillmentStatus.toLowerCase().includes(searchLower)) ||
-      (order.deliveryMethod && order.deliveryMethod.toLowerCase().includes(searchLower)) ||
-      (order.items && order.items.some(item => 
-        item.name && item.name.toLowerCase().includes(searchLower)
-      )) ||
-      (order.total && order.total.toString().includes(searchTerm))
-    );
+    // Amount range filter
+    if (filters.minAmount && order.total < parseFloat(filters.minAmount)) return false;
+    if (filters.maxAmount && order.total > parseFloat(filters.maxAmount)) return false;
+
+    return true;
   });
+
   // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -184,12 +210,229 @@ const Orders = () => {
     setOpenMenuId(null);
   };
 
-  // Print order (simulated)
+  // Print order
   const handlePrintOrder = (order) => {
-    // In a real app, this would generate a PDF or open print dialog
-    console.log("Printing order:", order.id);
-    alert(`Printing order ${order.id}`);
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <html>
+        <head>
+          <title>Order ${order.id}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .total { font-weight: bold; margin-top: 10px; }
+            .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <h1>Order #${order.id}</h1>
+              <p>Date: ${order.date}</p>
+            </div>
+            <div>
+              <p>Customer: ${order.customer}</p>
+              <p>Channel: ${order.salesChannel}</p>
+            </div>
+          </div>
+          
+          <h2>Items</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>$${item.price.toFixed(2)}</td>
+                  <td>$${(item.quantity * item.price).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div class="total">Order Total: $${order.total.toFixed(2)}</div>
+          
+          <h2>Order Details</h2>
+          <table>
+            <tr>
+              <td>Payment Status</td>
+              <td>${order.paymentStatus}</td>
+            </tr>
+            <tr>
+              <td>Fulfillment Status</td>
+              <td>${order.fulfillmentStatus}</td>
+            </tr>
+            <tr>
+              <td>Delivery Method</td>
+              <td>${order.deliveryMethod}</td>
+            </tr>
+            <tr>
+              <td>Delivery Status</td>
+              <td>${order.deliveryStatus}</td>
+            </tr>
+            ${order.destination ? `
+            <tr>
+              <td>Destination</td>
+              <td>${order.destination}</td>
+            </tr>
+            ` : ''}
+            ${order.tags && order.tags.length > 0 ? `
+            <tr>
+              <td>Tags</td>
+              <td>${order.tags.join(', ')}</td>
+            </tr>
+            ` : ''}
+          </table>
+          
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 200);
+            }
+          </script>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.open();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
     setOpenMenuId(null);
+  };
+
+  // Print all filtered orders
+  const handlePrintAll = () => {
+    const printWindow = window.open('', '_blank');
+    const printContent = `
+      <html>
+        <head>
+          <title>Orders Report</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            h1 { color: #333; text-align: center; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background-color: #f2f2f2; }
+            .order { page-break-inside: avoid; margin-bottom: 30px; }
+            .order-header { display: flex; justify-content: space-between; }
+            @media print {
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Orders Report</h1>
+          <p class="no-print">Generated on ${new Date().toLocaleString()}</p>
+          <p>Total Orders: ${filteredOrders.length}</p>
+          
+          ${filteredOrders.map(order => `
+            <div class="order">
+              <div class="order-header">
+                <h2>Order #${order.id}</h2>
+                <p>Date: ${order.date}</p>
+              </div>
+              <p>Customer: ${order.customer} | Channel: ${order.salesChannel}</p>
+              
+              <h3>Items</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Price</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${order.items.map(item => `
+                    <tr>
+                      <td>${item.name}</td>
+                      <td>${item.quantity}</td>
+                      <td>$${item.price.toFixed(2)}</td>
+                      <td>$${(item.quantity * item.price).toFixed(2)}</td>
+                    </tr>
+                  `).join('')}
+                  <tr>
+                    <td colspan="3" style="text-align: right;"><strong>Order Total:</strong></td>
+                    <td><strong>$${order.total.toFixed(2)}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+              
+              <h3>Status</h3>
+              <table>
+                <tr>
+                  <td>Payment Status</td>
+                  <td>${order.paymentStatus}</td>
+                </tr>
+                <tr>
+                  <td>Fulfillment Status</td>
+                  <td>${order.fulfillmentStatus}</td>
+                </tr>
+                <tr>
+                  <td>Delivery Method</td>
+                  <td>${order.deliveryMethod}</td>
+                </tr>
+                <tr>
+                  <td>Delivery Status</td>
+                  <td>${order.deliveryStatus}</td>
+                </tr>
+              </table>
+            </div>
+          `).join('')}
+          
+          <div class="no-print" style="margin-top: 20px; text-align: center;">
+            <button onclick="window.print()">Print Report</button>
+            <button onclick="window.close()">Close</button>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    printWindow.document.open();
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+  };
+
+  // Export orders to Excel
+  const handleExportOrders = () => {
+    // Prepare data for export
+    const exportData = filteredOrders.map(order => ({
+      'Order ID': order.id,
+      'Date': order.date,
+      'Customer': order.customer,
+      'Sales Channel': order.salesChannel,
+      'Total': order.total,
+      'Payment Status': order.paymentStatus,
+      'Fulfillment Status': order.fulfillmentStatus,
+      'Delivery Method': order.deliveryMethod,
+      'Delivery Status': order.deliveryStatus,
+      'Items Count': order.items.length,
+      'Items': order.items.map(item => `${item.quantity}x ${item.name}`).join(', '),
+      'Destination': order.destination,
+      'Tags': order.tags?.join(', ') || ''
+    }));
+
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+
+    // Generate Excel file and download
+    XLSX.writeFile(workbook, `orders_export_${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
   // Create or update order
@@ -279,16 +522,35 @@ const Orders = () => {
     return <FaBoxOpen className="text-gray-500" />;
   };
 
+  // Reset all filters
+  const resetFilters = () => {
+    setFilters({
+      paymentStatus: '',
+      fulfillmentStatus: '',
+      deliveryMethod: '',
+      dateFrom: '',
+      dateTo: '',
+      minAmount: '',
+      maxAmount: ''
+    });
+  };
+
   return (
-   <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
+    <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
         <h1 className="text-xl md:text-2xl font-bold text-gray-800">Orders Details</h1>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button 
+            className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+            onClick={handlePrintAll}
+          >
             <FiPrinter className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Print</span>
           </button>
-          <button className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button 
+            className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+            onClick={handleExportOrders}
+          >
             <FiDownload className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Export</span>
           </button>
           <button 
@@ -317,201 +579,303 @@ const Orders = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <button className="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">
-          <FiFilter className="mr-1 md:mr-2" /> <span>Filter</span>
-        </button>
+        <div className="relative w-full md:w-auto">
+          <button 
+            className="w-full md:w-auto flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-white"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <FiFilter className="mr-1 md:mr-2" /> <span>Filter</span>
+          </button>
+          
+          {showFilters && (
+            <div className="absolute right-0 mt-2 w-72 md:w-96 bg-white rounded-md shadow-lg z-10 border border-gray-200 p-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
+                  <select
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.paymentStatus}
+                    onChange={(e) => setFilters({...filters, paymentStatus: e.target.value})}
+                  >
+                    <option value="">All</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Partially Paid">Partially Paid</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Fulfillment Status</label>
+                  <select
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.fulfillmentStatus}
+                    onChange={(e) => setFilters({...filters, fulfillmentStatus: e.target.value})}
+                  >
+                    <option value="">All</option>
+                    <option value="Fulfilled">Fulfilled</option>
+                    <option value="Unfulfilled">Unfulfilled</option>
+                    <option value="Partially Fulfilled">Partially Fulfilled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Method</label>
+                  <select
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.deliveryMethod}
+                    onChange={(e) => setFilters({...filters, deliveryMethod: e.target.value})}
+                  >
+                    <option value="">All</option>
+                    <option value="Standard Shipping">Standard Shipping</option>
+                    <option value="Express Shipping">Express Shipping</option>
+                    <option value="In-Store Pickup">In-Store Pickup</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date From</label>
+                  <input
+                    type="date"
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.dateFrom}
+                    onChange={(e) => setFilters({...filters, dateFrom: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Date To</label>
+                  <input
+                    type="date"
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.dateTo}
+                    onChange={(e) => setFilters({...filters, dateTo: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Min Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.minAmount}
+                    onChange={(e) => setFilters({...filters, minAmount: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max Amount</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 text-sm"
+                    value={filters.maxAmount}
+                    onChange={(e) => setFilters({...filters, maxAmount: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-between mt-4">
+                <button
+                  className="px-3 py-1 bg-gray-200 rounded-md text-sm hover:bg-gray-400"
+                  onClick={resetFilters}
+                >
+                  Reset
+                </button>
+                <button
+                  className="px-3 py-1 bg-green-500 text-white rounded-md text-sm hover:bg-green-700"
+                  onClick={() => setShowFilters(false)}
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Orders Table */}
       <div className="bg-white shadow overflow-hidden rounded-lg">
-      {filteredOrders.length === 0 ? (
-        <div className="p-4 text-center text-red-500">
-        No orders found matching your search criteria.
-      </div>
-    ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Order
-                </th>
-                <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                  Date
-                </th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                  Customer
-                </th>
-                <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                  Channel
-                </th>
-                <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Total
-                </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                  Payment
-                </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                  Fulfillment
-                </th>
-                <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                  Delivery
-                </th>
-                <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
+        {filteredOrders.length === 0 ? (
+          <div className="p-4 text-center text-red-500">
+            No orders found matching your search criteria.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order
+                  </th>
+                  <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                    Date
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    Customer
+                  </th>
+                  <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                    Channel
+                  </th>
+                  <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                    Payment
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                    Fulfillment
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                    Delivery
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
 
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredOrders.map((order) => (
-                <React.Fragment key={order.id}>
-                  <tr 
-                    className="hover:bg-green-200 cursor-pointer" 
-                    onClick={() => toggleExpand(order.id)}
-                  >
-                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {order.id}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                      {order.date}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                      {order.customer}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                      {order.salesChannel}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                      ${order.total.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                      <div className="flex items-center">
-                        {getStatusIcon(order.paymentStatus)}
-                        <span className="ml-1 hidden md:inline">{order.paymentStatus}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                      <div className="flex items-center">
-                        {getStatusIcon(order.fulfillmentStatus)}
-                        <span className="ml-1 hidden lg:inline">{order.fulfillmentStatus}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                      <div className="flex items-center">
-                        {getDeliveryIcon(order.deliveryMethod)}
-                        <span className="ml-1">{order.deliveryStatus}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                      <div ref={menuRef}>
-                        <button 
-                          className="text-black hover:text-red-600 focus:outline-none"
-                          onClick={(e) => toggleMenu(e, order.id)}
-                        >
-                          <FiMoreVertical />
-                        </button>
-                        
-                        {openMenuId === order.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                            <div className="py-1">
-                              <button
-                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditOrder(order);
-                                }}
-                              >
-                                <FiEdit2 className="mr-2" /> Update
-                              </button>
-                              <button
-                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDuplicateOrder(order);
-                                }}
-                              >
-                                <FiCopy className="mr-2" /> Duplicate
-                              </button>
-                              <button
-                                className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handlePrintOrder(order);
-                                }}
-                              >
-                                <FiPrinter className="mr-2" /> Print
-                              </button>
-                              <button
-                                className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-800"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteOrder(order.id);
-                                }}
-                              >
-                                <FiTrash2 className="mr-2" /> Delete
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedOrder === order.id && (
-                    <tr className="bg-gray-50">
-                      <td colSpan="9" className="px-4 py-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900 mb-2">Items</h3>
-                            <ul className="border rounded-md divide-y divide-gray-200">
-                              {order.items.map((item, index) => (
-                                <li key={index} className="px-3 py-2 flex justify-between text-sm">
-                                  <span>{item.name}</span>
-                                  <span>{item.quantity} × ${item.price.toFixed(2)} = ${(item.quantity * item.price).toFixed(2)}</span>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredOrders.map((order) => (
+                  <React.Fragment key={order.id}>
+                    <tr 
+                      className="hover:bg-green-200 cursor-pointer" 
+                      onClick={() => toggleExpand(order.id)}
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {order.id}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                        {order.date}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                        {order.customer}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                        {order.salesChannel}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${order.total.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                        <div className="flex items-center">
+                          {getStatusIcon(order.paymentStatus)}
+                          <span className="ml-1 hidden md:inline">{order.paymentStatus}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+                        <div className="flex items-center">
+                          {getStatusIcon(order.fulfillmentStatus)}
+                          <span className="ml-1 hidden lg:inline">{order.fulfillmentStatus}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+                        <div className="flex items-center">
+                          {getDeliveryIcon(order.deliveryMethod)}
+                          <span className="ml-1">{order.deliveryStatus}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
+                        <div ref={menuRef}>
+                          <button 
+                            className="text-black hover:text-red-600 focus:outline-none"
+                            onClick={(e) => toggleMenu(e, order.id)}
+                          >
+                            <FiMoreVertical />
+                          </button>
                           
-                          <div>
-                            <h3 className="text-sm font-medium text-gray-900 mb-2">Delivery Details</h3>
-                            <div className="border rounded-md p-3 text-sm">
-                              <p className="mb-1"><span className="font-medium">Delivery Method:</span> {order.deliveryMethod}</p>
-                              <p className="mb-1"><span className="font-medium">Destination:</span> {order.destination}</p>
-                              <p className="mb-1"><span className="font-medium">Label Status:</span> {order.labelStatus}</p>
-                              {order.tags && order.tags.length > 0 && (
-                                <p className="mb-1">
-                                  <span className="font-medium">Tags:</span> {order.tags.join(', ')}
-                                </p>
-                              )}
-                              <p><span className="font-medium">Return Status:</span> {order.returnStatus}</p>
+                          {openMenuId === order.id && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                              <div className="py-1">
+                                <button
+                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditOrder(order);
+                                  }}
+                                >
+                                  <FiEdit2 className="mr-2" /> Update
+                                </button>
+                                <button
+                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDuplicateOrder(order);
+                                  }}
+                                >
+                                  <FiCopy className="mr-2" /> Duplicate
+                                </button>
+                                <button
+                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handlePrintOrder(order);
+                                  }}
+                                >
+                                  <FiPrinter className="mr-2" /> Print
+                                </button>
+                                <button
+                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-800"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeleteOrder(order.id);
+                                  }}
+                                >
+                                  <FiTrash2 className="mr-2" /> Delete
+                                </button>
+                              </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-    )}
+                    {expandedOrder === order.id && (
+                      <tr className="bg-gray-50">
+                        <td colSpan="9" className="px-4 py-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900 mb-2">Items</h3>
+                              <ul className="border rounded-md divide-y divide-gray-200">
+                                {order.items.map((item, index) => (
+                                  <li key={index} className="px-3 py-2 flex justify-between text-sm">
+                                    <span>{item.name}</span>
+                                    <span>{item.quantity} × ${item.price.toFixed(2)} = ${(item.quantity * item.price).toFixed(2)}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900 mb-2">Delivery Details</h3>
+                              <div className="border rounded-md p-3 text-sm">
+                                <p className="mb-1"><span className="font-medium">Delivery Method:</span> {order.deliveryMethod}</p>
+                                <p className="mb-1"><span className="font-medium">Destination:</span> {order.destination}</p>
+                                <p className="mb-1"><span className="font-medium">Label Status:</span> {order.labelStatus}</p>
+                                {order.tags && order.tags.length > 0 && (
+                                  <p className="mb-1">
+                                    <span className="font-medium">Tags:</span> {order.tags.join(', ')}
+                                  </p>
+                                )}
+                                <p><span className="font-medium">Return Status:</span> {order.returnStatus}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Pagination */}
       <div className="flex flex-col md:flex-row items-center justify-between mt-4 gap-2">
         <div>
           <p className="text-xs md:text-sm text-gray-700">
-            Showing <span className="font-medium">1</span> to <span className="font-medium">{orders.length}</span> of{' '}
+            Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredOrders.length}</span> of{' '}
             <span className="font-medium">{orders.length}</span> results
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="p-1 md:px-3 md:py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button className="p-1 md:px-3 md:py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-white">
             <FiChevronLeft />
           </button>
-          <button className="p-1 md:px-3 md:py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+          <button className="p-1 md:px-3 md:py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-white">
             <FiChevronRight />
           </button>
         </div>
@@ -632,7 +996,7 @@ const Orders = () => {
                   ))}
                   <button
                     type="button"
-                    className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                    className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 shadow-sm text-xs sm:text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                     onClick={addNewItem}
                   >
                     <FiPlus className="-ml-0.5 mr-1.5 h-3 w-3 sm:h-4 sm:w-4" /> Add Item
@@ -643,7 +1007,7 @@ const Orders = () => {
             <div className="px-4 md:px-6 py-3 border-t border-gray-200 flex justify-end gap-2">
               <button
                 type="button"
-                className="bg-white py-2 px-3 md:px-4 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="bg-white py-2 px-3 md:px-4 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 onClick={() => {
                   setShowCreateOrder(false);
                   setEditingOrder(null);
