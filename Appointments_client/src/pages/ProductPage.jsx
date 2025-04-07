@@ -1,7 +1,8 @@
+
 import { useState } from 'react';
 import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown } from 'react-icons/fi';
 
-const ProductsDashboard = () => {
+const ProductPages = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -66,18 +67,18 @@ const ProductsDashboard = () => {
   });
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-sm">
+    <div className="fixed inset-0 bg-gray-100 overflow-auto p-6"> {/* p-6 bg-white rounded-lg shadow-sm */}
       {/* Header with actions */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Products</h1>
         <div className="flex space-x-2">
-          <button className="px-3 py-2 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
+          <button className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-200">
             <FiDownload className="mr-2" /> Import
           </button>
-          <button className="px-3 py-2 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
+          <button className="px-3 py-2 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-200">
             <FiUpload className="mr-2" /> Export
           </button>
-          <button className="px-3 py-2 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
+          <button className="px-3 py-2 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-200">
             <FiMoreHorizontal className="mr-2" /> More actions
           </button>
           <button className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm flex items-center hover:bg-blue-700">
@@ -225,4 +226,4 @@ const ProductsDashboard = () => {
   );
 };
 
-export default ProductsDashboard;
+export default ProductPages;
