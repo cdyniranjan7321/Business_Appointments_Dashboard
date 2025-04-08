@@ -164,7 +164,7 @@ const ProductPages = () => {
         </div>
 
         {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2">
+        <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2 py-3 bg-gray-200">
           <div className="col-span-1 flex items-center">
             <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
           </div>
