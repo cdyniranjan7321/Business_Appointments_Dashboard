@@ -164,10 +164,11 @@ const ProductPages = () => {
         </div>
 
         {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2">
+        <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2 py-3 bg-gray-200">
           <div className="col-span-1 flex items-center">
             <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
           </div>
+          
           <div className="col-span-4">Product</div>
           <div className="col-span-1">Status</div>
           <div className="col-span-1">Inventory</div>
@@ -195,7 +196,7 @@ const ProductPages = () => {
               <div className="col-span-1">
                 {product.status && (
                   <span className={`px-2 py-1 rounded-full text-xs ${
-                    product.status === 'active' ? 'bg-green-200 text-green-800' : 
+                    product.status === 'active' ? 'bg-green-100 text-green-800' : 
                     product.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
                     'bg-gray-100 text-gray-800'
                   }`}>
