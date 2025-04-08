@@ -168,6 +168,7 @@ const ProductPages = () => {
           <div className="col-span-1 flex items-center">
             <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
           </div>
+          
           <div className="col-span-4">Product</div>
           <div className="col-span-1">Status</div>
           <div className="col-span-1">Inventory</div>
