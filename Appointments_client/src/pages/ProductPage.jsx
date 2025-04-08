@@ -181,7 +181,7 @@ const ProductPages = () => {
         {/* Table Rows */}
         <div className="space-y-2">
           {filteredProducts.map((product) => (
-            <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-100 pb-3 px-2 hover:bg-green-200 items-center">
+            <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-200 items-center">
               <div className="col-span-1 flex items-center">
                 <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
               </div>
