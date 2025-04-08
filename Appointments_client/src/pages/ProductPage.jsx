@@ -137,7 +137,6 @@ const ProductPages = () => {
     setShowAddProduct(false);
   };
 
-
   // Filter products based on active tab and search query
   const filteredProducts = products.filter(product => {
     const matchesTab = activeTab === 'all' || 
@@ -165,6 +164,7 @@ const ProductPages = () => {
       variants: [...prev.variants, { name: '', values: '' }]
     }));
   };
+
 
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6"> {/* p-6 bg-white rounded-lg shadow-sm */}
@@ -551,7 +551,7 @@ const ProductPages = () => {
 
  {/* Rest of your existing UI (same as before) */}
  <div className={`${showAddProduct ? 'blur-sm' : ''}`}>
-
+  
       {/* Header with actions */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Products</h1>
