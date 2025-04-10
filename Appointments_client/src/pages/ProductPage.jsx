@@ -71,8 +71,11 @@ const ProductPages = () => {
     compareAtPrice: 0.00,
     costPerItem: 0.00,
     trackQuantity: true,
+    continueSelling: false,
+    hasSKU: false,
     quantity: '',
     sku: '',
+    barcode: '',
     physicalProduct: true,
     weight: 0.0,
     countryOfOrigin: '',
@@ -351,65 +354,118 @@ const ProductPages = () => {
                       </div>
                     </div>
 
-                    {/* Inventory */}
-                    <div className="space-y-2 border-b pb-4">
-                      <h3 className="text-lg font-medium">Inventory</h3>
-                      <div className="flex items-center mb-2">
-                        <input
-                          type="checkbox"
-                          name="trackQuantity"
-                          checked={newProduct.trackQuantity}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <label>Track quantity</label>
-                      </div>
-                      <div className="mb-2">
-                        <label className="block text-sm font-medium mb-1">Quantity</label>
-                        <input
-                          type="text"
-                          name="quantity"
-                          value={newProduct.quantity}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded"
-                        />
-                      </div>
-                      <div className="flex items-center mb-2">
-                        <input
-                          type="checkbox"
-                          className="mr-2"
-                        />
-                        <label>Continue selling when out of stock</label>
-                      </div>
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          className="mr-2"
-                          checked
-                        />
-                        <label>This product has a SKU or barcode</label>
-                      </div>
-                      <div className="mt-2">
-                        <label className="block text-sm font-medium mb-1">SKU (Stock Keeping Unit)</label>
-                        <input
-                          type="text"
-                          name="sku"
-                          value={newProduct.sku}
-                          onChange={handleInputChange}
-                          className="w-full p-2 border border-gray-300 rounded"
-                        />
-                      </div>
-                      <div className="mt-2">
-                        <label className="block text-sm font-medium mb-1">Barcode (ISBN, UPC, GTIN, etc.)</label>
-                        <input
-                          type="text"
-                          className="w-full p-2 border border-gray-300 rounded"
-                        />
-                      </div>
-                    </div>
+                    {/* Inventory Section */}
+            <div className="space-y-4 border border-spacing-3 py-3 px-3 pb-6">
+              <h3 className="text-lg font-medium">Inventory</h3>
+  
+  {/* Track Quantity */}
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id="trackQuantity"
+      name="trackQuantity"
+      checked={newProduct.trackQuantity}
+      onChange={handleInputChange}
+      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+    />
+    <label htmlFor="trackQuantity" className="ml-2 block text-sm text-gray-700">
+      Track quantity
+    </label>
+  </div>
+
+  {/* Quantity Input */}
+  {newProduct.trackQuantity && (
+  <div className="mt-2 flex items-center justify-between">
+    <div className="border-b border-gray-300 pb-1 w-1/3">
+      <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
+        Quantity
+      </label>
+    </div>
+    <div className="w-2/3 flex justify-end">
+      <input
+        type="text"
+        id="quantity"
+        name="quantity"
+        value={newProduct.quantity}
+        onChange={handleInputChange}
+        className="w-1/2 p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
+        placeholder="0"
+      />
+    </div>
+  </div>
+)}
+
+  {/* Continue Selling When Out of Stock */}
+  <div className="flex items-center mt-4">
+    <input
+      type="checkbox"
+      id="continueSelling"
+      name="continueSelling"
+      checked={newProduct.continueSelling}
+      onChange={handleInputChange}
+      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+    />
+    <label htmlFor="continueSelling" className="ml-2 block text-sm text-gray-700">
+      Continue selling when out of stock
+    </label>
+  </div>
+
+  {/* SKU/Barcode Section */}
+  <div className="mt-6">
+    <div className="flex items-center">
+      <input
+        type="checkbox"
+        id="hasSKU"
+        name="hasSKU"
+        checked={newProduct.hasSKU}
+        onChange={handleInputChange}
+        className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+      />
+      <label htmlFor="hasSKU" className="ml-2 block text-sm text-gray-700">
+        This product has a SKU or barcode
+      </label>
+    </div>
+
+    {newProduct.hasSKU && (
+  <div className="mt-4">
+    <div className="grid grid-cols-2 gap-4">
+      {/* SKU Input - Left Side */}
+      <div>
+        <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
+          SKU (Stock Keeping Unit)
+        </label>
+        <input
+          type="text"
+          id="sku"
+          name="sku"
+          value={newProduct.sku}
+          onChange={handleInputChange}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
+        />
+      </div>
+
+      {/* Barcode Input - Right Side */}
+      <div>
+        <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 mb-1">
+          Barcode (ISBN, UPC, GTIN, etc.)
+        </label>
+        <input
+          type="text"
+          id="barcode"
+          name="barcode"
+          value={newProduct.barcode}
+          onChange={handleInputChange}
+          className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
+        />
+      </div>
+    </div>
+  </div>
+)}
+  </div>
+</div>
 
                     {/* Shipping */}
-                    <div className="space-y-2 border-b pb-4">
+                    <div className="space-y-2 border border-spacing-2 py-3 px-3 pb-4">
                       <h3 className="text-lg font-medium">Shipping</h3>
                       <div className="flex items-center mb-2">
                         <input
@@ -449,6 +505,7 @@ const ProductPages = () => {
                               <option value="US">United States</option>
                               <option value="AU">Australia</option>
                               <option value="CN">China</option>
+                              <option value="NP">Nepal</option>
                             </select>
                           </div>
                           <div>
@@ -604,7 +661,7 @@ const ProductPages = () => {
                   <button
                     type="button"
                     onClick={handleCloseModal}  // Changed to use handleCloseModal
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200"
                   >
                     Cancel
                   </button>
