@@ -1,12 +1,15 @@
 
-import { useState } from 'react';
-import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown,FiX, 
-  FiImage } from 'react-icons/fi';
+import { useRef, useState } from 'react';
+import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown,FiX, FiImage,
+ } from 'react-icons/fi';
 
 const ProductPages = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const fileInputRef = useRef(null);
  
   
   // Sample product data
@@ -58,7 +61,7 @@ const ProductPages = () => {
     }
   ]);
 
-
+   // New product form state
   const [newProduct, setNewProduct] = useState({
     title: '',
     description: '',
@@ -84,7 +87,9 @@ const ProductPages = () => {
     template: 'Default product',
     variants: []
   });
+  
 
+   // Handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -97,12 +102,30 @@ const ProductPages = () => {
       salesChannels: newProduct.salesChannels?.length || 3, // Default channels
       category: newProduct.category || "Uncategorized",
       type: newProduct.type || "General",
-      photo: 'https://example.com/placeholder.jpg' // Default image
+      photo: uploadedImage || 'https://via.placeholder.com/150' // Use uploaded image if available
     };
     
     // Add the new product to the products array
     setProducts([...products, productToAdd]);
+     setUploadedImage(null); // Reset uploaded image
     handleCloseModal();
+  };
+
+  // Handle image upload
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageLoading(true);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadedImage(reader.result);
+        setImageLoading(false);
+      };
+      reader.onerror = () => {
+        setImageLoading(false);
+      };
+      reader.readAsDataURL(file);
+    }
   };
     
   const handleCloseModal = () => {
@@ -134,6 +157,8 @@ const ProductPages = () => {
     });
     
     // Close the modal
+    setUploadedImage(null);
+    setImageLoading(false);
     setShowAddProduct(false);
   };
 
@@ -178,7 +203,7 @@ const ProductPages = () => {
                 <h2 className="text-xl font-bold">Add product</h2>
                 <button 
                   onClick={handleCloseModal}  // Changed to use handleCloseModal
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-red-500"
                 >
                   <FiX size={24} />
                 </button>
@@ -194,6 +219,7 @@ const ProductPages = () => {
                     value={newProduct.title}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded"
+                     placeholder="Enter product name..."
                   />
                 </div>
 
@@ -209,27 +235,62 @@ const ProductPages = () => {
                   />
                 </div>
 
-                {/* Media */}
+                {/* Media Upload Section */}
                 <div className="space-y-2">
                   <h3 className="text-lg font-medium">Media</h3>
-                  <div className="flex space-x-4">
-                    <button className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded p-4 w-32 h-32 hover:bg-gray-50">
-                      <FiUpload className="text-gray-400 mb-2" />
-                      <span className="text-sm">Upload now</span>
-                    </button>
-                    <button className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded p-4 w-32 h-32 hover:bg-gray-50">
-                      <FiImage className="text-gray-400 mb-2" />
-                      <span className="text-sm">Select existing</span>
-                    </button>
+                  <div className="flex space-x-4 border border-gray-200 py-4 px-4 bg-gray-100">
+                    <div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current.click()}
+                        disabled={imageLoading}
+                        className={`flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded p-4 w-32 h-32 hover:bg-gray-200 bg-white
+                           ${imageLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      >
+                        {imageLoading ? (
+                          <span className="text-sm">Uploading...</span>
+                        ) : (
+                          <>
+                            <FiUpload className="text-gray-400 mb-2" />
+                            <span className="text-sm">Upload now</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    {uploadedImage && (
+                      <div className="relative">
+                        <img 
+                          src={uploadedImage} 
+                          alt="Preview" 
+                          className="w-32 h-32 object-cover rounded border border-gray-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setUploadedImage(null)}
+                          className="absolute top-0 right-0 bg-gray-200 rounded-full p-1 hover:bg-gray-300"
+                        >
+                          <FiX size={14} />
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-gray-500">Accepts images, videos, or 3D models</p>
                 </div>
+
+                
 
                 <div className="grid grid-cols-3 gap-6">
                   {/* Left Column */}
                   <div className="col-span-2 space-y-6">
                     {/* Pricing */}
-                    <div className="space-y-2 border-b pb-4">
+                    <div className="space-y-2 border border-spacing-2 px-2 pb-4">
                       <h3 className="text-lg font-medium">Pricing</h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -261,6 +322,19 @@ const ProductPages = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Charge Tax Checkbox */}
+  <div className="mt-4 flex items-center">
+    <input
+      type="checkbox"
+      name="chargeTax"
+      checked={newProduct.chargeTax}
+      onChange={handleInputChange}
+      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+    />
+    <label className="text-sm">Charge tax on this product</label>
+  </div>
+                      
                       <div className="mt-2">
                         <label className="block text-sm font-medium mb-1">Cost per item</label>
                         <div className="flex items-center">
@@ -531,7 +605,7 @@ const ProductPages = () => {
                   <button
                     type="button"
                     onClick={handleCloseModal}  // Changed to use handleCloseModal
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200"
                   >
                     Cancel
                   </button>
@@ -667,19 +741,30 @@ const ProductPages = () => {
 
         {/* Table Rows */}
         <div className="space-y-2">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-200 items-center">
-              <div className="col-span-1 flex items-center">
-                <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-              </div>
-              <div className="col-span-4 flex items-center">
-                <div className="w-10 h-10 bg-gray-200 rounded-md mr-3 overflow-hidden flex-shrink-0">
-                  {product.photo && (
-                    <img src={product.photo} alt={product.name} className="w-full h-full object-cover" />
-                  )}
+            {filteredProducts.map((product) => (
+              <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-50 items-center">
+                <div className="col-span-1 flex items-center">
+                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
                 </div>
-                <span className="truncate">{product.name}</span>
-              </div>
+                <div className="col-span-4 flex items-center">
+                  <div className="w-10 h-10 bg-gray-200 rounded-md mr-3 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                    {product.photo ? (
+                      <img 
+                        src={product.photo} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = 'https://via.placeholder.com/150';
+                        }}
+                      />
+                    ) : (
+                      <FiImage className="text-gray-400" />
+                    )}
+                  </div>
+                  <span className="truncate">{product.name}</span>
+                </div>
+
               <div className="col-span-1">
                 {product.status && (
                   <span className={`px-2 py-1 rounded-full text-xs ${
