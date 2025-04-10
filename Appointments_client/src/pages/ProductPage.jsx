@@ -1,7 +1,6 @@
-
 import { useRef, useState } from 'react';
-import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown,FiX, FiImage,
- } from 'react-icons/fi';
+import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown,FiX, 
+  FiImage } from 'react-icons/fi';
 
 const ProductPages = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -61,7 +60,7 @@ const ProductPages = () => {
     }
   ]);
 
-   // New product form state
+
   const [newProduct, setNewProduct] = useState({
     title: '',
     description: '',
@@ -87,30 +86,8 @@ const ProductPages = () => {
     template: 'Default product',
     variants: []
   });
+
   
-
-   // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Create a new product object for the table(Create new product ONLY when Save is clicked)
-    const productToAdd = {
-      id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,  // Generate new ID
-      name: newProduct.title || "Untitled Product",
-      status: newProduct.status,
-      inventory: newProduct.quantity || 0,
-      salesChannels: newProduct.salesChannels?.length || 3, // Default channels
-      category: newProduct.category || "Uncategorized",
-      type: newProduct.type || "General",
-      photo: uploadedImage || 'https://via.placeholder.com/150' // Use uploaded image if available
-    };
-    
-    // Add the new product to the products array
-    setProducts([...products, productToAdd]);
-     setUploadedImage(null); // Reset uploaded image
-    handleCloseModal();
-  };
-
   // Handle image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -126,6 +103,28 @@ const ProductPages = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  // Handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    
+    // Create a new product object for the table(Create new product ONLY when Save is clicked)
+    const productToAdd = {
+      id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,  // Generate new ID
+      name: newProduct.title || "Untitled Product",
+      status: newProduct.status,
+      inventory: newProduct.quantity || 0,
+      salesChannels: newProduct.salesChannels?.length || 3, // Default channels
+      category: newProduct.category || "Uncategorized",
+      type: newProduct.type || "General",
+      photo: uploadedImage || 'https://via.placeholder.com/150'
+    };
+    
+    // Add the new product to the products array
+    setProducts([...products, productToAdd]);
+    handleCloseModal();
   };
     
   const handleCloseModal = () => {
@@ -203,7 +202,7 @@ const ProductPages = () => {
                 <h2 className="text-xl font-bold">Add product</h2>
                 <button 
                   onClick={handleCloseModal}  // Changed to use handleCloseModal
-                  className="text-gray-500 hover:text-red-500"
+                  className="text-gray-500 hover:text-red-600"
                 >
                   <FiX size={24} />
                 </button>
@@ -235,10 +234,10 @@ const ProductPages = () => {
                   />
                 </div>
 
-                {/* Media Upload Section */}
+                {/* Media */}
                 <div className="space-y-2">
                   <h3 className="text-lg font-medium">Media</h3>
-                  <div className="flex space-x-4 border border-gray-200 py-4 px-4 bg-gray-100">
+                  <div className="flex space-x-4 border border-spacing-2 py-3 px-3 bg-gray-100">
                     <div>
                       <input
                         type="file"
@@ -284,13 +283,11 @@ const ProductPages = () => {
                   <p className="text-xs text-gray-500">Accepts images, videos, or 3D models</p>
                 </div>
 
-                
-
                 <div className="grid grid-cols-3 gap-6">
                   {/* Left Column */}
                   <div className="col-span-2 space-y-6">
                     {/* Pricing */}
-                    <div className="space-y-2 border border-spacing-2 px-2 pb-4">
+                    <div className="space-y-2 border border-spacing-3 pb-4 py-2 px-3">
                       <h3 className="text-lg font-medium">Pricing</h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -322,19 +319,21 @@ const ProductPages = () => {
                           </div>
                         </div>
                       </div>
-
                       {/* Charge Tax Checkbox */}
-  <div className="mt-4 flex items-center">
-    <input
-      type="checkbox"
-      name="chargeTax"
-      checked={newProduct.chargeTax}
-      onChange={handleInputChange}
-      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
-    />
-    <label className="text-sm">Charge tax on this product</label>
-  </div>
-                      
+                       <div className="mt-4 flex items-center">
+                          <input
+                            type="checkbox"
+                            id="chargeTax"
+                            name="chargeTax"
+                            checked={newProduct.chargeTax}
+                            onChange={handleInputChange}
+                             className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                           <label htmlFor="chargeTax" className="ml-2 block text-sm text-black">
+                            Charge tax on this product
+                           </label>
+                        </div>
+
                       <div className="mt-2">
                         <label className="block text-sm font-medium mb-1">Cost per item</label>
                         <div className="flex items-center">
@@ -605,7 +604,7 @@ const ProductPages = () => {
                   <button
                     type="button"
                     onClick={handleCloseModal}  // Changed to use handleCloseModal
-                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200"
+                    className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
                   >
                     Cancel
                   </button>
@@ -764,7 +763,6 @@ const ProductPages = () => {
                   </div>
                   <span className="truncate">{product.name}</span>
                 </div>
-
               <div className="col-span-1">
                 {product.status && (
                   <span className={`px-2 py-1 rounded-full text-xs ${
