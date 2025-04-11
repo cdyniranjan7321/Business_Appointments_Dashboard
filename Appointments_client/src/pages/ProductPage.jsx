@@ -1,6 +1,6 @@
+
 import { useRef, useState } from 'react';
-import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown,FiX, 
-  FiImage } from 'react-icons/fi';
+import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiImage } from 'react-icons/fi';
 
 const ProductPages = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -10,11 +10,9 @@ const ProductPages = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const fileInputRef = useRef(null);
   const [showVariantBox, setShowVariantBox] = useState(false);
- 
-  
-  // Sample product data
- // Make products a state variable so we can update it
- const [products, setProducts] = useState([
+
+  // Sample initial product data
+  const [products, setProducts] = useState([
     {
       id: 1,
       name: 'Max & Molly Smart ID Cat Collar - Cherry Bloom',
@@ -61,7 +59,6 @@ const ProductPages = () => {
     }
   ]);
 
-
   const [newProduct, setNewProduct] = useState({
     title: '',
     description: '',
@@ -79,7 +76,7 @@ const ProductPages = () => {
     barcode: '',
     physicalProduct: true,
     weight: 0.0,
-    weightUnit: 'kg', // default to kilograms
+    weightUnit: 'kg',
     countryOfOrigin: '',
     hsCode: '',
     category: '',
@@ -92,7 +89,11 @@ const ProductPages = () => {
     variants: [],
   });
 
-  
+  const [variantOptions, setVariantOptions] = useState({
+    name: '',
+    values: ''
+  });
+
   // Handle image upload
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -114,16 +115,27 @@ const ProductPages = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    
-    // Create a new product object for the table(Create new product ONLY when Save is clicked)
+    // Create a new product object with all form data
     const productToAdd = {
-      id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,  // Generate new ID
+      id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
       name: newProduct.title || "Untitled Product",
+      description: newProduct.description,
       status: newProduct.status,
-      inventory: newProduct.quantity || 0,
-      salesChannels: newProduct.salesChannels?.length || 3, // Default channels
+      inventory: newProduct.trackQuantity ? newProduct.quantity : 0,
+      salesChannels: newProduct.salesChannels?.length || 3,
+      markets: newProduct.markets?.length || 2,
+      price: newProduct.price,
+      compareAtPrice: newProduct.compareAtPrice,
+      costPerItem: newProduct.costPerItem,
       category: newProduct.category || "Uncategorized",
       type: newProduct.type || "General",
+      vendor: newProduct.vendor,
+      collections: newProduct.collections,
+      tags: newProduct.tags,
+      weight: newProduct.weight,
+      weightUnit: newProduct.weightUnit,
+      countryOfOrigin: newProduct.countryOfOrigin,
+      variants: newProduct.variants,
       photo: uploadedImage || 'https://via.placeholder.com/150'
     };
     
@@ -131,9 +143,9 @@ const ProductPages = () => {
     setProducts([...products, productToAdd]);
     handleCloseModal();
   };
-    
+
   const handleCloseModal = () => {
-    // Reset form without adding to table
+    // Reset form
     setNewProduct({
       title: '',
       description: '',
@@ -144,10 +156,14 @@ const ProductPages = () => {
       compareAtPrice: 0.00,
       costPerItem: 0.00,
       trackQuantity: true,
+      continueSelling: false,
+      hasSKU: false,
       quantity: '',
       sku: '',
+      barcode: '',
       physicalProduct: true,
       weight: 0.0,
+      weightUnit: 'kg',
       countryOfOrigin: '',
       hsCode: '',
       category: '',
@@ -186,65 +202,53 @@ const ProductPages = () => {
     }));
   };
 
-
-  const [variantOptions, setVariantOptions] = useState({
-    name: '',
-    values: ''
-  });
-
-
   const addVariant = () => {
     setShowVariantBox(true);
-    // Reset variant options when opening
     setVariantOptions({
       name: '',
       values: ''
     });
   };
 
-  
-// Add these new functions
-const handleVariantInputChange = (e) => {
-  const { name, value } = e.target;
-  setVariantOptions(prev => ({
-    ...prev,
-    [name]: value
-  }));
-};
-
-const handleAddVariant = () => {
-  if (variantOptions.name && variantOptions.values) {
-    const newVariant = {
-      name: variantOptions.name,
-      values: variantOptions.values.split(',').map(v => v.trim())
-    };
-    
-    setNewProduct(prev => ({
+  const handleVariantInputChange = (e) => {
+    const { name, value } = e.target;
+    setVariantOptions(prev => ({
       ...prev,
-      variants: [...prev.variants, newVariant]
+      [name]: value
     }));
-    
-    // Close the box and reset
-    setShowVariantBox(false);
-    setVariantOptions({
-      name: '',
-      values: ''
-    });
-  }
-};
+  };
+
+  const handleAddVariant = () => {
+    if (variantOptions.name && variantOptions.values) {
+      const newVariant = {
+        name: variantOptions.name,
+        values: variantOptions.values.split(',').map(v => v.trim())
+      };
+      
+      setNewProduct(prev => ({
+        ...prev,
+        variants: [...prev.variants, newVariant]
+      }));
+      
+      setShowVariantBox(false);
+      setVariantOptions({
+        name: '',
+        values: ''
+      });
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-gray-100 overflow-auto p-6"> {/* p-6 bg-white rounded-lg shadow-sm */}
-   
-       {/* Add Product Modal (Update modal close button to use handleCloseModal) */}
+    <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
+      {/* Add Product Modal */}
       {showAddProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
             <div className="p-7">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold ">Add product</h2>
+                <h2 className="text-xl font-bold">Add product</h2>
                 <button 
-                  onClick={handleCloseModal}  // Changed to use handleCloseModal
+                  onClick={handleCloseModal}
                   className="text-gray-500 hover:text-red-600"
                 >
                   <FiX size={24} />
@@ -261,7 +265,8 @@ const handleAddVariant = () => {
                     value={newProduct.title}
                     onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded"
-                     placeholder="Enter product name..."
+                    placeholder="Enter product name..."
+                    required
                   />
                 </div>
 
@@ -330,7 +335,7 @@ const handleAddVariant = () => {
                   {/* Left Column */}
                   <div className="col-span-2 space-y-6">
                     {/* Pricing */}
-                    <div className="space-y-2 border border-spacing-3 pb-4 py-2 px-3">
+                    <div className="space-y-2 border border-spacing-3 pb-4 py-2 px-3 shadow-md rounded-lg">
                       <h3 className="text-lg font-medium">Pricing</h3>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -344,6 +349,8 @@ const handleAddVariant = () => {
                               onChange={handleInputChange}
                               className="w-full p-2 border border-gray-300 rounded"
                               step="0.01"
+                              min="0"
+                              required
                             />
                           </div>
                         </div>
@@ -358,24 +365,25 @@ const handleAddVariant = () => {
                               onChange={handleInputChange}
                               className="w-full p-2 border border-gray-300 rounded"
                               step="0.01"
+                              min="0"
                             />
                           </div>
                         </div>
                       </div>
                       {/* Charge Tax Checkbox */}
-                       <div className="mt-4 flex items-center">
-                          <input
-                            type="checkbox"
-                            id="chargeTax"
-                            name="chargeTax"
-                            checked={newProduct.chargeTax}
-                            onChange={handleInputChange}
-                             className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                          />
-                           <label htmlFor="chargeTax" className="ml-2 block text-sm text-black">
-                            Charge tax on this product
-                           </label>
-                        </div>
+                      <div className="mt-4 flex items-center">
+                        <input
+                          type="checkbox"
+                          id="chargeTax"
+                          name="chargeTax"
+                          checked={newProduct.chargeTax}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <label htmlFor="chargeTax" className="ml-2 block text-sm text-black">
+                          Charge tax on this product
+                        </label>
+                      </div>
 
                       <div className="mt-2">
                         <label className="block text-sm font-medium mb-1">Cost per item</label>
@@ -388,6 +396,7 @@ const handleAddVariant = () => {
                             onChange={handleInputChange}
                             className="w-full p-2 border border-gray-300 rounded"
                             step="0.01"
+                            min="0"
                           />
                         </div>
                         <p className="text-xs text-gray-500 mt-1">Customers won&apos;t see this</p>
@@ -395,283 +404,283 @@ const handleAddVariant = () => {
                     </div>
 
                     {/* Inventory Section */}
-            <div className="space-y-4 border border-spacing-3 py-3 px-3 pb-6">
-              <h3 className="text-lg font-medium">Inventory</h3>
-  
-  {/* Track Quantity */}
-  <div className="flex items-center">
-    <input
-      type="checkbox"
-      id="trackQuantity"
-      name="trackQuantity"
-      checked={newProduct.trackQuantity}
-      onChange={handleInputChange}
-      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-    />
-    <label htmlFor="trackQuantity" className="ml-2 block text-sm text-gray-700">
-      Track quantity
-    </label>
-  </div>
+                    <div className="space-y-4 border border-spacing-3 py-3 px-3 pb-6 shadow-md rounded-lg">
+                      <h3 className="text-lg font-medium">Inventory</h3>
+                      
+                      {/* Track Quantity */}
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="trackQuantity"
+                          name="trackQuantity"
+                          checked={newProduct.trackQuantity}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <label htmlFor="trackQuantity" className="ml-2 block text-sm text-gray-700">
+                          Track quantity
+                        </label>
+                      </div>
 
-  {/* Quantity Input */}
-  {newProduct.trackQuantity && (
-  <div className="mt-2 flex items-center justify-between">
-    <div className="border-b border-gray-300 pb-1 w-1/3">
-      <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
-        Quantity
-      </label>
-    </div>
-    <div className="w-2/3 flex justify-end">
-      <input
-        type="text"
-        id="quantity"
-        name="quantity"
-        value={newProduct.quantity}
-        onChange={handleInputChange}
-        className="w-1/2 p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
-        placeholder="0"
-      />
-    </div>
-  </div>
-)}
+                      {/* Quantity Input */}
+                      {newProduct.trackQuantity && (
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="border-b border-gray-300 pb-1 w-1/3">
+                            <label htmlFor="quantity" className="block text-sm font-medium text-gray-700">
+                              Quantity
+                            </label>
+                          </div>
+                          <div className="w-2/3 flex justify-end">
+                            <input
+                              type="text"
+                              id="quantity"
+                              name="quantity"
+                              value={newProduct.quantity}
+                              onChange={handleInputChange}
+                              className="w-1/2 p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
+                              placeholder="0"
+                            />
+                          </div>
+                        </div>
+                      )}
 
-  {/* Continue Selling When Out of Stock */}
-  <div className="flex items-center mt-4">
-    <input
-      type="checkbox"
-      id="continueSelling"
-      name="continueSelling"
-      checked={newProduct.continueSelling}
-      onChange={handleInputChange}
-      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-    />
-    <label htmlFor="continueSelling" className="ml-2 block text-sm text-gray-700">
-      Continue selling when out of stock
-    </label>
-  </div>
+                      {/* Continue Selling When Out of Stock */}
+                      <div className="flex items-center mt-4">
+                        <input
+                          type="checkbox"
+                          id="continueSelling"
+                          name="continueSelling"
+                          checked={newProduct.continueSelling}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <label htmlFor="continueSelling" className="ml-2 block text-sm text-gray-700">
+                          Continue selling when out of stock
+                        </label>
+                      </div>
 
-  {/* SKU/Barcode Section */}
-  <div className="mt-6">
-    <div className="flex items-center">
-      <input
-        type="checkbox"
-        id="hasSKU"
-        name="hasSKU"
-        checked={newProduct.hasSKU}
-        onChange={handleInputChange}
-        className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-      />
-      <label htmlFor="hasSKU" className="ml-2 block text-sm text-gray-700">
-        This product has a SKU or barcode
-      </label>
-    </div>
+                      {/* SKU/Barcode Section */}
+                      <div className="mt-6">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            id="hasSKU"
+                            name="hasSKU"
+                            checked={newProduct.hasSKU}
+                            onChange={handleInputChange}
+                            className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                          />
+                          <label htmlFor="hasSKU" className="ml-2 block text-sm text-gray-700">
+                            This product has a SKU or barcode
+                          </label>
+                        </div>
 
-    {newProduct.hasSKU && (
-  <div className="mt-4">
-    <div className="grid grid-cols-2 gap-4">
-      {/* SKU Input - Left Side */}
-      <div>
-        <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
-          SKU (Stock Keeping Unit)
-        </label>
-        <input
-          type="text"
-          id="sku"
-          name="sku"
-          value={newProduct.sku}
-          onChange={handleInputChange}
-          className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
-        />
-      </div>
+                        {newProduct.hasSKU && (
+                          <div className="mt-4">
+                            <div className="grid grid-cols-2 gap-4">
+                              {/* SKU Input */}
+                              <div>
+                                <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
+                                  SKU (Stock Keeping Unit)
+                                </label>
+                                <input
+                                  type="text"
+                                  id="sku"
+                                  name="sku"
+                                  value={newProduct.sku}
+                                  onChange={handleInputChange}
+                                  className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
+                                />
+                              </div>
 
-      {/* Barcode Input - Right Side */}
-      <div>
-        <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 mb-1">
-          Barcode (ISBN, UPC, GTIN, etc.)
-        </label>
-        <input
-          type="text"
-          id="barcode"
-          name="barcode"
-          value={newProduct.barcode}
-          onChange={handleInputChange}
-          className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
-        />
-      </div>
-    </div>
-  </div>
-)}
-  </div>
-</div>
+                              {/* Barcode Input */}
+                              <div>
+                                <label htmlFor="barcode" className="block text-sm font-medium text-gray-700 mb-1">
+                                  Barcode (ISBN, UPC, GTIN, etc.)
+                                </label>
+                                <input
+                                  type="text"
+                                  id="barcode"
+                                  name="barcode"
+                                  value={newProduct.barcode}
+                                  onChange={handleInputChange}
+                                  className="w-full p-2 border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 text-sm"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
 
                     {/* Shipping */}
-                    <div className="space-y-2 border border-spacing-2 py-3 px-3 pb-4">
+                    <div className="space-y-2 border border-spacing-2 py-3 px-3 pb-4 shadow-md rounded-lg">
                       <h3 className="text-lg font-medium">Shipping</h3>
 
                       {/* Physical Product Checkbox */}
-  <div className="flex items-center">
-    <input
-      type="checkbox"
-      id="physicalProduct"
-      name="physicalProduct"
-      checked={newProduct.physicalProduct}
-      onChange={handleInputChange}
-      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-    />
-    <label htmlFor="physicalProduct" className="ml-2 block text-sm text-gray-700">
-      This is a physical product
-    </label>
-  </div>
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="physicalProduct"
+                          name="physicalProduct"
+                          checked={newProduct.physicalProduct}
+                          onChange={handleInputChange}
+                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                        />
+                        <label htmlFor="physicalProduct" className="ml-2 block text-sm text-gray-700">
+                          This is a physical product
+                        </label>
+                      </div>
 
-  {newProduct.physicalProduct && (
-    <div className="space-y-4 mt-4">
-      {/* Weight Input - Separate Boxes */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">weight</label>
-        <div className="flex space-x-2">
-          <input
-            type="number"
-            name="weight"
-            value={newProduct.weight}
-            onChange={handleInputChange}
-            className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
-            step="0.1"
-            min="0"
-            placeholder="0.0"
-          />
-          {/* Unit Dropdown */}
-    <select
-      name="weightUnit"
-      value={newProduct.weightUnit}
-      onChange={handleInputChange}
-      className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 appearance-none bg-gray-50"
-    >
-      <option value="kg">kg</option>
-      <option value="g">gm</option>
-      <option value="lb">lb</option>
-      <option value="oz">oz</option>
-    </select>
-        </div>
-      </div>
+                      {newProduct.physicalProduct && (
+                        <div className="space-y-4 mt-4">
+                          {/* Weight Input */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
+                            <div className="flex space-x-2">
+                              <input
+                                type="number"
+                                name="weight"
+                                value={newProduct.weight}
+                                onChange={handleInputChange}
+                                className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+                                step="0.1"
+                                min="0"
+                                placeholder="0.0"
+                              />
+                              {/* Unit Dropdown */}
+                              <select
+                                name="weightUnit"
+                                value={newProduct.weightUnit}
+                                onChange={handleInputChange}
+                                className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 appearance-none bg-gray-50"
+                              >
+                                <option value="kg">kg</option>
+                                <option value="g">gm</option>
+                                <option value="lb">lb</option>
+                                <option value="oz">oz</option>
+                              </select>
+                            </div>
+                          </div>
 
-      {/* Country of Origin */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Country/Region of origin</label>
-        <select
-          name="countryOfOrigin"
-          value={newProduct.countryOfOrigin}
-          onChange={handleInputChange}
-          className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
-        >
-          <option value="">Select</option>
-          <option value="US">United States</option>
-          <option value="AU">Australia</option>
-          <option value="CN">China</option>
-          <option value="NP">Nepal</option>
-        </select>
-      </div>
-    </div>
-  )}
-</div>
+                          {/* Country of Origin */}
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Country/Region of origin</label>
+                            <select
+                              name="countryOfOrigin"
+                              value={newProduct.countryOfOrigin}
+                              onChange={handleInputChange}
+                              className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+                            >
+                              <option value="">Select</option>
+                              <option value="US">United States</option>
+                              <option value="AU">Australia</option>
+                              <option value="CN">China</option>
+                              <option value="NP">Nepal</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
 
-   {/* Variants  */}
-<div className="space-y-2">
-  <h3 className="text-lg font-medium">Variants</h3>
-  <button 
-    type="button"
-    onClick={addVariant}
-    className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-100"
-  >
-    <FiPlus className="mr-1" /> Add options like size or color
-  </button>
-  
-  {showVariantBox && (
-    <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium mb-1">Option name</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="e.g. Size, Color"
-            className="w-full p-2 border border-gray-300 rounded text-sm"
-            value={variantOptions.name}
-            onChange={handleVariantInputChange}
-          />
-        </div>
-        <div className="col-span-2">
-          <label className="block text-sm font-medium mb-1">Option values</label>
-          <input
-            type="text"
-            name="values"
-            placeholder="Enter comma-separated values"
-            className="w-full p-2 border border-gray-300 rounded text-sm"
-            value={variantOptions.values}
-            onChange={handleVariantInputChange}
-          />
-          <p className="text-xs text-gray-500 mt-1">Separate options with a comma</p>
-        </div>
-      </div>
-      <div className="flex justify-between mt-4">
-        <button 
-          type="button"
-          className="px-3 py-1 bg-white text-red-500 rounded text-sm hover:bg-gray-300"
-          onClick={() => {
-            setShowVariantBox(false);
-            setVariantOptions({
-              name: '',
-              values: ''
-            });
-          }}
-        >
-          Delete
-        </button>
-        <button 
-          type="button"
-          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-          onClick={handleAddVariant}
-          disabled={!variantOptions.name || !variantOptions.values}
-        >
-          Done
-        </button>
-      </div>
-    </div>
-  )}
+                    {/* Variants */}
+                    <div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
+                      <h3 className="text-lg font-medium">Variants</h3>
+                      <button 
+                        type="button"
+                        onClick={addVariant}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
+                      >
+                        <FiPlus className="mr-1" /> Add options like size or color
+                      </button>
+                      
+                      {showVariantBox && (
+                        <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium mb-1">Option name</label>
+                              <input
+                                type="text"
+                                name="name"
+                                placeholder="e.g. Size, Color"
+                                className="w-full p-2 border border-gray-300 rounded text-sm"
+                                value={variantOptions.name}
+                                onChange={handleVariantInputChange}
+                              />
+                            </div>
+                            <div className="col-span-2">
+                              <label className="block text-sm font-medium mb-1">Option values</label>
+                              <input
+                                type="text"
+                                name="values"
+                                placeholder="Enter comma-separated values"
+                                className="w-full p-2 border border-gray-300 rounded text-sm"
+                                value={variantOptions.values}
+                                onChange={handleVariantInputChange}
+                              />
+                              <p className="text-xs text-gray-500 mt-1">Separate options with a comma</p>
+                            </div>
+                          </div>
+                          <div className="flex justify-between mt-4">
+                            <button 
+                              type="button"
+                              className="px-3 py-1 bg-white text-red-500 rounded text-sm hover:bg-gray-300"
+                              onClick={() => {
+                                setShowVariantBox(false);
+                                setVariantOptions({
+                                  name: '',
+                                  values: ''
+                                });
+                              }}
+                            >
+                              Delete
+                            </button>
+                            <button 
+                              type="button"
+                              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                              onClick={handleAddVariant}
+                              disabled={!variantOptions.name || !variantOptions.values}
+                            >
+                              Done
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
-  {/* Display added variants */}
-  {newProduct.variants.length > 0 && (
-    <div className="mt-4 border border-gray-200 rounded p-4">
-      <h4 className="text-md font-medium mb-2">Current Variants</h4>
-      <div className="space-y-2">
-        {newProduct.variants.map((variant, index) => (
-          <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-            <div>
-              <span className="font-medium">{variant.name}: </span>
-              <span>{variant.values.join(', ')}</span>
-            </div>
-            <button 
-              onClick={() => {
-                setNewProduct(prev => ({
-                  ...prev,
-                  variants: prev.variants.filter((_, i) => i !== index)
-                }));
-              }}
-              className="text-red-500 hover:text-red-700"
-            >
-              <FiX />
-            </button>
-          </div>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
+                      {/* Display added variants */}
+                      {newProduct.variants.length > 0 && (
+                        <div className="mt-4 border border-gray-200 rounded p-4">
+                          <h4 className="text-md font-medium mb-2">Current Variants</h4>
+                          <div className="space-y-2">
+                            {newProduct.variants.map((variant, index) => (
+                              <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                <div>
+                                  <span className="font-medium">{variant.name}: </span>
+                                  <span>{variant.values.join(', ')}</span>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    setNewProduct(prev => ({
+                                      ...prev,
+                                      variants: prev.variants.filter((_, i) => i !== index)
+                                    }));
+                                  }}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  <FiX />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Right Column */}
                   <div className="space-y-6">
                     {/* Status */}
-                    <div className="space-y-2">
+                    <div className="space-y-2 border border-spacing-2 px-3 py-3 shadow-md rounded-lg">
                       <h3 className="text-lg font-medium">Status</h3>
                       <select
                         name="status"
@@ -686,7 +695,7 @@ const handleAddVariant = () => {
                     </div>                    
 
                     {/* Product Organization */}
-                    <div className="space-y- border border-spacing-3 px-2 py-2">
+                    <div className="space-y- border border-spacing-3 px-2 py-2 shadow-md rounded-lg">
                       <h3 className="text-lg font-medium">Product organization</h3>
                       <div className="space-y-4">
                         <div className="text-left">
@@ -694,7 +703,10 @@ const handleAddVariant = () => {
                           <input
                             type="text"
                             name="type"
+                            value={newProduct.type}
+                            onChange={handleInputChange}
                             className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="e.g. Clothing"
                           />
                         </div>
                         <div className="text-left">
@@ -705,6 +717,18 @@ const handleAddVariant = () => {
                             value={newProduct.vendor}
                             onChange={handleInputChange}
                             className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="e.g. Nike"
+                          />
+                        </div>
+                        <div className="text-left">
+                          <label className="block text-sm font-medium mb-1">Category</label>
+                          <input
+                            type="text"
+                            name="category"
+                            value={newProduct.category}
+                            onChange={handleInputChange}
+                            className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="e.g. Apparel"
                           />
                         </div>
                         <div className="text-left">
@@ -715,6 +739,7 @@ const handleAddVariant = () => {
                             value={newProduct.collections}
                             onChange={handleInputChange}
                             className="w-full p-2 border border-gray-300 rounded"
+                            placeholder="e.g. Summer Collection"
                           />
                         </div>
                         <div className="text-left">
@@ -737,7 +762,7 @@ const handleAddVariant = () => {
                 <div className="flex justify-end space-x-3 mt-6 border-t pt-4">
                   <button
                     type="button"
-                    onClick={handleCloseModal}  // Changed to use handleCloseModal
+                    onClick={handleCloseModal}
                     className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-200"
                   >
                     Cancel
@@ -755,125 +780,118 @@ const handleAddVariant = () => {
         </div>
       )}
 
-
- {/* Rest of your existing UI (same as before) */}
- <div className={`${showAddProduct ? 'blur-sm' : ''}`}>
-  
-      {/* Header with actions */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Products</h1>
-        <div className="flex space-x-2">
-          <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
-            <FiDownload className="mr-2" /> Import
-          </button>
-          <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
-            <FiUpload className="mr-2" /> Export
-          </button>
-          <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
-            <FiMoreHorizontal className="mr-2" /> More actions
-          </button>
-          <button className="px-4 py-2 bg-green-600 text-white rounded-md text-sm flex items-center hover:bg-green-700"
-           onClick={() => setShowAddProduct(true)}
-          >
-            <FiPlus className="mr-2" /> Add product
-          </button>
-        </div>
-      </div>
-      </div>
-      
-      {/* Metrics Row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className=" bg-white border border-gray-200 rounded-lg p-4">
-          <div className="text-xs text-black lowercase font-medium">Products by sell-through rate</div>
-          <div className="text-xl font-semibold mt-1">1.5%</div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="text-xs text-black uppercase font-medium">Products by days of inventory remaining</div>
-          <div className="text-xl font-semibold mt-1">10 days</div>
-        </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
-          <div className="text-xs text-black uppercase font-medium">ABC product analysis</div>
-          <div className="text-sm mt-1"><span className="font-semibold">$8.6K</span> A-grade</div>
-          <div className="text-sm"><span className="font-semibold">$0</span> B-grade</div>
-          <div className="text-sm"><span className="font-semibold">$2M</span> C-grade</div>
-        </div>
-      </div>
-
-      <div className="border-t border-gray-200 my-4"></div>
-
       {/* Main Content */}
-      <div className="mt-4">
-        {/* Top Navigation Tabs and Search */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex space-x-1 border-b border-gray-200 pb-1">
-            <button 
-              className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'all' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
-              onClick={() => setActiveTab('all')}
-            >
-              All
+      <div className={`${showAddProduct ? 'blur-sm' : ''}`}>
+        {/* Header with actions */}
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Products</h1>
+          <div className="flex space-x-2">
+            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+              <FiDownload className="mr-2" /> Import
+            </button>
+            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+              <FiUpload className="mr-2" /> Export
+            </button>
+            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+              <FiMoreHorizontal className="mr-2" /> More actions
             </button>
             <button 
-              className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'active' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
-              onClick={() => setActiveTab('active')}
+              className="px-4 py-2 bg-green-600 text-white rounded-md text-sm flex items-center hover:bg-green-700"
+              onClick={() => setShowAddProduct(true)}
             >
-              Active
-            </button>
-            <button 
-              className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'draft' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
-              onClick={() => setActiveTab('draft')}
-            >
-              Draft
-            </button>
-            <button 
-              className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'archived' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
-              onClick={() => setActiveTab('archived')}
-            >
-              Archived
-            </button>
-            <button 
-              className="px-3 py-2 text-sm rounded-t-md text-blue-600 hover:bg-blue-50"
-            >
-              <FiPlus className="inline mr-1" /> Add
+              <FiPlus className="mr-2" /> Add product
             </button>
           </div>
+        </div>
+        
+        {/* Metrics Row */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
+            <div className="text-xs text-black lowercase font-medium">Products by sell-through rate</div>
+            <div className="text-xl font-semibold mt-1">1.5%</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
+            <div className="text-xs text-black uppercase font-medium">Products by days of inventory remaining</div>
+            <div className="text-xl font-semibold mt-1">10 days</div>
+          </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
+            <div className="text-xs text-black uppercase font-medium">ABC product analysis</div>
+            <div className="text-sm mt-1"><span className="font-semibold">$8.6K</span> A-grade</div>
+            <div className="text-sm"><span className="font-semibold">$0</span> B-grade</div>
+            <div className="text-sm"><span className="font-semibold">$2M</span> C-grade</div>
+          </div>
+        </div>
 
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products..."
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+        <div className="border-t border-gray-200 my-4"></div>
+
+        {/* Product Table Section */}
+        <div className="mt-4">
+          {/* Top Navigation Tabs and Search */}
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex space-x-1 border-b border-gray-200 pb-1">
+              <button 
+                className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'all' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('all')}
+              >
+                All
+              </button>
+              <button 
+                className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'active' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('active')}
+              >
+                Active
+              </button>
+              <button 
+                className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'draft' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('draft')}
+              >
+                Draft
+              </button>
+              <button 
+                className={`px-3 py-2 text-sm rounded-t-md ${activeTab === 'archived' ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+                onClick={() => setActiveTab('archived')}
+              >
+                Archived
+              </button>
             </div>
-            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
-              <FiFilter className="mr-2" /> Filters
-            </button>
-            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
-              Sort <FiChevronDown className="ml-2" />
-            </button>
-          </div>
-        </div>
 
-        {/* Table Header */}
-        <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2 py-3 bg-gray-200">
-          <div className="col-span-1 flex items-center">
-            <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
+                <FiFilter className="mr-2" /> Filters
+              </button>
+              <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
+                Sort <FiChevronDown className="ml-2" />
+              </button>
+            </div>
           </div>
-          
-          <div className="col-span-4">Product</div>
-          <div className="col-span-1">Status</div>
-          <div className="col-span-1">Inventory</div>
-          <div className="col-span-1">Sales channels</div>
-          <div className="col-span-1">Markets</div>
-          <div className="col-span-2">Category</div>
-          <div className="col-span-1">Type</div>
-        </div>
 
-        {/* Table Rows */}
-        <div className="space-y-2">
+          {/* Table Header */}
+          <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2 py-3 bg-gray-200">
+            <div className="col-span-1 flex items-center">
+              <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+            </div>
+            
+            <div className="col-span-4">Product</div>
+            <div className="col-span-1">Status</div>
+            <div className="col-span-1">Inventory</div>
+            <div className="col-span-1">Sales channels</div>
+            <div className="col-span-1">Markets</div>
+            <div className="col-span-2">Category</div>
+            <div className="col-span-1">Type</div>
+          </div>
+
+          {/* Table Rows */}
+          <div className="space-y-2">
             {filteredProducts.map((product) => (
               <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-50 items-center">
                 <div className="col-span-1 flex items-center">
@@ -897,34 +915,35 @@ const handleAddVariant = () => {
                   </div>
                   <span className="truncate">{product.name}</span>
                 </div>
-              <div className="col-span-1">
-                {product.status && (
-                  <span className={`px-2 py-1 rounded-full text-xs ${
-                    product.status === 'active' ? 'bg-green-100 text-green-800' : 
-                    product.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {product.status}
-                  </span>
-                )}
+                <div className="col-span-1">
+                  {product.status && (
+                    <span className={`px-2 py-1 rounded-full text-xs ${
+                      product.status === 'active' ? 'bg-green-100 text-green-800' : 
+                      product.status === 'draft' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {product.status}
+                    </span>
+                  )}
+                </div>
+                <div className="col-span-1">
+                  {product.inventory !== '' ? `${product.inventory} in stock` : ''}
+                </div>
+                <div className="col-span-1">
+                  {product.salesChannels || ''}
+                </div>
+                <div className="col-span-1">
+                  {product.markets || ''}
+                </div>
+                <div className="col-span-2">
+                  {product.category || ''}
+                </div>
+                <div className="col-span-1">
+                  {product.type || ''}
+                </div>
               </div>
-              <div className="col-span-1">
-                {product.inventory !== '' ? `${product.inventory} in stock` : ''}
-              </div>
-              <div className="col-span-1">
-                {product.salesChannels || ''}
-              </div>
-              <div className="col-span-1">
-                {product.markets || ''}
-              </div>
-              <div className="col-span-2">
-                {product.category || ''}
-              </div>
-              <div className="col-span-1">
-                {product.type || ''}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
     </div>
