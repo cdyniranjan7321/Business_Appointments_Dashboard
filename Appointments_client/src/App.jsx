@@ -9,6 +9,8 @@ import './App.css';
 import Orders from './pages/Orders';
 import ProductPage from './pages/ProductPage';
 import CustomerPage from './pages/CustomerPage'
+import DiscountPage from './pages/DiscountPage';
+
 
 
 function App() {
@@ -43,6 +45,7 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/products" element={<ProductPage />} />
         <Route path="/customer" element={<CustomerPage />} />
+        <Route path="/discount" element={<DiscountPage />} />
        
       </Routes>
     </Router>

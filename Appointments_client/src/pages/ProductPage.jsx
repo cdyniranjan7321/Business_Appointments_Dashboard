@@ -9,6 +9,7 @@ const ProductPages = () => {
   const [imageLoading, setImageLoading] = useState(false);
   const [uploadedImage, setUploadedImage] = useState(null);
   const fileInputRef = useRef(null);
+  const [showVariantBox, setShowVariantBox] = useState(false);
  
   
   // Sample product data
@@ -78,6 +79,7 @@ const ProductPages = () => {
     barcode: '',
     physicalProduct: true,
     weight: 0.0,
+    weightUnit: 'kg', // default to kilograms
     countryOfOrigin: '',
     hsCode: '',
     category: '',
@@ -87,7 +89,7 @@ const ProductPages = () => {
     seoTitle: '',
     seoDescription: '',
     template: 'Default product',
-    variants: []
+    variants: [],
   });
 
   
@@ -185,13 +187,51 @@ const ProductPages = () => {
   };
 
 
+  const [variantOptions, setVariantOptions] = useState({
+    name: '',
+    values: ''
+  });
+
+
   const addVariant = () => {
-    setNewProduct(prev => ({
-      ...prev,
-      variants: [...prev.variants, { name: '', values: '' }]
-    }));
+    setShowVariantBox(true);
+    // Reset variant options when opening
+    setVariantOptions({
+      name: '',
+      values: ''
+    });
   };
 
+  
+// Add these new functions
+const handleVariantInputChange = (e) => {
+  const { name, value } = e.target;
+  setVariantOptions(prev => ({
+    ...prev,
+    [name]: value
+  }));
+};
+
+const handleAddVariant = () => {
+  if (variantOptions.name && variantOptions.values) {
+    const newVariant = {
+      name: variantOptions.name,
+      values: variantOptions.values.split(',').map(v => v.trim())
+    };
+    
+    setNewProduct(prev => ({
+      ...prev,
+      variants: [...prev.variants, newVariant]
+    }));
+    
+    // Close the box and reset
+    setShowVariantBox(false);
+    setVariantOptions({
+      name: '',
+      values: ''
+    });
+  }
+};
 
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6"> {/* p-6 bg-white rounded-lg shadow-sm */}
@@ -200,9 +240,9 @@ const ProductPages = () => {
       {showAddProduct && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+            <div className="p-7">
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold">Add product</h2>
+                <h2 className="text-xl font-bold ">Add product</h2>
                 <button 
                   onClick={handleCloseModal}  // Changed to use handleCloseModal
                   className="text-gray-500 hover:text-red-600"
@@ -213,7 +253,7 @@ const ProductPages = () => {
 
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Title */}
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <h3 className="text-lg font-medium">Title</h3>
                   <input
                     type="text"
@@ -226,7 +266,7 @@ const ProductPages = () => {
                 </div>
 
                 {/* Description */}
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <h3 className="text-lg font-medium">Description</h3>
                   <textarea
                     name="description"
@@ -238,7 +278,7 @@ const ProductPages = () => {
                 </div>
 
                 {/* Media */}
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
                   <h3 className="text-lg font-medium">Media</h3>
                   <div className="flex space-x-4 border border-spacing-2 py-3 px-3 bg-gray-100">
                     <div>
@@ -467,74 +507,165 @@ const ProductPages = () => {
                     {/* Shipping */}
                     <div className="space-y-2 border border-spacing-2 py-3 px-3 pb-4">
                       <h3 className="text-lg font-medium">Shipping</h3>
-                      <div className="flex items-center mb-2">
-                        <input
-                          type="checkbox"
-                          name="physicalProduct"
-                          checked={newProduct.physicalProduct}
-                          onChange={handleInputChange}
-                          className="mr-2"
-                        />
-                        <label>This is a physical product</label>
-                      </div>
-                      {newProduct.physicalProduct && (
-                        <>
-                          <div className="mb-2">
-                            <label className="block text-sm font-medium mb-1">Weight</label>
-                            <div className="flex items-center">
-                              <input
-                                type="number"
-                                name="weight"
-                                value={newProduct.weight}
-                                onChange={handleInputChange}
-                                className="w-full p-2 border border-gray-300 rounded"
-                                step="0.1"
-                              />
-                              <span className="ml-2">kg</span>
-                            </div>
-                          </div>
-                          <div className="mb-2">
-                            <label className="block text-sm font-medium mb-1">Country/Region of origin</label>
-                            <select
-                              name="countryOfOrigin"
-                              value={newProduct.countryOfOrigin}
-                              onChange={handleInputChange}
-                              className="w-full p-2 border border-gray-300 rounded"
-                            >
-                              <option value="">Select</option>
-                              <option value="US">United States</option>
-                              <option value="AU">Australia</option>
-                              <option value="CN">China</option>
-                              <option value="NP">Nepal</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Harmonized System (HS) code</label>
-                            <input
-                              type="text"
-                              name="hsCode"
-                              value={newProduct.hsCode}
-                              onChange={handleInputChange}
-                              className="w-full p-2 border border-gray-300 rounded"
-                              placeholder="Search by product keyword or code"
-                            />
-                            <p className="text-xs text-gray-500 mt-1">Learn more about adding HS codes</p>
-                          </div>
-                        </>
-                      )}
-                    </div>
 
-                    {/* Variants */}
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Variants</h3>
-                      <button 
-                        type="button"
-                        onClick={addVariant}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-50"
-                      >
-                        <FiPlus className="mr-1" /> Add options like size or color
-                      </button>
-                    </div>
+                      {/* Physical Product Checkbox */}
+  <div className="flex items-center">
+    <input
+      type="checkbox"
+      id="physicalProduct"
+      name="physicalProduct"
+      checked={newProduct.physicalProduct}
+      onChange={handleInputChange}
+      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+    />
+    <label htmlFor="physicalProduct" className="ml-2 block text-sm text-gray-700">
+      This is a physical product
+    </label>
+  </div>
+
+  {newProduct.physicalProduct && (
+    <div className="space-y-4 mt-4">
+      {/* Weight Input - Separate Boxes */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">weight</label>
+        <div className="flex space-x-2">
+          <input
+            type="number"
+            name="weight"
+            value={newProduct.weight}
+            onChange={handleInputChange}
+            className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+            step="0.1"
+            min="0"
+            placeholder="0.0"
+          />
+          {/* Unit Dropdown */}
+    <select
+      name="weightUnit"
+      value={newProduct.weightUnit}
+      onChange={handleInputChange}
+      className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 appearance-none bg-gray-50"
+    >
+      <option value="kg">kg</option>
+      <option value="g">gm</option>
+      <option value="lb">lb</option>
+      <option value="oz">oz</option>
+    </select>
+        </div>
+      </div>
+
+      {/* Country of Origin */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Country/Region of origin</label>
+        <select
+          name="countryOfOrigin"
+          value={newProduct.countryOfOrigin}
+          onChange={handleInputChange}
+          className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
+        >
+          <option value="">Select</option>
+          <option value="US">United States</option>
+          <option value="AU">Australia</option>
+          <option value="CN">China</option>
+          <option value="NP">Nepal</option>
+        </select>
+      </div>
+    </div>
+  )}
+</div>
+
+   {/* Variants  */}
+<div className="space-y-2">
+  <h3 className="text-lg font-medium">Variants</h3>
+  <button 
+    type="button"
+    onClick={addVariant}
+    className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-100"
+  >
+    <FiPlus className="mr-1" /> Add options like size or color
+  </button>
+  
+  {showVariantBox && (
+    <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Option name</label>
+          <input
+            type="text"
+            name="name"
+            placeholder="e.g. Size, Color"
+            className="w-full p-2 border border-gray-300 rounded text-sm"
+            value={variantOptions.name}
+            onChange={handleVariantInputChange}
+          />
+        </div>
+        <div className="col-span-2">
+          <label className="block text-sm font-medium mb-1">Option values</label>
+          <input
+            type="text"
+            name="values"
+            placeholder="Enter comma-separated values"
+            className="w-full p-2 border border-gray-300 rounded text-sm"
+            value={variantOptions.values}
+            onChange={handleVariantInputChange}
+          />
+          <p className="text-xs text-gray-500 mt-1">Separate options with a comma</p>
+        </div>
+      </div>
+      <div className="flex justify-between mt-4">
+        <button 
+          type="button"
+          className="px-3 py-1 bg-white text-red-500 rounded text-sm hover:bg-gray-300"
+          onClick={() => {
+            setShowVariantBox(false);
+            setVariantOptions({
+              name: '',
+              values: ''
+            });
+          }}
+        >
+          Delete
+        </button>
+        <button 
+          type="button"
+          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+          onClick={handleAddVariant}
+          disabled={!variantOptions.name || !variantOptions.values}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  )}
+
+  {/* Display added variants */}
+  {newProduct.variants.length > 0 && (
+    <div className="mt-4 border border-gray-200 rounded p-4">
+      <h4 className="text-md font-medium mb-2">Current Variants</h4>
+      <div className="space-y-2">
+        {newProduct.variants.map((variant, index) => (
+          <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+            <div>
+              <span className="font-medium">{variant.name}: </span>
+              <span>{variant.values.join(', ')}</span>
+            </div>
+            <button 
+              onClick={() => {
+                setNewProduct(prev => ({
+                  ...prev,
+                  variants: prev.variants.filter((_, i) => i !== index)
+                }));
+              }}
+              className="text-red-500 hover:text-red-700"
+            >
+              <FiX />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
                   </div>
 
                   {/* Right Column */}
@@ -552,46 +683,13 @@ const ProductPages = () => {
                         <option value="draft">Draft</option>
                         <option value="archived">Archived</option>
                       </select>
-                    </div>
-
-                    {/* Publishing */}
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Publishing</h3>
-                      <div className="space-y-1">
-                        <h4 className="text-sm font-medium">Sales channels</h4>
-                        <div className="space-y-1">
-                          <div className="flex items-center">
-                            <input type="checkbox" className="mr-2" checked />
-                            <span>Online Store</span>
-                          </div>
-                          <div className="flex items-center">
-                            <input type="checkbox" className="mr-2" checked />
-                            <span>Google & YouTube</span>
-                          </div>
-                          <div className="flex items-center">
-                            <input type="checkbox" className="mr-2" checked />
-                            <span>Point of Sale, Shop, Facebook & Instagram, and 4 more</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Markets */}
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Markets</h3>
-                      <select
-                        name="markets"
-                        className="w-full p-2 border border-gray-300 rounded"
-                      >
-                        <option>Australia and International</option>
-                      </select>
-                    </div>
+                    </div>                    
 
                     {/* Product Organization */}
-                    <div className="space-y-2">
+                    <div className="space-y- border border-spacing-3 px-2 py-2">
                       <h3 className="text-lg font-medium">Product organization</h3>
                       <div className="space-y-4">
-                        <div>
+                        <div className="text-left">
                           <label className="block text-sm font-medium mb-1">Type</label>
                           <input
                             type="text"
@@ -599,7 +697,7 @@ const ProductPages = () => {
                             className="w-full p-2 border border-gray-300 rounded"
                           />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <label className="block text-sm font-medium mb-1">Vendor</label>
                           <input
                             type="text"
@@ -609,7 +707,7 @@ const ProductPages = () => {
                             className="w-full p-2 border border-gray-300 rounded"
                           />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <label className="block text-sm font-medium mb-1">Collections</label>
                           <input
                             type="text"
@@ -619,7 +717,7 @@ const ProductPages = () => {
                             className="w-full p-2 border border-gray-300 rounded"
                           />
                         </div>
-                        <div>
+                        <div className="text-left">
                           <label className="block text-sm font-medium mb-1">Tags</label>
                           <input
                             type="text"
@@ -631,28 +729,7 @@ const ProductPages = () => {
                           />
                         </div>
                       </div>
-                    </div>
-
-                    {/* Theme template */}
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Theme template</h3>
-                      <select
-                        name="template"
-                        value={newProduct.template}
-                        onChange={handleInputChange}
-                        className="w-full p-2 border border-gray-300 rounded"
-                      >
-                        <option>Default product</option>
-                      </select>
-                    </div>
-
-                    {/* Search engine listing */}
-                    <div className="space-y-2">
-                      <h3 className="text-lg font-medium">Search engine listing</h3>
-                      <p className="text-sm text-gray-600">
-                        Add a title and description to see how this product might appear in a search engine listing
-                      </p>
-                    </div>
+                    </div>                    
                   </div>
                 </div>
 
