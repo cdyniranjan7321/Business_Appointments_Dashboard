@@ -233,8 +233,6 @@ const handleAddVariant = () => {
   }
 };
 
-
-
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6"> {/* p-6 bg-white rounded-lg shadow-sm */}
    
