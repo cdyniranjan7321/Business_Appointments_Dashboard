@@ -23,7 +23,7 @@ function App() {
             <div className="flex flex-col items-center justify-center h-screen">
              {/* Card Container with Hover Animation */}
              <div className="bg-green-200 p-8 rounded-lg shadow-lg text-center transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
-                <h1 className="text-4xl font-bold text-gray-800">Welcome to the Business Home Page</h1>
+                <h1 className="text-4xl font-bold text-gray-800">Welcome to the Business Appointments<br/> Home Page</h1>
                 <p className="text-lg text-gray-600 mt-4">
                   Create an account first to use your own Dashboard.
                 </p>
