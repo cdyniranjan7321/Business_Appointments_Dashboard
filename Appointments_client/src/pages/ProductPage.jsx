@@ -1,6 +1,8 @@
 
-import { useRef, useState } from 'react';
-import { FiMoreHorizontal, FiDownload, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiImage } from 'react-icons/fi';
+import { useEffect, useRef, useState } from 'react';
+import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiImage, FiPrinter, FiCopy, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const ProductPages = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -10,6 +12,182 @@ const ProductPages = () => {
   const [uploadedImage, setUploadedImage] = useState(null);
   const fileInputRef = useRef(null);
   const [showVariantBox, setShowVariantBox] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [showMoreActions, setShowMoreActions] = useState(false);
+  const moreActionsRef = useRef(null);
+
+
+  // Close more actions dropdown when clicking outside
+  const handleClickOutside = (event) => {
+    if (moreActionsRef.current && !moreActionsRef.current.contains(event.target)) {
+      setShowMoreActions(false);
+    }
+  };
+
+  // Add event listener when component mounts
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Handle product selection
+  const handleProductSelect = (productId, isSelected) => {
+    if (isSelected) {
+      setSelectedProducts([...selectedProducts, productId]);
+    } else {
+      setSelectedProducts(selectedProducts.filter(id => id !== productId));
+    }
+  };
+
+  // Handle select all products
+  const handleSelectAll = (isSelected) => {
+    if (isSelected) {
+      setSelectedProducts(filteredProducts.map(product => product.id));
+    } else {
+      setSelectedProducts([]);
+    }
+  };
+
+  // Handle update action
+  const handleUpdate = () => {
+    if (selectedProducts.length === 1) {
+      const productToUpdate = products.find(p => p.id === selectedProducts[0]);
+      setNewProduct({
+        ...productToUpdate,
+        title: productToUpdate.name,
+        quantity: productToUpdate.inventory,
+        variants: productToUpdate.variants || []
+      });
+      if (productToUpdate.photo) {
+        setUploadedImage(productToUpdate.photo);
+      }
+      setShowAddProduct(true);
+      setShowMoreActions(false);
+    } else {
+      alert('Please select exactly one product to update');
+    }
+  };
+
+  // Handle delete action
+  const handleDelete = () => {
+    if (selectedProducts.length > 0) {
+      if (window.confirm(`Are you sure you want to delete ${selectedProducts.length} selected product(s)?`)) {
+        setProducts(products.filter(product => !selectedProducts.includes(product.id)));
+        setSelectedProducts([]);
+        setShowMoreActions(false);
+      }
+    } else {
+      alert('Please select at least one product to delete');
+    }
+  };
+
+  // Handle duplicate action
+  const handleDuplicate = () => {
+    if (selectedProducts.length > 0) {
+      const duplicatedProducts = products
+        .filter(product => selectedProducts.includes(product.id))
+        .map(product => ({
+          ...product,
+          id: Math.max(...products.map(p => p.id)) + 1,
+          name: `${product.name} (Copy)`,
+          inventory: 0
+        }));
+      
+      setProducts([...products, ...duplicatedProducts]);
+      setSelectedProducts([]);
+      setShowMoreActions(false);
+    } else {
+      alert('Please select at least one product to duplicate');
+    }
+  };
+
+
+
+  const handlePrint = () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.text('Products List', 14, 15);
+      
+      // Prepare data for the table
+      const tableData = filteredProducts.map(product => [
+        product.name || 'N/A',
+        product.status || 'N/A',
+        product.inventory !== '' ? product.inventory : 'N/A',
+        product.salesChannels || 'N/A',
+        product.markets || 'N/A',
+        product.category || 'N/A',
+        product.type || 'N/A'
+      ]);
+      
+      // Add the table
+      autoTable(doc, {
+        head: [['Product', 'Status', 'Inventory', 'Sales Channels', 'Markets', 'Category', 'Type']],
+        body: tableData,
+        startY: 20,
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [34, 139, 34],
+          textColor: 255
+        }
+      });
+      
+      // Open print dialog
+      window.open(doc.output('bloburl'), '_blank');
+    } catch (error) {
+      console.error('Error generating print document:', error);
+      alert('Failed to generate print document. Please try again.');
+    }
+  };
+  
+  const handleExport = () => {
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.text('Products Export', 14, 15);
+      
+      // Prepare data for the table
+      const tableData = filteredProducts.map(product => [
+        product.name || 'N/A',
+        product.status || 'N/A',
+        product.inventory !== '' ? product.inventory : 'N/A',
+        product.salesChannels || 'N/A',
+        product.markets || 'N/A',
+        product.category || 'N/A',
+        product.type || 'N/A'
+      ]);
+      
+      // Add the table
+      autoTable(doc, {
+        head: [['Product', 'Status', 'Inventory', 'Sales Channels', 'Markets', 'Category', 'Type']],
+        body: tableData,
+        startY: 20,
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          valign: 'middle'
+        },
+        headStyles: {
+          fillColor: [34, 139, 34],
+          textColor: 255
+        }
+      });
+      
+      // Save the PDF
+      doc.save('products_export.pdf');
+    } catch (error) {
+      console.error('Error generating export document:', error);
+      alert('Failed to generate export document. Please try again.');
+    }
+  };
 
   // Sample initial product data
   const [products, setProducts] = useState([
@@ -786,15 +964,52 @@ const ProductPages = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Products</h1>
           <div className="flex space-x-2">
-            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
-              <FiDownload className="mr-2" /> Import
+            <button
+               onClick={handlePrint}
+            className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+              <FiPrinter className="mr-2" /> Print
             </button>
-            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+            <button 
+               onClick={handleExport}
+            className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
               <FiUpload className="mr-2" /> Export
             </button>
-            <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
-              <FiMoreHorizontal className="mr-2" /> More actions
-            </button>
+            <div className="relative" ref={moreActionsRef}>
+              <button 
+                className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white"
+                onClick={() => setShowMoreActions(!showMoreActions)}
+                disabled={selectedProducts.length === 0}
+              >
+                <FiMoreHorizontal className="mr-2" /> More actions
+              </button>
+              
+              {showMoreActions && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+                  <div className="py-1">
+                    <button
+                      onClick={handleUpdate}
+                      disabled={selectedProducts.length !== 1}
+                      className={`flex items-center px-4 py-2 text-sm w-full text-left ${selectedProducts.length === 1 ? 'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed'}`}
+                    >
+                      <FiEdit2 className="mr-2" /> Update
+                    </button>
+                    <button
+                      onClick={handleDuplicate}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <FiCopy className="mr-2" /> Duplicate
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                    >
+                      <FiTrash2 className="mr-2" /> Delete
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <button 
               className="px-4 py-2 bg-green-600 text-white rounded-md text-sm flex items-center hover:bg-green-700"
               onClick={() => setShowAddProduct(true)}
@@ -878,7 +1093,12 @@ const ProductPages = () => {
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2 py-3 bg-gray-200">
             <div className="col-span-1 flex items-center">
-              <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+              <input 
+                  type="checkbox" 
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+              onChange={(e) => handleSelectAll(e.target.checked)}
+                  />
             </div>
             
             <div className="col-span-4">Product</div>
@@ -895,7 +1115,12 @@ const ProductPages = () => {
             {filteredProducts.map((product) => (
               <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-50 items-center">
                 <div className="col-span-1 flex items-center">
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                  <input 
+                       type="checkbox" 
+                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                       checked={selectedProducts.includes(product.id)}
+                  onChange={(e) => handleProductSelect(product.id, e.target.checked)}
+                       />
                 </div>
                 <div className="col-span-4 flex items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-md mr-3 overflow-hidden flex-shrink-0 flex items-center justify-center">
