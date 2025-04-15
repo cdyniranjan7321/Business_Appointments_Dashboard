@@ -1208,7 +1208,6 @@ const getSortedProducts = (items) => {
     <div className="col-span-1">Type</div>
   </div>
 
-
           {/* Table Rows */}
           <div className="space-y-2">
             {filteredProducts.map((product) => (
@@ -1273,5 +1272,4 @@ const getSortedProducts = (items) => {
     </div>
   );
 };
-
 export default ProductPages;
