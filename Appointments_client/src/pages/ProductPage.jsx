@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiFilter, FiChevronDown, FiX, FiImage, FiPrinter, FiCopy, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiChevronDown, FiX, FiImage, FiPrinter, FiCopy, FiEdit2, FiTrash2, FiChevronUp } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -15,12 +15,22 @@ const ProductPages = () => {
   const [selectedProducts, setSelectedProducts] = useState([]);
   const [showMoreActions, setShowMoreActions] = useState(false);
   const moreActionsRef = useRef(null);
+  const [showSortOptions, setShowSortOptions] = useState(false);
+  const [sortConfig, setSortConfig] = useState({
+
+    key: 'name',
+    direction: 'asc'
+  });
+  const sortRef = useRef(null);
 
 
   // Close more actions dropdown when clicking outside
   const handleClickOutside = (event) => {
     if (moreActionsRef.current && !moreActionsRef.current.contains(event.target)) {
       setShowMoreActions(false);
+    }
+    if (sortRef.current && !sortRef.current.contains(event.target)) {
+      setShowSortOptions(false);
     }
   };
 
@@ -31,6 +41,29 @@ const ProductPages = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Add these sorting functions
+const requestSort = (key) => {
+  let direction = 'asc';
+  if (sortConfig.key === key && sortConfig.direction === 'asc') {
+    direction = 'desc';
+  }
+  setSortConfig({ key, direction });
+};
+
+const getSortedProducts = (items) => {
+  if (!sortConfig.key) return items;
+  
+  return [...items].sort((a, b) => {
+    if (a[sortConfig.key] < b[sortConfig.key]) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+    if (a[sortConfig.key] > b[sortConfig.key]) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
+    return 0;
+  });
+};
 
   // Handle product selection
   const handleProductSelect = (productId, isSelected) => {
@@ -361,16 +394,18 @@ const ProductPages = () => {
   };
 
   // Filter products based on active tab and search query
-  const filteredProducts = products.filter(product => {
+  const filteredProducts = getSortedProducts(
+  products.filter(product => {
     const matchesTab = activeTab === 'all' || 
-                      (activeTab === 'active' && product.status === 'active') ||
-                      (activeTab === 'draft' && product.status === 'draft') ||
-                      (activeTab === 'archived' && product.status === 'archived');
+                     (activeTab === 'active' && product.status === 'active') ||
+                     (activeTab === 'draft' && product.status === 'draft') ||
+                     (activeTab === 'archived' && product.status === 'archived');
     
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
     
     return matchesTab && matchesSearch;
-  });
+  })
+);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -415,6 +450,7 @@ const ProductPages = () => {
       });
     }
   };
+  
 
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
@@ -1081,14 +1117,52 @@ const ProductPages = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
-                <FiFilter className="mr-2" /> Filters
+
+              {/* Sort Dropdown */}
+      <div className="relative" ref={sortRef}>
+        <button 
+          className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50"
+          onClick={() => setShowSortOptions(!showSortOptions)}
+        >
+          Sort <FiChevronDown className="ml-2" />
+        </button>
+        
+        {showSortOptions && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200 py-1">
+            <div className="py-1">
+              <button
+                onClick={() => {
+                  requestSort('name');
+                  setShowSortOptions(false);
+                }}
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+              >
+                Name {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
-              <button className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-50">
-                Sort <FiChevronDown className="ml-2" />
+              <button
+                onClick={() => {
+                  requestSort('status');
+                  setShowSortOptions(false);
+                }}
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+              >
+                Status {sortConfig.key === 'status' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
+              </button>
+              <button
+                onClick={() => {
+                  requestSort('inventory');
+                  setShowSortOptions(false);
+                }}
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+              >
+                Inventory {sortConfig.key === 'inventory' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
               </button>
             </div>
           </div>
+        )}
+      </div>
+    </div>
+  </div>
 
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-4 text-xs text-gray-500 font-medium mb-3 px-2 py-3 bg-gray-200">
@@ -1101,19 +1175,44 @@ const ProductPages = () => {
                   />
             </div>
             
-            <div className="col-span-4">Product</div>
-            <div className="col-span-1">Status</div>
-            <div className="col-span-1">Inventory</div>
-            <div className="col-span-1">Sales channels</div>
-            <div className="col-span-1">Markets</div>
-            <div className="col-span-2">Category</div>
-            <div className="col-span-1">Type</div>
-          </div>
+            <div 
+      className="col-span-4 flex items-center cursor-pointer hover:text-gray-700"
+      onClick={() => requestSort('name')}
+    >
+      Product
+      {sortConfig.key === 'name' && (
+        sortConfig.direction === 'asc' ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />
+      )}
+    </div>
+    <div 
+      className="col-span-1 cursor-pointer hover:text-gray-700"
+      onClick={() => requestSort('status')}
+    >
+      Status
+      {sortConfig.key === 'status' && (
+        sortConfig.direction === 'asc' ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />
+      )}
+    </div>
+    <div 
+      className="col-span-1 cursor-pointer hover:text-gray-700"
+      onClick={() => requestSort('inventory')}
+    >
+      Inventory
+      {sortConfig.key === 'inventory' && (
+        sortConfig.direction === 'asc' ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />
+      )}
+    </div>
+    <div className="col-span-1">Sales channels</div>
+    <div className="col-span-1">Markets</div>
+    <div className="col-span-2">Category</div>
+    <div className="col-span-1">Type</div>
+  </div>
+
 
           {/* Table Rows */}
           <div className="space-y-2">
             {filteredProducts.map((product) => (
-              <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-50 items-center">
+              <div key={product.id} className="grid grid-cols-12 gap-4 text-sm border-b border-gray-200 pb-3 px-2 hover:bg-green-200 items-center">
                 <div className="col-span-1 flex items-center">
                   <input 
                        type="checkbox" 
