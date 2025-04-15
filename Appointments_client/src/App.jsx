@@ -10,6 +10,7 @@ import Orders from './pages/Orders';
 import ProductPage from './pages/ProductPage';
 import CustomerPage from './pages/CustomerPage'
 import DiscountPage from './pages/DiscountPage';
+import MarketingPage from './pages/MarketingPage'
 
 
 
@@ -46,6 +47,7 @@ function App() {
         <Route path="/products" element={<ProductPage />} />
         <Route path="/customer" element={<CustomerPage />} />
         <Route path="/discount" element={<DiscountPage />} />
+        <Route path="/marketing" element={<MarketingPage />} />
        
       </Routes>
     </Router>
