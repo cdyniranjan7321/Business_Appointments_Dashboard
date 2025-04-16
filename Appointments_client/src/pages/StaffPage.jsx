@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
 
@@ -102,12 +103,12 @@ const Staff = () => {
         >
           <FiKey className="inline mr-2" /> Accounts
         </button>
-        <button
+        <buttond
           className={`py-2 px-4 font-medium ${activeTab === 'attendance' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
           onClick={() => setActiveTab('attendance')}
         >
           <FiClock className="inline mr-2" /> Attendance
-        </button>
+        </buttond>
         <button
           className={`py-2 px-4 font-medium ${activeTab === 'roles' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
           onClick={() => setActiveTab('roles')}
@@ -121,7 +122,7 @@ const Staff = () => {
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Staff Members</h2>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center">
+            <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
               <FiPlus className="mr-2" /> Add Staff
             </button>
           </div>
@@ -214,7 +215,7 @@ const Staff = () => {
               </div>
               <button
                 type="submit"
-                className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+                className="mt-6 bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
               >
                 Create Staff Account
               </button>
