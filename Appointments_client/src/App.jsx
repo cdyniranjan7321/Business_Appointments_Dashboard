@@ -14,6 +14,7 @@ import MarketingPage from './pages/MarketingPage'
 import StaffPage from './pages/StaffPage';
 import ServicesPage from'./pages/ServicesPage';
 import BookingPage from './pages/BookingPage';
+import Analytics from './pages/Analytics';
 
 
 
@@ -54,6 +55,7 @@ function App() {
         <Route path="/staff" element={<StaffPage />} />
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/booking" element={<BookingPage />} />
+        <Route path="/analytics" element= {<Analytics/>}/>
        
       </Routes>
     </Router>
