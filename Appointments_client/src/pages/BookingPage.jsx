@@ -448,7 +448,7 @@ const Booking = () => {
             <div className="mt-8 flex justify-end">
               <button
                 type="submit"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md flex items-center"
+                className="bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md flex items-center"
               >
                 <FiCheck className="mr-2" /> Create Booking
               </button>
