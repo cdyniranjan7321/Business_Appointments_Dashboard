@@ -11,6 +11,9 @@ import ProductPage from './pages/ProductPage';
 import CustomerPage from './pages/CustomerPage'
 import DiscountPage from './pages/DiscountPage';
 import MarketingPage from './pages/MarketingPage'
+import StaffPage from './pages/StaffPage';
+import ServicesPage from'./pages/ServicesPage';
+import BookingPage from './pages/BookingPage';
 
 
 
@@ -48,6 +51,9 @@ function App() {
         <Route path="/customer" element={<CustomerPage />} />
         <Route path="/discount" element={<DiscountPage />} />
         <Route path="/marketing" element={<MarketingPage />} />
+        <Route path="/staff" element={<StaffPage />} />
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/booking" element={<BookingPage />} />
        
       </Routes>
     </Router>

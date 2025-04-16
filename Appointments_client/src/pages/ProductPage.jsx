@@ -1037,7 +1037,7 @@ const getSortedProducts = (items) => {
                     </button>
                     <button
                       onClick={handleDelete}
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+                      className="flex items-center px-4 py-2 text-sm text-red-500 hover:bg-gray-100 w-full text-left"
                     >
                       <FiTrash2 className="mr-2" /> Delete
                     </button>

@@ -1,0 +1,362 @@
+import React, { useState } from 'react';
+import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, FiDollarSign, FiTag, FiInfo } from 'react-icons/fi';
+
+const Services = () => {
+  // State for form inputs
+  const [serviceForm, setServiceForm] = useState({
+    name: '',
+    description: '',
+    duration: 30,
+    price: '',
+    category: '',
+    active: true
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentServiceId, setCurrentServiceId] = useState(null);
+
+  // Sample services data - replace with actual data from your backend
+  const [services, setServices] = useState([
+    { id: 1, name: 'Haircut', description: 'Basic haircut service', duration: 30, price: 25, category: 'Hair', active: true },
+    { id: 2, name: 'Manicure', description: 'Basic manicure service', duration: 45, price: 35, category: 'Nails', active: true },
+    { id: 3, name: 'Massage', description: '60-minute full body massage', duration: 60, price: 80, category: 'Spa', active: true }
+  ]);
+
+  // Handle form input changes
+  const handleServiceFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setServiceForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  // Form submission handler
+  const handleServiceSubmit = (e) => {
+    e.preventDefault();
+    
+    if (isEditing) {
+      // Update existing service
+      setServices(services.map(service => 
+        service.id === currentServiceId ? { ...serviceForm, id: currentServiceId } : service
+      ));
+      setIsEditing(false);
+      setCurrentServiceId(null);
+    } else {
+      // Add new service
+      const newService = {
+        ...serviceForm,
+        id: services.length > 0 ? Math.max(...services.map(s => s.id)) + 1 : 1,
+        price: parseFloat(serviceForm.price),
+        duration: parseInt(serviceForm.duration)
+      };
+      setServices([...services, newService]);
+    }
+    
+    // Reset form
+    setServiceForm({
+      name: '',
+      description: '',
+      duration: 30,
+      price: '',
+      category: '',
+      active: true
+    });
+  };
+
+  // Edit service handler
+  const handleEditService = (service) => {
+    setServiceForm({
+      name: service.name,
+      description: service.description,
+      duration: service.duration,
+      price: service.price,
+      category: service.category,
+      active: service.active
+    });
+    setIsEditing(true);
+    setCurrentServiceId(service.id);
+  };
+
+  // Delete service handler
+  const handleDeleteService = (id) => {
+    setServices(services.filter(service => service.id !== id));
+  };
+
+  // Toggle service status
+  const toggleServiceStatus = (id) => {
+    setServices(services.map(service => 
+      service.id === id ? { ...service, active: !service.active } : service
+    ));
+  };
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold text-gray-800 mb-8">Service Management</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Service Creation Form */}
+        <div className="lg:col-span-1">
+          <div className="bg-white rounded-lg shadow p-6 sticky top-4">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              {isEditing ? 'Edit Service' : 'Create New Service'}
+            </h2>
+            <form onSubmit={handleServiceSubmit}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Service Name*</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={serviceForm.name}
+                  onChange={handleServiceFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                />
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={serviceForm.description}
+                  onChange={handleServiceFormChange}
+                  rows="3"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)*</label>
+                  <select
+                    name="duration"
+                    value={serviceForm.duration}
+                    onChange={handleServiceFormChange}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    required
+                  >
+                    <option value="15">15 min</option>
+                    <option value="30">30 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">60 min</option>
+                    <option value="90">90 min</option>
+                    <option value="120">120 min</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-500">$</span>
+                    </div>
+                    <input
+                      type="number"
+                      name="price"
+                      value={serviceForm.price}
+                      onChange={handleServiceFormChange}
+                      min="0"
+                      step="0.01"
+                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <input
+                  type="text"
+                  name="category"
+                  value={serviceForm.category}
+                  onChange={handleServiceFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                />
+              </div>
+              
+              <div className="mb-6 flex items-center">
+                <input
+                  type="checkbox"
+                  name="active"
+                  id="active"
+                  checked={serviceForm.active}
+                  onChange={handleServiceFormChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="active" className="ml-2 block text-sm text-gray-700">
+                  Available for booking
+                </label>
+              </div>
+              
+              <button
+                type="submit"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md flex items-center justify-center"
+              >
+                <FiPlus className="mr-2" />
+                {isEditing ? 'Update Service' : 'Add Service'}
+              </button>
+              
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditing(false);
+                    setCurrentServiceId(null);
+                    setServiceForm({
+                      name: '',
+                      description: '',
+                      duration: 30,
+                      price: '',
+                      category: '',
+                      active: true
+                    });
+                  }}
+                  className="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-md"
+                >
+                  Cancel
+                </button>
+              )}
+            </form>
+          </div>
+        </div>
+        
+        {/* Services List */}
+        <div className="lg:col-span-2">
+          <div className="bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">Available Services</h2>
+              <div className="text-sm text-gray-500">
+                {services.length} {services.length === 1 ? 'service' : 'services'}
+              </div>
+            </div>
+            
+            {services.length === 0 ? (
+              <div className="p-6 text-center text-gray-500">
+                No services available. Create your first service to get started.
+              </div>
+            ) : (
+              <ul className="divide-y divide-gray-200">
+                {services.map(service => (
+                  <li key={service.id} className="p-6 hover:bg-gray-50">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center">
+                          <h3 className="text-lg font-medium text-gray-800 mr-2">{service.name}</h3>
+                          <span className={`px-2 py-1 text-xs rounded-full 
+                            ${service.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {service.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-sm text-gray-600">{service.description}</p>
+                        
+                        <div className="mt-3 flex flex-wrap gap-4">
+                          <div className="flex items-center text-sm text-gray-500">
+                            <FiClock className="mr-1.5" />
+                            {service.duration} min
+                          </div>
+                          <div className="flex items-center text-sm text-gray-500">
+                            <FiDollarSign className="mr-1.5" />
+                            ${service.price.toFixed(2)}
+                          </div>
+                          {service.category && (
+                            <div className="flex items-center text-sm text-gray-500">
+                              <FiTag className="mr-1.5" />
+                              {service.category}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="ml-4 flex-shrink-0 flex space-x-2">
+                        <button
+                          onClick={() => handleEditService(service)}
+                          className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-50"
+                          title="Edit"
+                        >
+                          <FiEdit2 />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteService(service.id)}
+                          className="p-2 text-red-600 hover:text-red-800 rounded-full hover:bg-red-50"
+                          title="Delete"
+                        >
+                          <FiTrash2 />
+                        </button>
+                        <button
+                          onClick={() => toggleServiceStatus(service.id)}
+                          className={`p-2 rounded-full hover:bg-gray-100 ${
+                            service.active ? 'text-yellow-600 hover:text-yellow-800' : 'text-green-600 hover:text-green-800'
+                          }`}
+                          title={service.active ? 'Deactivate' : 'Activate'}
+                        >
+                          {service.active ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          
+          {/* Booking Preview Section */}
+          <div className="mt-8 bg-white rounded-lg shadow overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800">Customer Booking Preview</h2>
+            </div>
+            <div className="p-6">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <FiInfo className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-blue-700">
+                      This is how your services will appear to customers when they book online.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {services.filter(s => s.active).slice(0, 3).map(service => (
+                  <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <h3 className="text-lg font-medium text-gray-800">{service.name}</h3>
+                    <p className="mt-1 text-sm text-gray-600 line-clamp-2">{service.description}</p>
+                    <div className="mt-3 flex justify-between items-center">
+                      <div>
+                        <span className="text-sm font-medium text-gray-900">${service.price.toFixed(2)}</span>
+                        <span className="mx-2 text-gray-300">•</span>
+                        <span className="text-sm text-gray-500">{service.duration} min</span>
+                      </div>
+                      <button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
+                        Book Now
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {services.filter(s => s.active).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No active services available for booking. Activate services to make them visible to customers.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Services;
