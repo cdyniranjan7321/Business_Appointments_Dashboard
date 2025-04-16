@@ -191,7 +191,7 @@ const Services = () => {
               
               <button
                 type="submit"
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md flex items-center justify-center"
+                className="w-full bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md flex items-center justify-center"
               >
                 <FiPlus className="mr-2" />
                 {isEditing ? 'Update Service' : 'Add Service'}
