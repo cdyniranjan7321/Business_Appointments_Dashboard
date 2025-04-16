@@ -1045,7 +1045,7 @@ const getSortedProducts = (items) => {
                 </div>
               )}
             </div>
-
+            
             <button 
               className="px-4 py-2 bg-green-600 text-white rounded-md text-sm flex items-center hover:bg-green-700"
               onClick={() => setShowAddProduct(true)}
