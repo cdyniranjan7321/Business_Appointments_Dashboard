@@ -56,7 +56,7 @@ const Marketing = () => {
       setIsSubmitting(false);
       setIsSuccess(true);
       
-      // Reset form after 3 seconds
+      // Reset form after 10 minutes (600,000 milliseconds)
       setTimeout(() => {
         setIsSuccess(false);
         setCampaign({
@@ -77,7 +77,7 @@ const Marketing = () => {
           instagram: false,
           linkedin: false
         });
-      }, 3000);
+      }, 600000);
     }, 1500);
   };
 
@@ -111,7 +111,7 @@ const Marketing = () => {
                   name="title"
                   value={campaign.title}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   required
                 />
               </div>
@@ -127,7 +127,7 @@ const Marketing = () => {
                   rows={4}
                   value={campaign.description}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   required
                 />
               </div>
@@ -143,7 +143,7 @@ const Marketing = () => {
                   name="targetAudience"
                   value={campaign.targetAudience}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   required
                 />
               </div>
@@ -160,7 +160,7 @@ const Marketing = () => {
                     name="startDate"
                     value={campaign.startDate}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     required
                   />
                 </div>
@@ -174,7 +174,7 @@ const Marketing = () => {
                     name="endDate"
                     value={campaign.endDate}
                     onChange={handleInputChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     required
                   />
                 </div>
@@ -192,7 +192,7 @@ const Marketing = () => {
                   min="0"
                   value={campaign.budget}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                   required
                 />
               </div>
@@ -205,7 +205,7 @@ const Marketing = () => {
                 <div className="mt-1 flex items-center">
                   <label
                     htmlFor="image-upload"
-                    className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                   >
                     Upload Image
                   </label>
@@ -235,7 +235,7 @@ const Marketing = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-500 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${isSubmitting ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isSubmitting ? 'Creating Campaign...' : 'Create Campaign'}
               </button>
