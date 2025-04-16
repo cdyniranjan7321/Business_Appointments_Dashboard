@@ -118,7 +118,7 @@ const CustomerPage = () => {
             {!isEditing ? (
               <button 
                 onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 transition"
               >
                 Edit Profile
               </button>
@@ -126,13 +126,13 @@ const CustomerPage = () => {
               <>
                 <button 
                   onClick={handleSave}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 transition"
                 >
                   Save Changes
                 </button>
                 <button 
                   onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition"
+                  className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-700 transition"
                 >
                   Cancel
                 </button>
@@ -257,7 +257,7 @@ const CustomerPage = () => {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Booked Services</h2>
               <button 
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 transition"
                 onClick={() => document.getElementById('serviceModal').showModal()}
               >
                 Add Service
@@ -297,7 +297,7 @@ const CustomerPage = () => {
 
             {/* Add Service Modal */}
             <dialog id="serviceModal" className="modal">
-              <div className="modal-box max-w-md">
+              <div className="modal-box max-w-2xl p-11">
                 <h3 className="font-bold text-lg mb-4">Add New Service</h3>
                 <div className="space-y-4">
                   <div>
@@ -306,7 +306,7 @@ const CustomerPage = () => {
                       type="text"
                       value={newService.name}
                       onChange={(e) => setNewService({...newService, name: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
                   <div>
@@ -315,7 +315,7 @@ const CustomerPage = () => {
                       type="date"
                       value={newService.date}
                       onChange={(e) => setNewService({...newService, date: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
                   <div>
@@ -324,7 +324,7 @@ const CustomerPage = () => {
                       type="number"
                       value={newService.price}
                       onChange={(e) => setNewService({...newService, price: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
                   <div>
@@ -332,7 +332,7 @@ const CustomerPage = () => {
                     <select
                       value={newService.status}
                       onChange={(e) => setNewService({...newService, status: e.target.value})}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
                     >
                       <option value="pending">Pending</option>
                       <option value="upcoming">Upcoming</option>
@@ -342,15 +342,15 @@ const CustomerPage = () => {
                 </div>
                 <div className="modal-action">
                   <form method="dialog">
-                    <div className="flex space-x-2">
+                    <div className="flex space-x-2 mt-5">
                       <button 
                         type="button" 
                         onClick={handleAddService}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 transition"
                       >
                         Add Service
                       </button>
-                      <button className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition">
+                      <button className="px-4 py-2 bg-gray-400 text-white rounded-md hover:bg-gray-700 transition">
                         Close
                       </button>
                     </div>
@@ -372,7 +372,7 @@ const CustomerPage = () => {
                 onChange={(e) => setSelectedCohort(e.target.value)}
                 className="border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Select a cohort</option>
+                <option value="">--Select a cohort--</option>
                 {cohorts.map(cohort => (
                   <option key={cohort.id} value={cohort.id}>{cohort.name}</option>
                 ))}
@@ -380,7 +380,7 @@ const CustomerPage = () => {
               <button
                 onClick={handleAddToCohort}
                 disabled={!selectedCohort}
-                className={`px-4 py-2 rounded-md transition ${selectedCohort ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                className={`px-4 py-2 rounded-md transition ${selectedCohort ? 'bg-green-500 text-white hover:bg-green-700' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
               >
                 Add to Cohort
               </button>
@@ -436,7 +436,7 @@ const CustomerPage = () => {
                 <h3 className="text-sm font-medium text-green-800">Total Services</h3>
                 <p className="text-2xl font-bold text-green-900 mt-2">{services.length}</p>
               </div>
-              <div className="bg-purple-50 p-4 rounded-lg">
+              <div className="bg-purple-100 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-purple-800">Last Visit</h3>
                 <p className="text-2xl font-bold text-purple-900 mt-2">
                   {customer.lastVisit ? new Date(customer.lastVisit).toLocaleDateString() : 'Never'}
