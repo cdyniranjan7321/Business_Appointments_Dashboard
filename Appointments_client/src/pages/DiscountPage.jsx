@@ -120,7 +120,7 @@ const DiscountsPage = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition flex items-center"
+            className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 transition flex items-center"
           >
             Create Discount
           </button>
@@ -257,7 +257,7 @@ const DiscountsPage = () => {
                       type="text"
                       value={newDiscount.code}
                       onChange={(e) => setNewDiscount({ ...newDiscount, code: e.target.value.toUpperCase() })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                       required
                       placeholder="e.g. SUMMER20"
                     />
@@ -268,7 +268,7 @@ const DiscountsPage = () => {
                       <select
                         value={newDiscount.type}
                         onChange={(e) => setNewDiscount({ ...newDiscount, type: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                       >
                         <option value="percentage">Percentage</option>
                         <option value="fixed">Fixed Amount</option>
@@ -286,7 +286,7 @@ const DiscountsPage = () => {
                             max="100"
                             value={newDiscount.value}
                             onChange={(e) => setNewDiscount({ ...newDiscount, value: e.target.value })}
-                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                             required
                             placeholder="10"
                           />
@@ -318,7 +318,7 @@ const DiscountsPage = () => {
                         step="0.01"
                         value={newDiscount.minOrder}
                         onChange={(e) => setNewDiscount({ ...newDiscount, minOrder: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 pl-8 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 pl-8 focus:outline-none focus:ring-2 focus:ring-green-400"
                         placeholder="0 (no minimum)"
                       />
                     </div>
@@ -330,7 +330,7 @@ const DiscountsPage = () => {
                         type="date"
                         value={newDiscount.startDate}
                         onChange={(e) => setNewDiscount({ ...newDiscount, startDate: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                         required
                       />
                     </div>
@@ -340,7 +340,7 @@ const DiscountsPage = () => {
                         type="date"
                         value={newDiscount.endDate}
                         onChange={(e) => setNewDiscount({ ...newDiscount, endDate: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                         required
                       />
                     </div>
@@ -352,7 +352,7 @@ const DiscountsPage = () => {
                       min="1"
                       value={newDiscount.usageLimit}
                       onChange={(e) => setNewDiscount({ ...newDiscount, usageLimit: e.target.value })}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                       placeholder="Leave empty for unlimited"
                     />
                   </div>
@@ -373,13 +373,13 @@ const DiscountsPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowCreateModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-300"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                    className="px-4 py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-700"
                   >
                     Create Discount
                   </button>
@@ -430,7 +430,7 @@ const DiscountsPage = () => {
                         type="email"
                         value={shareData.email}
                         onChange={(e) => setShareData({ ...shareData, email: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                         required
                         placeholder="customer@example.com"
                       />
@@ -442,7 +442,7 @@ const DiscountsPage = () => {
                         type="tel"
                         value={shareData.phone}
                         onChange={(e) => setShareData({ ...shareData, phone: e.target.value })}
-                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                         required
                         placeholder="+1234567890"
                       />
@@ -454,7 +454,7 @@ const DiscountsPage = () => {
                       value={shareData.message}
                       onChange={(e) => setShareData({ ...shareData, message: e.target.value })}
                       rows="3"
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-400"
                     />
                   </div>
                   <div className="bg-gray-50 p-3 rounded-md">
@@ -475,13 +475,13 @@ const DiscountsPage = () => {
                   <button
                     type="button"
                     onClick={() => setShowShareModal(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-300"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
+                    className="px-4 py-2 bg-green-500 text-white rounded-md text-sm font-medium hover:bg-green-700"
                   >
                     Share Discount
                   </button>
