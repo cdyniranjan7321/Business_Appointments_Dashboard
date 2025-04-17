@@ -89,6 +89,8 @@ const Orders = () => {
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [newOrder, setNewOrder] = useState({
     customer: '',
     salesChannel: 'Online Store',
@@ -162,8 +164,12 @@ const Orders = () => {
 
   // Toggle order details expansion
   const toggleExpand = (orderId) => {
-    setExpandedOrder(expandedOrder === orderId ? null : orderId);
-    setOpenMenuId(null);
+    if (expandedOrder === orderId) {
+      setExpandedOrder(null);
+      return;
+    }
+    setSelectedOrderId(orderId);
+    setShowConfirmDialog(true);
   };
 
   // Toggle action menu
@@ -535,6 +541,48 @@ const Orders = () => {
     });
   };
 
+  const ConfirmDialog = () => {
+    if (!showConfirmDialog) return null;
+  
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 md:p-4 z-50">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-screen overflow-y-auto">
+          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">View Order Details</h2>
+          </div>
+          <div className="p-4 md:p-6">
+            <p className="text-sm text-gray-700 mb-4">
+              Are you sure you want to view the details of order {selectedOrderId}?
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                className="bg-white py-2 px-3 md:px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                onClick={() => {
+                  setShowConfirmDialog(false);
+                  setSelectedOrderId(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="inline-flex justify-center py-2 px-3 md:px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                onClick={() => {
+                  setExpandedOrder(selectedOrderId);
+                  setShowConfirmDialog(false);
+                  setSelectedOrderId(null);
+                }}
+              >
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
       {/* Header */}
@@ -1026,6 +1074,7 @@ const Orders = () => {
           </div>
         </div>
       )}
+      <ConfirmDialog />
     </div>
   );
 };
