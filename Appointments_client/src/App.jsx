@@ -15,6 +15,7 @@ import StaffPage from './pages/StaffPage';
 import ServicesPage from'./pages/ServicesPage';
 import BookingPage from './pages/BookingPage';
 import Analytics from './pages/Analytics';
+import OrderDetails from './pages/OrderDetails';
 
 
 
@@ -56,6 +57,7 @@ function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/analytics" element= {<Analytics/>}/>
+        <Route path="/orderdetails" element={<OrderDetails/>}/>
        
       </Routes>
     </Router>
