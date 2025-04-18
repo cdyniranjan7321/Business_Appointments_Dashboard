@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiChevronDown, FiX, FiImage, FiPrinter, FiCopy, FiEdit2, FiTrash2, FiChevronUp } from 'react-icons/fi';
+import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiChevronDown, FiX, FiImage, FiPrinter, FiCopy, FiEdit2, FiTrash2, FiChevronUp, FiEye } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -136,8 +136,6 @@ const getSortedProducts = (items) => {
     }
   };
 
-
-
   const handlePrint = () => {
     try {
       const doc = new jsPDF();
@@ -179,6 +177,17 @@ const getSortedProducts = (items) => {
       alert('Failed to generate print document. Please try again.');
     }
   };
+
+  // Add this to your existing functions
+const handleDetails = () => {
+  if (selectedProducts.length === 1) {
+    const productToView = products.find(p => p.id === selectedProducts[0]);
+    // Navigate to details page with the product ID
+    window.location.href = `/products/${productToView.id}`;
+  } else {
+    alert('Please select exactly one product to view details');
+  }
+};
   
   const handleExport = () => {
     try {
@@ -1041,6 +1050,16 @@ const getSortedProducts = (items) => {
                     >
                       <FiTrash2 className="mr-2" /> Delete
                     </button>
+                    <button
+                      onClick={() => handleDetails()}
+                      disabled={selectedProducts.length !== 1}
+                      className={`flex items-center px-4 py-2 text-sm w-full text-left
+                       ${selectedProducts.length === 1 ? 
+                       'text-gray-700 hover:bg-gray-100' : 'text-gray-400 cursor-not-allowed'
+                       }`}
+                     >
+                         <FiEye className="mr-2" /> Details
+                     </button>
                   </div>
                 </div>
               )}
@@ -1052,24 +1071,6 @@ const getSortedProducts = (items) => {
             >
               <FiPlus className="mr-2" /> Add product
             </button>
-          </div>
-        </div>
-        
-        {/* Metrics Row */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
-            <div className="text-xs text-black lowercase font-medium">Products by sell-through rate</div>
-            <div className="text-xl font-semibold mt-1">1.5%</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
-            <div className="text-xs text-black uppercase font-medium">Products by days of inventory remaining</div>
-            <div className="text-xl font-semibold mt-1">10 days</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
-            <div className="text-xs text-black uppercase font-medium">ABC product analysis</div>
-            <div className="text-sm mt-1"><span className="font-semibold">$8.6K</span> A-grade</div>
-            <div className="text-sm"><span className="font-semibold">$0</span> B-grade</div>
-            <div className="text-sm"><span className="font-semibold">$2M</span> C-grade</div>
           </div>
         </div>
 

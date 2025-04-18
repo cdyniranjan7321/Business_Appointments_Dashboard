@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiCalendar, FiUser, FiClock, FiDollarSign, FiPlus, FiCheck, FiX, FiSearch, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { useState, } from 'react';
+import { FiCalendar, FiUser, FiPlus, FiCheck, FiX, FiSearch, FiFilter, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { format, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, parseISO } from 'date-fns';
 
 const Booking = () => {

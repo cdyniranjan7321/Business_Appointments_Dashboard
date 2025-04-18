@@ -17,7 +17,6 @@ import BookingPage from './pages/BookingPage';
 import Analytics from './pages/Analytics';
 
 
-
 function App() {
   return (
     <Router>
@@ -56,6 +55,7 @@ function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/analytics" element= {<Analytics/>}/>
+     
        
       </Routes>
     </Router>
