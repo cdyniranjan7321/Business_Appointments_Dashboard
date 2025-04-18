@@ -136,8 +136,6 @@ const getSortedProducts = (items) => {
     }
   };
 
-
-
   const handlePrint = () => {
     try {
       const doc = new jsPDF();
@@ -1052,24 +1050,6 @@ const getSortedProducts = (items) => {
             >
               <FiPlus className="mr-2" /> Add product
             </button>
-          </div>
-        </div>
-        
-        {/* Metrics Row */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
-            <div className="text-xs text-black lowercase font-medium">Products by sell-through rate</div>
-            <div className="text-xl font-semibold mt-1">1.5%</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
-            <div className="text-xs text-black uppercase font-medium">Products by days of inventory remaining</div>
-            <div className="text-xl font-semibold mt-1">10 days</div>
-          </div>
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-md">
-            <div className="text-xs text-black uppercase font-medium">ABC product analysis</div>
-            <div className="text-sm mt-1"><span className="font-semibold">$8.6K</span> A-grade</div>
-            <div className="text-sm"><span className="font-semibold">$0</span> B-grade</div>
-            <div className="text-sm"><span className="font-semibold">$2M</span> C-grade</div>
           </div>
         </div>
 
