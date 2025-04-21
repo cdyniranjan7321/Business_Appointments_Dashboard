@@ -11,8 +11,9 @@ import {
   FiChevronRight,
   FiEdit2,
   FiCopy,
-  FiTrash2
+  FiTrash2,
 } from 'react-icons/fi';
+
 import { 
   FaRegCheckCircle, 
   FaRegTimesCircle, 
@@ -21,6 +22,7 @@ import {
   FaStore,
   FaBoxOpen
 } from 'react-icons/fa';
+
 import * as XLSX from 'xlsx';
 
 const Orders = () => {
@@ -110,6 +112,7 @@ const Orders = () => {
     minAmount: '',
     maxAmount: ''
   });
+  const [selectedItems, setSelectedItems] = useState([]);
   const menuRef = useRef(null);
 
   // Filter orders based on search term and filters
@@ -163,7 +166,12 @@ const Orders = () => {
   }, []);
 
   // Toggle order details expansion
-  const toggleExpand = (orderId) => {
+  const toggleExpand = (orderId, e) => {
+    // Don't toggle if clicking on checkbox or menu button
+    if (e && (e.target.closest('.order-checkbox') || e.target.closest('.action-menu-button'))) {
+      return;
+    }
+
     if (expandedOrder === orderId) {
       setExpandedOrder(null);
       return;
@@ -178,10 +186,33 @@ const Orders = () => {
     setOpenMenuId(openMenuId === orderId ? null : orderId);
   };
 
+  // Toggle item selection
+  const toggleItemSelection = (orderId, e) => {
+    e.stopPropagation();
+    setSelectedItems(prev => {
+      if (prev.includes(orderId)) {
+        return prev.filter(id => id !== orderId);
+      } else {
+        return [...prev, orderId];
+      }
+    });
+  };
+
+  // Select all items
+  const selectAllItems = (e) => {
+    e.stopPropagation();
+    if (selectedItems.length === filteredOrders.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(filteredOrders.map(order => order.id));
+    }
+  };
+
   // Delete order
   const handleDeleteOrder = (orderId) => {
     if (window.confirm(`Are you sure you want to delete order ${orderId}?`)) {
       setOrders(orders.filter(order => order.id !== orderId));
+      setSelectedItems(selectedItems.filter(id => id !== orderId));
     }
     setOpenMenuId(null);
   };
@@ -321,6 +352,15 @@ const Orders = () => {
 
   // Print all filtered orders
   const handlePrintAll = () => {
+    const ordersToPrint = selectedItems.length > 0 
+      ? filteredOrders.filter(order => selectedItems.includes(order.id))
+      : filteredOrders;
+  
+    if (ordersToPrint.length === 0) {
+      alert('No orders selected to print');
+      return;
+    }
+  
     const printWindow = window.open('', '_blank');
     const printContent = `
       <html>
@@ -342,9 +382,9 @@ const Orders = () => {
         <body>
           <h1>Orders Report</h1>
           <p class="no-print">Generated on ${new Date().toLocaleString()}</p>
-          <p>Total Orders: ${filteredOrders.length}</p>
+          <p>Total Orders: ${ordersToPrint.length} ${selectedItems.length > 0 ? '(Selected)' : ''}</p>
           
-          ${filteredOrders.map(order => `
+          ${ordersToPrint.map(order => `
             <div class="order">
               <div class="order-header">
                 <h2>Order #${order.id}</h2>
@@ -415,8 +455,17 @@ const Orders = () => {
 
   // Export orders to Excel
   const handleExportOrders = () => {
+    const ordersToExport = selectedItems.length > 0 
+      ? filteredOrders.filter(order => selectedItems.includes(order.id))
+      : filteredOrders;
+  
+    if (ordersToExport.length === 0) {
+      alert('No orders selected to export');
+      return;
+    }
+  
     // Prepare data for export
-    const exportData = filteredOrders.map(order => ({
+    const exportData = ordersToExport.map(order => ({
       'Order ID': order.id,
       'Date': order.date,
       'Customer': order.customer,
@@ -431,14 +480,18 @@ const Orders = () => {
       'Destination': order.destination,
       'Tags': order.tags?.join(', ') || ''
     }));
-
+  
     // Create worksheet and workbook
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
-
+  
     // Generate Excel file and download
-    XLSX.writeFile(workbook, `orders_export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    const fileName = selectedItems.length > 0 
+      ? `selected_orders_export_${new Date().toISOString().split('T')[0]}.xlsx`
+      : `orders_export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    
+    XLSX.writeFile(workbook, fileName);
   };
 
   // Create or update order
@@ -589,29 +642,40 @@ const Orders = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
         <h1 className="text-xl md:text-2xl font-bold text-gray-800">Orders Details</h1>
         <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <button 
-            className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
-            onClick={handlePrintAll}
-          >
+          <div className="relative group">
+            <button 
+                   className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+                   onClick={handlePrintAll}
+            >
             <FiPrinter className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Print</span>
+           </button>
+              <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+                    Print {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+              </span>
+          </div>
+          <div className="relative group">
+              <button 
+                      className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+                      onClick={handleExportOrders}
+              >
+                 <FiDownload className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Export</span>
+                 </button>
+                <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+                  Export {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+                </span>
+          </div>
+        <button 
+             className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-xs md:text-sm font-medium text-white hover:bg-green-700"
+             onClick={() => {
+
+             setEditingOrder(null);
+             setShowCreateOrder(true);
+             }}
+        >
+          <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
           </button>
-          <button 
-            className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
-            onClick={handleExportOrders}
-          >
-            <FiDownload className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Export</span>
-          </button>
-          <button 
-            className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-xs md:text-sm font-medium text-white hover:bg-green-700"
-            onClick={() => {
-              setEditingOrder(null);
-              setShowCreateOrder(true);
-            }}
-          >
-            <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
-          </button>
-        </div>
-      </div>
+     </div>
+   </div>
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
@@ -747,6 +811,16 @@ const Orders = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                        checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
+                        onChange={selectAllItems}
+                      />
+                    </div>
+                  </th>
+                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Order
                   </th>
                   <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
@@ -781,8 +855,18 @@ const Orders = () => {
                   <React.Fragment key={order.id}>
                     <tr 
                       className="hover:bg-green-200 cursor-pointer" 
-                      onClick={() => toggleExpand(order.id)}
+                      onClick={(e) => toggleExpand(order.id, e)}
                     >
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                            checked={selectedItems.includes(order.id)}
+                            onChange={(e) => toggleItemSelection(order.id, e)}
+                          />
+                        </div>
+                      </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {order.id}
                       </td>
@@ -819,7 +903,7 @@ const Orders = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
                         <div ref={menuRef}>
                           <button 
-                            className="text-black hover:text-red-600 focus:outline-none"
+                            className="action-menu-button text-black hover:text-red-600 focus:outline-none"
                             onClick={(e) => toggleMenu(e, order.id)}
                           >
                             <FiMoreVertical />
@@ -872,7 +956,7 @@ const Orders = () => {
                     </tr>
                     {expandedOrder === order.id && (
                       <tr className="bg-gray-50">
-                        <td colSpan="9" className="px-4 py-4">
+                        <td colSpan="10" className="px-4 py-4">
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <h3 className="text-sm font-medium text-gray-900 mb-2">Items</h3>
