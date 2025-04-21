@@ -672,10 +672,10 @@ const Orders = () => {
              setShowCreateOrder(true);
              }}
         >
-          <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
-          </button>
-     </div>
-   </div>
+         <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
+        </button>
+      </div>
+    </div>
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
