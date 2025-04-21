@@ -12,6 +12,7 @@ import {
   FiEdit2,
   FiCopy,
   FiTrash2,
+  FiArrowLeft,
 } from 'react-icons/fi';
 
 import { 
@@ -88,7 +89,7 @@ const Orders = () => {
   ];
 
   const [orders, setOrders] = useState(initialOrders);
-  const [expandedOrder, setExpandedOrder] = useState(null);
+  const [selectedOrder, setSelectedOrder] = useState(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -165,20 +166,6 @@ const Orders = () => {
     };
   }, []);
 
-  // Toggle order details expansion
-  const toggleExpand = (orderId, e) => {
-    // Don't toggle if clicking on checkbox or menu button
-    if (e && (e.target.closest('.order-checkbox') || e.target.closest('.action-menu-button'))) {
-      return;
-    }
-
-    if (expandedOrder === orderId) {
-      setExpandedOrder(null);
-      return;
-    }
-    setSelectedOrderId(orderId);
-    setShowConfirmDialog(true);
-  };
 
   // Toggle action menu
   const toggleMenu = (e, orderId) => {
@@ -622,10 +609,12 @@ const Orders = () => {
                 type="button"
                 className="inline-flex justify-center py-2 px-3 md:px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 onClick={() => {
-                  setExpandedOrder(selectedOrderId);
-                  setShowConfirmDialog(false);
-                  setSelectedOrderId(null);
-                }}
+          
+                const order = orders.find(o => o.id === selectedOrderId);
+                setSelectedOrder(order); // Set the selected order to show details
+                setShowConfirmDialog(false); // Close the confirmation dialog
+                setSelectedOrderId(null); // Clear the selected order ID
+              }}
               >
                 View Details
               </button>
@@ -635,6 +624,120 @@ const Orders = () => {
       </div>
     );
   };
+
+  // View order details in separate page
+const viewOrderDetails = (orderId) => {
+  setSelectedOrderId(orderId); // Set the selected order ID
+  setShowConfirmDialog(true); // Show the confirmation dialog
+}
+
+// Close order details view
+const closeOrderDetails = () => {
+  setSelectedOrder(null);
+};
+
+
+if (selectedOrder) {
+  return (
+    <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
+      <div className="bg-white shadow overflow-hidden rounded-lg p-6">
+        <button 
+          onClick={closeOrderDetails}
+          className="flex items-center mb-4 text-blue-600 hover:text-blue-800"
+        >
+          <FiArrowLeft className="mr-1" /> Back to Orders
+        </button>
+        
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Order #{selectedOrder.id}</h1>
+            <p className="text-gray-600">Placed on {selectedOrder.date}</p>
+          </div>
+          <div className="flex gap-2">
+            <button 
+              className="flex items-center px-3 py-1 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-200"
+              onClick={() => handlePrintOrder(selectedOrder)}
+            >
+              <FiPrinter className="mr-2" /> Print
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Customer</h2>
+            <p>{selectedOrder.customer}</p>
+            <p className="text-sm text-gray-500 mt-1">{selectedOrder.salesChannel}</p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Payment</h2>
+            <div className="flex items-center">
+              {getStatusIcon(selectedOrder.paymentStatus)}
+              <span className="ml-2">{selectedOrder.paymentStatus}</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">${selectedOrder.total.toFixed(2)}</p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Delivery</h2>
+            <div className="flex items-center">
+              {getDeliveryIcon(selectedOrder.deliveryMethod)}
+              <span className="ml-2">{selectedOrder.deliveryMethod}</span>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">{selectedOrder.deliveryStatus}</p>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Items</h2>
+          <div className="border rounded-md overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {selectedOrder.items.map((item, index) => (
+                  <tr key={index}>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{item.name}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${item.price.toFixed(2)}</td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${(item.quantity * item.price).toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Shipping Information</h2>
+            <p>{selectedOrder.destination}</p>
+            <p className="text-sm text-gray-500 mt-2">Label Status: {selectedOrder.labelStatus}</p>
+          </div>
+
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <h2 className="text-lg font-medium text-gray-900 mb-2">Additional Information</h2>
+            {selectedOrder.tags && selectedOrder.tags.length > 0 && (
+              <p className="mb-2">
+                <span className="font-medium">Tags:</span> {selectedOrder.tags.join(', ')}
+              </p>
+            )}
+            <p>
+              <span className="font-medium">Return Status:</span> {selectedOrder.returnStatus}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
   
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
@@ -854,8 +957,13 @@ const Orders = () => {
                 {filteredOrders.map((order) => (
                   <React.Fragment key={order.id}>
                     <tr 
-                      className="hover:bg-green-200 cursor-pointer" 
-                      onClick={(e) => toggleExpand(order.id, e)}
+                       className="hover:bg-green-200 cursor-pointer" 
+                       onClick={(e) => {
+                      // Only proceed if not clicking on checkbox or menu button
+                      if (!e.target.closest('.order-checkbox') && !e.target.closest('.action-menu-button')) {
+                        viewOrderDetails(order.id); // Call the modified function
+                        }
+                     }}
                     >
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         <div className="flex items-center">
@@ -954,39 +1062,7 @@ const Orders = () => {
                         </div>
                       </td>
                     </tr>
-                    {expandedOrder === order.id && (
-                      <tr className="bg-gray-50">
-                        <td colSpan="10" className="px-4 py-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <h3 className="text-sm font-medium text-gray-900 mb-2">Items</h3>
-                              <ul className="border rounded-md divide-y divide-gray-200">
-                                {order.items.map((item, index) => (
-                                  <li key={index} className="px-3 py-2 flex justify-between text-sm">
-                                    <span>{item.name}</span>
-                                    <span>{item.quantity} × ${item.price.toFixed(2)} = ${(item.quantity * item.price).toFixed(2)}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                            <div>
-                              <h3 className="text-sm font-medium text-gray-900 mb-2">Delivery Details</h3>
-                              <div className="border rounded-md p-3 text-sm">
-                                <p className="mb-1"><span className="font-medium">Delivery Method:</span> {order.deliveryMethod}</p>
-                                <p className="mb-1"><span className="font-medium">Destination:</span> {order.destination}</p>
-                                <p className="mb-1"><span className="font-medium">Label Status:</span> {order.labelStatus}</p>
-                                {order.tags && order.tags.length > 0 && (
-                                  <p className="mb-1">
-                                    <span className="font-medium">Tags:</span> {order.tags.join(', ')}
-                                  </p>
-                                )}
-                                <p><span className="font-medium">Return Status:</span> {order.returnStatus}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                    
                   </React.Fragment>
                 ))}
               </tbody>
