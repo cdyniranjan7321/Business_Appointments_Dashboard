@@ -751,53 +751,74 @@ if (selectedOrder) {
           </motion.div>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mb-10"
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ delay: 0.6 }}
+           className="mb-10"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
-          </h2>
-          <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {selectedOrder.items.map((item, index) => (
-                  <motion.tr 
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatNPR(item.price)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {formatNPR(item.quantity * item.price)}
-                      </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">Total</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">
-                  {formatNPR(selectedOrder.total)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </motion.div>
+          <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
+  </h2>
+
+  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Item
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Quantity
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Price
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Total
+          </th>
+        </tr>
+      </thead>
+
+      <tbody className="bg-white divide-y divide-gray-200">
+        {selectedOrder.items.map((item, index) => (
+          <motion.tr
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index }}
+            className="hover:bg-gray-50 transition-colors duration-150"
+          >
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {item.name}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+              {item.quantity}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+              {formatNPR(item.price)}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
+              {formatNPR(item.quantity * item.price)}
+            </td>
+          </motion.tr>
+        ))}
+      </tbody>
+
+      <tfoot className="bg-gray-50">
+        <tr>
+          <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">
+            Total
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900">
+            {formatNPR(selectedOrder.total)}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</motion.div>
+
 
         <motion.div 
           initial={{ opacity: 0 }}
