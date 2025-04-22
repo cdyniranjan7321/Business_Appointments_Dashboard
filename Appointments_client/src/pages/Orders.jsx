@@ -759,7 +759,7 @@ if (selectedOrder) {
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
           <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
-  </h2>
+          </h2>
 
   <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
     <table className="min-w-full divide-y divide-gray-200">
@@ -818,7 +818,6 @@ if (selectedOrder) {
     </table>
   </div>
 </motion.div>
-
 
         <motion.div 
           initial={{ opacity: 0 }}
