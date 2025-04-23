@@ -233,9 +233,9 @@ const CustomerPage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-sm"><span className="font-medium">Phone:</span> {customer.phone}</p>
+                
                 <p className="text-sm"><span className="font-medium">Member Since:</span> {new Date(customer.joinDate).toLocaleDateString()}</p>
-                <p className="text-sm"><span className="font-medium">LTV:</span> ${customer.lifetimeValue.toFixed(2)}</p>
+                
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 {customer.cohortIds.map(cohortId => {
