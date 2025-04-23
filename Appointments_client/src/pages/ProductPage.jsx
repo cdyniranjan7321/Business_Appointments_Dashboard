@@ -153,7 +153,7 @@ const getSortedProducts = (items) => {
         product.category || 'N/A',
         product.type || 'N/A'
       ]);
-      
+
       // Add the table
       autoTable(doc, {
         head: [['Product', 'Status', 'Inventory', 'Sales Channels', 'Markets', 'Category', 'Type']],
@@ -564,7 +564,7 @@ const handleDetails = () => {
                         <div>
                           <label className="block text-sm font-medium mb-1">Price</label>
                           <div className="flex items-center">
-                            <span className="mr-2">$</span>
+                            <span className="mr-2">रु</span>
                             <input
                               type="number"
                               name="price"
@@ -580,7 +580,7 @@ const handleDetails = () => {
                         <div>
                           <label className="block text-sm font-medium mb-1">Compare-at price</label>
                           <div className="flex items-center">
-                            <span className="mr-2">$</span>
+                            <span className="mr-2">रु</span>
                             <input
                               type="number"
                               name="compareAtPrice"
@@ -611,7 +611,7 @@ const handleDetails = () => {
                       <div className="mt-2">
                         <label className="block text-sm font-medium mb-1">Cost per item</label>
                         <div className="flex items-center">
-                          <span className="mr-2">$</span>
+                          <span className="mr-2">रु</span>
                           <input
                             type="number"
                             name="costPerItem"
@@ -796,10 +796,11 @@ const handleDetails = () => {
                               className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
                             >
                               <option value="">Select</option>
+                              <option value="NP">Nepal</option>
                               <option value="US">United States</option>
                               <option value="AU">Australia</option>
                               <option value="CN">China</option>
-                              <option value="NP">Nepal</option>
+                              
                             </select>
                           </div>
                         </div>

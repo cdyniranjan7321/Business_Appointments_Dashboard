@@ -95,7 +95,7 @@ const Analytics = () => {
                 </svg>
               </div>
             </div>
-            <p className="text-2xl font-bold text-gray-800 mt-4">${analyticsData.dailySales.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-gray-800 mt-4">रू {analyticsData.dailySales.toLocaleString()}</p>
             <div className="flex items-center mt-2">
               <span className="text-green-500 text-sm flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -196,11 +196,11 @@ const Analytics = () => {
             <h3 className="text-gray-800 font-medium">Total Sales</h3>
             <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full">This Month</span>
           </div>
-          <p className="text-4xl font-bold text-indigo-600">${analyticsData.totalSales.toLocaleString()}</p>
+          <p className="text-4xl font-bold text-indigo-600">रू {analyticsData.totalSales.toLocaleString()}</p>
           <div className="mt-6">
             <div className="flex justify-between text-sm text-gray-500 mb-1">
               <span>Target</span>
-              <span>${(analyticsData.totalSales / 0.75).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+              <span>रू {(analyticsData.totalSales / 0.75).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
             </div>
             <div className="w-full bg-gray-100 rounded-full h-3">
               <motion.div 
@@ -216,15 +216,15 @@ const Analytics = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-500 text-sm">Avg. Daily Sales</p>
-                <p className="font-medium">${(analyticsData.totalSales / 30).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                <p className="font-medium">रू {(analyticsData.totalSales / 30).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Best Day</p>
-                <p className="font-medium">${(analyticsData.dailySales * 1.5).toLocaleString()}</p>
+                <p className="font-medium">रू {(analyticsData.dailySales * 1.5).toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-gray-500 text-sm">Refunds</p>
-                <p className="font-medium">${(analyticsData.totalSales * 0.03).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                <p className="font-medium">रू {(analyticsData.totalSales * 0.03).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
               </div>
             </div>
           </div>
@@ -286,7 +286,7 @@ const Analytics = () => {
                 })}
                 <div className="absolute inset-0 flex items-center justify-center flex-col">
                   <span className="text-2xl font-bold text-gray-800">
-                    ${analyticsData.totalSales.toLocaleString()}
+                    रू {analyticsData.totalSales.toLocaleString()}
                   </span>
                   <span className="text-sm text-gray-500">Total Sales</span>
                 </div>
