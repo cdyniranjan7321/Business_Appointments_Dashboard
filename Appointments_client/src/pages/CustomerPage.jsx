@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const CustomerPage = () => {
   const { customerId } = useParams();
+  const navigate = useNavigate();
+  const [customers, setCustomers] = useState([]);
   const [customer, setCustomer] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [services, setServices] = useState([]);
@@ -16,38 +18,87 @@ const CustomerPage = () => {
     status: 'pending'
   });
   const [activeTab, setActiveTab] = useState('details');
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    // Fetch customer data
-    const fetchCustomer = async () => {
+    // Fetch all customers data
+    const fetchCustomers = async () => {
       // Replace with actual API call
-      const mockCustomer = {
-        id: customerId,
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+1 (555) 123-4567',
-        address: '123 Main St, Anytown, USA',
-        joinDate: '2023-01-15',
-        notes: 'Prefers morning appointments. Allergic to peanuts.',
-        cohortIds: ['cohort1', 'cohort2'],
-        lifetimeValue: 1250.00,
-        lastVisit: '2023-10-28'
-      };
-      setCustomer(mockCustomer);
+      const mockCustomers = [
+        {
+          id: '1',
+          name: 'John Doe',
+          email: 'john@example.com',
+          phone: '+1 (555) 123-4567',
+          address: '123 Main St, Anytown, USA',
+          joinDate: '2023-01-15',
+          notes: 'Prefers morning appointments. Allergic to peanuts.',
+          cohortIds: ['cohort1', 'cohort2'],
+          lifetimeValue: 1250.00,
+          lastVisit: '2023-10-28'
+        },
+        {
+          id: '2',
+          name: 'Jane Smith',
+          email: 'jane@example.com',
+          phone: '+1 (555) 987-6543',
+          address: '456 Oak Ave, Somewhere, USA',
+          joinDate: '2023-03-22',
+          notes: 'Loyal customer, refers many friends.',
+          cohortIds: ['cohort1'],
+          lifetimeValue: 890.00,
+          lastVisit: '2023-11-05'
+        },
+        {
+          id: '3',
+          name: 'Robert Johnson',
+          email: 'robert@example.com',
+          phone: '+1 (555) 456-7890',
+          address: '789 Pine Rd, Nowhere, USA',
+          joinDate: '2023-05-10',
+          notes: 'Prefers email communication.',
+          cohortIds: ['cohort3'],
+          lifetimeValue: 450.00,
+          lastVisit: '2023-09-18'
+        }
+      ];
+      setCustomers(mockCustomers);
+      
+      // If customerId is present in URL, load that customer
+      if (customerId) {
+        const selectedCustomer = mockCustomers.find(c => c.id === customerId);
+        if (selectedCustomer) {
+          setCustomer(selectedCustomer);
+          loadCustomerDetails(selectedCustomer.id);
+        }
+      }
     };
 
-    // Fetch services
+    fetchCustomers();
+  }, [customerId]);
+
+  const loadCustomerDetails = async (id) => {
+    // Fetch services for this customer - now using the id parameter
     const fetchServices = async () => {
       // Replace with actual API call
-      const mockServices = [
-        { id: 's1', name: 'Haircut', date: '2023-10-28', price: 45.00, status: 'completed' },
-        { id: 's2', name: 'Coloring', date: '2023-08-15', price: 120.00, status: 'completed' },
-        { id: 's3', name: 'Manicure', date: '2023-11-15', price: 35.00, status: 'upcoming' }
-      ];
-      setServices(mockServices);
+      const mockServices = {
+        '1': [
+          { id: 's1', name: 'Haircut', date: '2023-10-28', price: 45.00, status: 'completed' },
+          { id: 's2', name: 'Coloring', date: '2023-08-15', price: 120.00, status: 'completed' },
+          { id: 's3', name: 'Manicure', date: '2023-11-15', price: 35.00, status: 'upcoming' }
+        ],
+        '2': [
+          { id: 's4', name: 'Facial', date: '2023-11-10', price: 75.00, status: 'completed' },
+          { id: 's5', name: 'Massage', date: '2023-12-05', price: 90.00, status: 'upcoming' }
+        ],
+        '3': [
+          { id: 's6', name: 'Haircut', date: '2023-09-18', price: 40.00, status: 'completed' }
+        ]
+      };
+      setServices(mockServices[id] || []);
     };
-
-    // Fetch cohorts
+  
+    // Fetch cohorts - now filtered by customer
     const fetchCohorts = async () => {
       // Replace with actual API call
       const mockCohorts = [
@@ -57,11 +108,23 @@ const CustomerPage = () => {
       ];
       setCohorts(mockCohorts);
     };
+  
+    await fetchServices();
+    await fetchCohorts();
+  };
 
-    fetchCustomer();
-    fetchServices();
-    fetchCohorts();
-  }, [customerId]);
+  const handleCustomerClick = (customer) => {
+    navigate(`/customers/${customer.id}`);
+    setCustomer(customer);
+    loadCustomerDetails(customer.id);
+    setActiveTab('details');
+    setIsEditing(false);
+  };
+
+  const handleBackToList = () => {
+    navigate('/customer');
+    setCustomer(null);
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -72,6 +135,8 @@ const CustomerPage = () => {
     // Here you would typically make an API call to save the customer data
     console.log('Saving customer:', customer);
     setIsEditing(false);
+    // Update the customers list with the edited customer
+    setCustomers(customers.map(c => c.id === customer.id ? customer : c));
   };
 
   const handleAddService = () => {
@@ -90,30 +155,122 @@ const CustomerPage = () => {
     
     // Here you would typically make an API call to add customer to cohort
     if (!customer.cohortIds.includes(selectedCohort)) {
-      setCustomer({
+      const updatedCustomer = {
         ...customer,
         cohortIds: [...customer.cohortIds, selectedCohort]
-      });
+      };
+      setCustomer(updatedCustomer);
+      // Update the customers list
+      setCustomers(customers.map(c => c.id === customer.id ? updatedCustomer : c));
     }
     setSelectedCohort('');
   };
 
   const handleRemoveFromCohort = (cohortId) => {
     // Here you would typically make an API call to remove customer from cohort
-    setCustomer({
+    const updatedCustomer = {
       ...customer,
       cohortIds: customer.cohortIds.filter(id => id !== cohortId)
-    });
+    };
+    setCustomer(updatedCustomer);
+    // Update the customers list
+    setCustomers(customers.map(c => c.id === customer.id ? updatedCustomer : c));
   };
 
-  if (!customer) return <div className="p-4">Loading...</div>;
+  const filteredCustomers = customers.filter(customer =>
+    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    customer.phone.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
+  // Show customer list if no customer is selected
+  if (!customerId) {
+    return (
+      <div className="container mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-800">Customers</h1>
+          <div className="relative w-64">
+            <input
+              type="text"
+              placeholder="Search customers..."
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg
+              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              ></path>
+            </svg>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredCustomers.map((customer) => (
+            <div
+              key={customer.id}
+              onClick={() => handleCustomerClick(customer)}
+              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex-shrink-0">
+                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                    {customer.name.charAt(0)}
+                  </div>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold">{customer.name}</h2>
+                  <p className="text-sm text-gray-500">{customer.email}</p>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm"><span className="font-medium">Phone:</span> {customer.phone}</p>
+                <p className="text-sm"><span className="font-medium">Member Since:</span> {new Date(customer.joinDate).toLocaleDateString()}</p>
+                <p className="text-sm"><span className="font-medium">LTV:</span> ${customer.lifetimeValue.toFixed(2)}</p>
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {customer.cohortIds.map(cohortId => {
+                  const cohort = cohorts.find(c => c.id === cohortId);
+                  return cohort ? (
+                    <span key={cohort.id} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                      {cohort.name}
+                    </span>
+                  ) : null;
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Show customer details if a customer is selected
   return (
     <div className="container mx-auto p-4">
       <div className="bg-white rounded-lg shadow-md p-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">{customer.name}</h1>
+          <div className="flex items-center space-x-4">
+            <button 
+              onClick={handleBackToList}
+              className="p-2 rounded-full hover:bg-gray-100 transition"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </button>
+            <h1 className="text-2xl font-bold text-gray-800">{customer.name}</h1>
+          </div>
           <div className="flex space-x-2">
             {!isEditing ? (
               <button 

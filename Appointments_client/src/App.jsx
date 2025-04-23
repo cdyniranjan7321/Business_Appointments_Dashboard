@@ -55,6 +55,7 @@ function App() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/analytics" element= {<Analytics/>}/>
+        <Route path="/customers/:customerId" element={<CustomerPage />} />
      
        
       </Routes>
