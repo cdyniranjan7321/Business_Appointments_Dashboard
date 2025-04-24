@@ -420,7 +420,7 @@ const CustomerPage = () => {
 
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-100">
+                <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
@@ -460,7 +460,7 @@ const CustomerPage = () => {
               <select
                 value={selectedCohort}
                 onChange={(e) => setSelectedCohort(e.target.value)}
-                className="border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                className="border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500"
               >
                 <option value="">--Select a cohort--</option>
                 {cohorts.map(cohort => (
