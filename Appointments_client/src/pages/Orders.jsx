@@ -122,6 +122,12 @@ const Orders = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const menuRef = useRef(null);
 
+
+  // utility function to format numbers as Nepali currency.
+  const formatNPR = (amount) => {
+    return `रु ${amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')}`;
+  };
+
   // Filter orders based on search term and filters
   const filteredOrders = orders.filter(order => {
     // Search term filtering
@@ -284,14 +290,14 @@ const Orders = () => {
                 <tr>
                   <td>${item.name}</td>
                   <td>${item.quantity}</td>
-                  <td>$${item.price.toFixed(2)}</td>
-                  <td>$${(item.quantity * item.price).toFixed(2)}</td>
+                  <td>${formatNPR(item.price)}</td>
+                  <td>${formatNPR(item.quantity * item.price)}</td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
           
-          <div class="total">Order Total: $${order.total.toFixed(2)}</div>
+          <div class="total">Order Total: ${formatNPR(order.total)}</div>
           
           <h2>Order Details</h2>
           <table>
@@ -400,13 +406,13 @@ const Orders = () => {
                     <tr>
                       <td>${item.name}</td>
                       <td>${item.quantity}</td>
-                      <td>$${item.price.toFixed(2)}</td>
-                      <td>$${(item.quantity * item.price).toFixed(2)}</td>
+                      <td>${formatNPR(item.price)}</td>
+                      <td>${formatNPR(item.quantity * item.price)}</td>
                     </tr>
                   `).join('')}
                   <tr>
                     <td colspan="3" style="text-align: right;"><strong>Order Total:</strong></td>
-                    <td><strong>$${order.total.toFixed(2)}</strong></td>
+                    <td><strong>${formatNPR(order.total)}</strong></td>
                   </tr>
                 </tbody>
               </table>
@@ -463,7 +469,7 @@ const Orders = () => {
       'Date': order.date,
       'Customer': order.customer,
       'Sales Channel': order.salesChannel,
-      'Total': order.total,
+      'Total (NPR)': order.total,
       'Payment Status': order.paymentStatus,
       'Fulfillment Status': order.fulfillmentStatus,
       'Delivery Method': order.deliveryMethod,
@@ -722,7 +728,7 @@ if (selectedOrder) {
               {getStatusIcon(selectedOrder.paymentStatus)}
               <span className="ml-2 font-medium">{selectedOrder.paymentStatus}</span>
             </div>
-            <p className="text-lg font-bold text-gray-800 mt-2">${selectedOrder.total.toFixed(2)}</p>
+            <p className="text-lg font-bold text-gray-800 mt-2">{formatNPR(selectedOrder.total)}</p>
           </motion.div>
 
           <motion.div 
@@ -745,50 +751,73 @@ if (selectedOrder) {
           </motion.div>
         </div>
 
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mb-10"
+        <motion.div
+           initial={{ opacity: 0 }}
+           animate={{ opacity: 1 }}
+           transition={{ delay: 0.6 }}
+           className="mb-10"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-            <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
+          <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
           </h2>
-          <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {selectedOrder.items.map((item, index) => (
-                  <motion.tr 
-                    key={index}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="hover:bg-gray-50 transition-colors duration-150"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{item.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.price.toFixed(2)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${(item.quantity * item.price).toFixed(2)}</td>
-                  </motion.tr>
-                ))}
-              </tbody>
-              <tfoot className="bg-gray-50">
-                <tr>
-                  <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">Total</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">${selectedOrder.total.toFixed(2)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        </motion.div>
+
+  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+    <table className="min-w-full divide-y divide-gray-200">
+      <thead className="bg-gray-50">
+        <tr>
+          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Item
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Quantity
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Price
+          </th>
+          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Total
+          </th>
+        </tr>
+      </thead>
+
+      <tbody className="bg-white divide-y divide-gray-200">
+        {selectedOrder.items.map((item, index) => (
+          <motion.tr
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 * index }}
+            className="hover:bg-gray-50 transition-colors duration-150"
+          >
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+              {item.name}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+              {item.quantity}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+              {formatNPR(item.price)}
+            </td>
+            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
+              {formatNPR(item.quantity * item.price)}
+            </td>
+          </motion.tr>
+        ))}
+      </tbody>
+
+      <tfoot className="bg-gray-50">
+        <tr>
+          <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">
+            Total
+          </td>
+          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900">
+            {formatNPR(selectedOrder.total)}
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</motion.div>
 
         <motion.div 
           initial={{ opacity: 0 }}
@@ -1102,7 +1131,7 @@ if (selectedOrder) {
                         {order.salesChannel}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                        ${order.total.toFixed(2)}
+                       {formatNPR(order.total)}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
                         <div className="flex items-center">
@@ -1283,7 +1312,7 @@ if (selectedOrder) {
                 </div>
 
                 <div className="sm:col-span-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Items</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Items (Prices in NPR)</h3>
                   {newOrder.items.map((item, index) => (
                     <div key={index} className="grid grid-cols-12 gap-2 mb-3">
                       <div className="col-span-12 sm:col-span-6">
