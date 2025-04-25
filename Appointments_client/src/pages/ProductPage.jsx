@@ -557,74 +557,81 @@ const handleDetails = () => {
                 <div className="grid grid-cols-3 gap-6">
                   {/* Left Column */}
                   <div className="col-span-2 space-y-6">
-                    {/* Pricing */}
-                    <div className="space-y-2 border border-spacing-3 pb-4 py-2 px-3 shadow-md rounded-lg">
-                      <h3 className="text-lg font-medium">Pricing</h3>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Price</label>
-                          <div className="flex items-center">
-                            <span className="mr-2">रु</span>
-                            <input
-                              type="number"
-                              name="price"
-                              value={newProduct.price}
-                              onChange={handleInputChange}
-                              className="w-full p-2 border border-gray-300 rounded"
-                              step="0.01"
-                              min="0"
-                              required
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1">Compare-at price</label>
-                          <div className="flex items-center">
-                            <span className="mr-2">रु</span>
-                            <input
-                              type="number"
-                              name="compareAtPrice"
-                              value={newProduct.compareAtPrice}
-                              onChange={handleInputChange}
-                              className="w-full p-2 border border-gray-300 rounded"
-                              step="0.01"
-                              min="0"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      {/* Charge Tax Checkbox */}
-                      <div className="mt-4 flex items-center">
-                        <input
-                          type="checkbox"
-                          id="chargeTax"
-                          name="chargeTax"
-                          checked={newProduct.chargeTax}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        />
-                        <label htmlFor="chargeTax" className="ml-2 block text-sm text-black">
-                          Charge tax on this product
-                        </label>
-                      </div>
 
-                      <div className="mt-2">
-                        <label className="block text-sm font-medium mb-1">Cost per item</label>
-                        <div className="flex items-center">
-                          <span className="mr-2">रु</span>
-                          <input
-                            type="number"
-                            name="costPerItem"
-                            value={newProduct.costPerItem}
-                            onChange={handleInputChange}
-                            className="w-full p-2 border border-gray-300 rounded"
-                            step="0.01"
-                            min="0"
-                          />
-                        </div>
-                        <p className="text-xs text-gray-500 mt-1">Customers won&apos;t see this</p>
-                      </div>
-                    </div>
+                    {/* Pricing */}
+                 <div className="space-y-2 border border-spacing-3 pb-4 py-2 px-3 shadow-md rounded-lg">
+                    <h3 className="text-lg font-medium">Pricing</h3>
+                     <div className="grid grid-cols-2 gap-4">
+                     <div>
+                       <label className="block text-sm font-medium mb-1">Price</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                           <span className="text-gray-500">रु</span>
+                  </div>
+                   <input
+                    type="number"
+                    name="price"
+                    value={newProduct.price}
+                    onChange={handleInputChange}
+                    className="w-full p-2 pl-8 border border-gray-300 rounded"
+                    step="0.01"
+                    min="0"
+                    required
+                   />
+                 </div>
+              </div>
+           <div>
+                <label className="block text-sm font-medium mb-1">Compare-at price</label>
+                  <div className="relative">
+                   <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                    <span className="text-gray-500">रु</span>
+                   </div>
+        <input
+          type="number"
+          name="compareAtPrice"
+          value={newProduct.compareAtPrice}
+          onChange={handleInputChange}
+          className="w-full p-2 pl-8 border border-gray-300 rounded"
+          step="0.01"
+          min="0"
+        />
+      </div>
+    </div>
+  </div>
+  {/* Charge Tax Checkbox */}
+  <div className="mt-4 flex items-center">
+    <input
+      type="checkbox"
+      id="chargeTax"
+      name="chargeTax"
+      checked={newProduct.chargeTax}
+      onChange={handleInputChange}
+      className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+    />
+    <label htmlFor="chargeTax" className="ml-2 block text-sm text-black">
+      Charge tax on this product
+    </label>
+  </div>
+
+  <div className="mt-2">
+    <label className="block text-sm font-medium mb-1">Cost per item</label>
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+        <span className="text-gray-500">रु</span>
+      </div>
+      <input
+        type="number"
+        name="costPerItem"
+        value={newProduct.costPerItem}
+        onChange={handleInputChange}
+        className="w-full p-2 pl-8 border border-gray-300 rounded"
+        step="0.01"
+        min="0"
+      />
+    </div>
+    <p className="text-xs text-gray-500 mt-1">Customers won&apos;t see this</p>
+  </div>
+</div>
 
                     {/* Inventory Section */}
                     <div className="space-y-4 border border-spacing-3 py-3 px-3 pb-6 shadow-md rounded-lg">
