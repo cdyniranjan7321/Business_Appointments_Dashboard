@@ -460,7 +460,6 @@ const handleDetails = () => {
     }
   };
   
-
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
       {/* Add Product Modal */}
