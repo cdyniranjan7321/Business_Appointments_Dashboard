@@ -1,6 +1,6 @@
-
 import React, { useState } from 'react';
-import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi';
+import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2, 
+  FiCheck, FiX, FiLock } from 'react-icons/fi';
 
 const Staff = () => {
   // State for form inputs
@@ -12,28 +12,24 @@ const Staff = () => {
     position: '',
     role: 'staff',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    pin: ''
   });
   const [loginForm, setLoginForm] = useState({
     email: '',
-    password: ''
+    password: '',
+    pin: '',
+    usePin: false
   });
+  const [editMode, setEditMode] = useState(false);
+  const [currentStaffId, setCurrentStaffId] = useState(null);
+  const [currentDate] = useState(new Date().toISOString().split('T')[0]);
+  const [showStaffFormModal, setShowStaffFormModal] = useState(false);
 
-  // Sample staff data - replace with actual data from your backend
-  const [staffMembers, setStaffMembers] = useState([
-    { id: 1, name: 'John Doe', email: 'john@example.com', phone: '123-456-7890', position: 'Manager', role: 'admin', lastLogin: '2023-05-15 09:30' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', phone: '987-654-3210', position: 'Cashier', role: 'staff', lastLogin: '2023-05-15 08:45' },
-    { id: 3, name: 'Mike Johnson', email: 'mike@example.com', phone: '555-123-4567', position: 'Inventory', role: 'staff', lastLogin: '2023-05-14 14:20' }
-  ]);
+  // Staff and attendance data
+  const [staffMembers, setStaffMembers] = useState([]);
+  const [attendance, setAttendance] = useState([]);
 
-  // Sample attendance data
-  const [attendance, setAttendance] = useState([
-    { id: 1, staffId: 1, name: 'John Doe', date: '2023-05-15', clockIn: '08:30', clockOut: '17:15', status: 'present' },
-    { id: 2, staffId: 2, name: 'Jane Smith', date: '2023-05-15', clockIn: '08:45', clockOut: '17:00', status: 'present' },
-    { id: 3, staffId: 3, name: 'Mike Johnson', date: '2023-05-15', clockIn: '09:00', clockOut: '16:45', status: 'late' }
-  ]);
-
-  // Handle form input changes
   const handleStaffFormChange = (e) => {
     const { name, value } = e.target;
     setStaffForm(prev => ({ ...prev, [name]: value }));
@@ -44,12 +40,45 @@ const Staff = () => {
     setLoginForm(prev => ({ ...prev, [name]: value }));
   };
 
-  // Form submission handlers
   const handleStaffSubmit = (e) => {
     e.preventDefault();
-    // Validate and submit to backend
-    console.log('Staff form submitted:', staffForm);
-    // Reset form
+    
+    // Validate passwords match if not using PIN
+    if (!staffForm.pin && staffForm.password !== staffForm.confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+
+    // Validate PIN is 4 digits if provided
+    if (staffForm.pin && !/^\d{4}$/.test(staffForm.pin)) {
+      alert("PIN must be 4 digits!");
+      return;
+    }
+
+    if (editMode) {
+      setStaffMembers(staffMembers.map(staff => 
+        staff.id === currentStaffId ? { ...staff, ...staffForm } : staff
+      ));
+    } else {
+      const newStaff = {
+        id: staffMembers.length > 0 ? Math.max(...staffMembers.map(s => s.id)) + 1 : 1,
+        ...staffForm,
+        lastLogin: 'Never'
+      };
+      setStaffMembers([...staffMembers, newStaff]);
+      
+      const newAttendance = {
+        id: attendance.length > 0 ? Math.max(...attendance.map(a => a.id)) + 1 : 1,
+        staffId: newStaff.id,
+        name: newStaff.name,
+        date: currentDate,
+        clockIn: '',
+        clockOut: '',
+        status: 'absent'
+      };
+      setAttendance([...attendance, newAttendance]);
+    }
+
     setStaffForm({
       name: '',
       email: '',
@@ -57,32 +86,131 @@ const Staff = () => {
       position: '',
       role: 'staff',
       password: '',
-      confirmPassword: ''
+      confirmPassword: '',
+      pin: ''
     });
+    setEditMode(false);
+    setCurrentStaffId(null);
+    setShowStaffFormModal(false);
   };
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    // Validate and submit to backend
-    console.log('Login form submitted:', loginForm);
-    // Reset form
-    setLoginForm({ email: '', password: '' });
+    const staff = staffMembers.find(s => s.email === loginForm.email);
+    
+    if (staff) {
+      if (
+        (!loginForm.usePin && staff.password === loginForm.password) ||
+        (loginForm.usePin && staff.pin === loginForm.pin)
+      ) {
+        alert(`Welcome back, ${staff.name}!`);
+        setStaffMembers(staffMembers.map(s => 
+          s.id === staff.id ? { ...s, lastLogin: new Date().toLocaleString() } : s
+        ));
+      } else {
+        alert('Invalid credentials!');
+      }
+    } else {
+      alert('Staff member not found!');
+    }
+    setLoginForm({ email: '', password: '', pin: '', usePin: false });
   };
 
-  // Clock in/out handlers
+  const handleEditStaff = (staff) => {
+    setStaffForm({
+      name: staff.name,
+      email: staff.email,
+      phone: staff.phone,
+      position: staff.position,
+      role: staff.role,
+      password: '',
+      confirmPassword: '',
+      pin: staff.pin || ''
+    });
+    setEditMode(true);
+    setCurrentStaffId(staff.id);
+    setShowStaffFormModal(true);
+  };
+
   const handleClockIn = (staffId) => {
-    console.log('Clock in:', staffId);
-    // Add to attendance records
+    const now = new Date();
+    const timeString = now.toTimeString().substring(0, 5);
+    
+    const existingRecord = attendance.find(a => 
+      a.staffId === staffId && a.date === currentDate
+    );
+    
+    if (existingRecord) {
+      setAttendance(attendance.map(a => 
+        a.id === existingRecord.id ? { 
+          ...a, 
+          clockIn: timeString,
+          status: getAttendanceStatus(timeString)
+        } : a
+      ));
+    } else {
+      const staff = staffMembers.find(s => s.id === staffId);
+      const newAttendanceRecord = {
+        id: attendance.length > 0 ? Math.max(...attendance.map(a => a.id)) + 1 : 1,
+        staffId,
+        name: staff.name,
+        date: currentDate,
+        clockIn: timeString,
+        clockOut: '',
+        status: getAttendanceStatus(timeString)
+      };
+      setAttendance([...attendance, newAttendanceRecord]);
+    }
   };
 
   const handleClockOut = (staffId) => {
-    console.log('Clock out:', staffId);
-    // Update attendance records
+    const now = new Date();
+    const timeString = now.toTimeString().substring(0, 5);
+    
+    setAttendance(attendance.map(a => 
+      a.staffId === staffId && a.date === currentDate ? { 
+        ...a, 
+        clockOut: timeString 
+      } : a
+    ));
   };
 
-  // Delete staff member
+  const getAttendanceStatus = (clockInTime) => {
+    const [hours, minutes] = clockInTime.split(':').map(Number);
+    if (hours > 9 || (hours === 9 && minutes > 0)) return 'late';
+    return 'present';
+  };
+
   const handleDeleteStaff = (id) => {
-    setStaffMembers(staffMembers.filter(staff => staff.id !== id));
+    if (window.confirm('Are you sure you want to delete this staff member?')) {
+      setStaffMembers(staffMembers.filter(staff => staff.id !== id));
+      setAttendance(attendance.filter(record => record.staffId !== id));
+    }
+  };
+
+  const handleResetPassword = (id) => {
+    const staff = staffMembers.find(s => s.id === id);
+    const resetType = window.confirm("Reset password? Click OK for password, Cancel for PIN");
+    
+    if (resetType) {
+      const newPassword = prompt("Enter new password for this staff member:");
+      if (newPassword) {
+        setStaffMembers(staffMembers.map(s => 
+          s.id === id ? { ...s, password: newPassword } : s
+        ));
+        alert(`Password for ${staff.name} has been reset.`);
+      }
+    } else {
+      const newPin = prompt("Enter new 4-digit PIN for this staff member:");
+      if (newPin && /^\d{4}$/.test(newPin)) {
+        setStaffMembers(staffMembers.map(s => 
+          s.id === id ? { ...s, pin: newPin } : s
+        ));
+        alert(`PIN for ${staff.name} has been reset.`);
+      } else {
+        alert("PIN must be 4 digits!");
+      }
+    }
   };
 
   return (
@@ -103,12 +231,12 @@ const Staff = () => {
         >
           <FiKey className="inline mr-2" /> Accounts
         </button>
-        <buttond
+        <button
           className={`py-2 px-4 font-medium ${activeTab === 'attendance' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
           onClick={() => setActiveTab('attendance')}
         >
           <FiClock className="inline mr-2" /> Attendance
-        </buttond>
+        </button>
         <button
           className={`py-2 px-4 font-medium ${activeTab === 'roles' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
           onClick={() => setActiveTab('roles')}
@@ -122,157 +250,232 @@ const Staff = () => {
         <div>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Staff Members</h2>
-            <button className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center">
+            <button 
+              className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center"
+              onClick={() => {
+                setEditMode(false);
+                setStaffForm({
+                  name: '',
+                  email: '',
+                  phone: '',
+                  position: '',
+                  role: 'staff',
+                  password: '',
+                  confirmPassword: '',
+                  pin: ''
+                });
+                setShowStaffFormModal(true);
+              }}
+            >
               <FiPlus className="mr-2" /> Add Staff
             </button>
           </div>
           
-          {/* Staff Creation Form */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Create Staff Profile</h3>
-            <form onSubmit={handleStaffSubmit}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={staffForm.name}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={staffForm.email}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={staffForm.phone}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                  <input
-                    type="text"
-                    name="position"
-                    value={staffForm.position}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select
-                    name="role"
-                    value={staffForm.role}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  >
-                    <option value="admin">Admin</option>
-                    <option value="manager">Manager</option>
-                    <option value="staff">Staff</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={staffForm.password}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={staffForm.confirmPassword}
-                    onChange={handleStaffFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
-                  />
-                </div>
-              </div>
-              <button
-                type="submit"
-                className="mt-6 bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
-              >
-                Create Staff Account
-              </button>
-            </form>
+
+          {/* Staff Form Modal */}
+{showStaffFormModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center sticky top-0 bg-white p-6 pb-0">
+        <h3 className="text-lg font-medium text-gray-800">
+          {editMode ? 'Edit Staff Profile' : 'Create Staff Profile'}
+        </h3>
+        <button 
+          onClick={() => {
+            setShowStaffFormModal(false);
+            setEditMode(false);
+          }}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <FiX className="text-xl" />
+        </button>
+      </div>
+      <form onSubmit={handleStaffSubmit} className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <input
+              type="text"
+              name="name"
+              value={staffForm.name}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={staffForm.email}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input
+              type="tel"
+              name="phone"
+              value={staffForm.phone}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+            <input
+              type="text"
+              name="position"
+              value={staffForm.position}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select
+              name="role"
+              value={staffForm.role}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            >
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={staffForm.password}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required={!staffForm.pin}
+              disabled={!!staffForm.pin}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={staffForm.confirmPassword}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required={!staffForm.pin}
+              disabled={!!staffForm.pin}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <FiLock className="inline mr-1" /> 
+              PIN (4 digits, optional - can be used instead of password)
+            </label>
+            <input
+              type="password"
+              name="pin"
+              value={staffForm.pin}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              maxLength="4"
+              pattern="\d{4}"
+              placeholder="Enter 4-digit PIN (optional)"
+            />
+          </div>
+        </div>
+        <div className="mt-6 flex space-x-4 sticky bottom-0 bg-white pt-4 pb-2">
+          <button
+            type="submit"
+            className="bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
+          >
+            {editMode ? 'Update Staff' : 'Create Staff'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowStaffFormModal(false);
+              setEditMode(false);
+            }}
+            className="bg-gray-500 hover:bg-gray-700 text-white px-6 py-2 rounded-md"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
           
           {/* Staff List */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {staffMembers.map(staff => (
-                  <tr key={staff.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                          <FiUser className="text-gray-600" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{staff.name}</div>
-                          <div className="text-sm text-gray-500">{staff.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.position}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${staff.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                          staff.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                        {staff.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.phone}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button className="text-blue-600 hover:text-blue-900 mr-4">
-                        <FiEdit2 className="inline mr-1" /> Edit
-                      </button>
-                      <button 
-                        className="text-red-600 hover:text-red-900"
-                        onClick={() => handleDeleteStaff(staff.id)}
-                      >
-                        <FiTrash2 className="inline mr-1" /> Delete
-                      </button>
-                    </td>
+          {staffMembers.length > 0 ? (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {staffMembers.map(staff => (
+                    <tr key={staff.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <FiUser className="text-gray-600" />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{staff.name}</div>
+                            <div className="text-sm text-gray-500">{staff.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.position}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${staff.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                            staff.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                          {staff.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.phone}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          onClick={() => handleEditStaff(staff)}
+                        >
+                          <FiEdit2 className="inline mr-1" /> Edit
+                        </button>
+                        <button 
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDeleteStaff(staff.id)}
+                        >
+                          <FiTrash2 className="inline mr-1" /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No Staff Members Found</h3>
+              <p className="text-gray-500 mb-4">Add your first staff member to get started</p>
+            </div>
+          )}
         </div>
       )}
       
@@ -295,24 +498,55 @@ const Staff = () => {
                     name="email"
                     value={loginForm.email}
                     onChange={handleLoginFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-green-300 rounded-md"
                     required
                   />
                 </div>
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                
+                <div className="mb-4 flex items-center">
                   <input
-                    type="password"
-                    name="password"
-                    value={loginForm.password}
-                    onChange={handleLoginFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
+                    type="checkbox"
+                    id="usePin"
+                    checked={loginForm.usePin}
+                    onChange={() => setLoginForm(prev => ({ ...prev, usePin: !prev.usePin }))}
+                    className="mr-2"
                   />
+                  <label htmlFor="usePin" className="text-sm text-gray-700">
+                    Login with PIN instead of password
+                  </label>
                 </div>
+                
+                {loginForm.usePin ? (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">PIN</label>
+                    <input
+                      type="password"
+                      name="pin"
+                      value={loginForm.pin}
+                      onChange={handleLoginFormChange}
+                      className="w-full px-3 py-2 border border-green-300 rounded-md"
+                      maxLength="4"
+                      pattern="\d{4}"
+                      required
+                    />
+                  </div>
+                ) : (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input
+                      type="password"
+                      name="password"
+                      value={loginForm.password}
+                      onChange={handleLoginFormChange}
+                      className="w-full px-3 py-2 border border-green-300 rounded-md"
+                      required
+                    />
+                  </div>
+                )}
+                
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+                  className="w-full bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
                 >
                   Login
                 </button>
@@ -322,24 +556,34 @@ const Staff = () => {
             {/* Account Status */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-800 mb-4">Account Status</h3>
-              <div className="space-y-4">
-                {staffMembers.map(staff => (
-                  <div key={staff.id} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{staff.name}</p>
-                        <p className="text-sm text-gray-500">{staff.email}</p>
-                      </div>
-                      <div className="text-sm">
-                        <p className="text-gray-500">Last login: {staff.lastLogin}</p>
-                        <button className="text-blue-600 hover:text-blue-800 text-sm">
-                          Reset Password
-                        </button>
+              {staffMembers.length > 0 ? (
+                <div className="space-y-4">
+                  {staffMembers.map(staff => (
+                    <div key={staff.id} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{staff.name}</p>
+                          <p className="text-sm text-gray-500">{staff.email}</p>
+                        </div>
+                        <div className="text-sm">
+                          <p className="text-gray-500">Last login: {staff.lastLogin}</p>
+                          <button 
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                            onClick={() => handleResetPassword(staff.id)}
+                          >
+                            Reset Password/PIN
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
+                  <p className="text-gray-500">No staff accounts available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -351,72 +595,149 @@ const Staff = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Staff Attendance</h2>
           
           {/* Current Status */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Today's Attendance</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {staffMembers.map(staff => (
-                <div key={staff.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="font-medium">{staff.name}</p>
-                      <p className="text-sm text-gray-500">{staff.position}</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
-                      Clocked In
-                    </span>
-                  </div>
-                  <div className="mt-4 flex justify-between">
-                    <button 
-                      onClick={() => handleClockIn(staff.id)}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded text-sm flex items-center"
-                    >
-                      <FiLogIn className="mr-1" /> Clock In
-                    </button>
-                    <button 
-                      onClick={() => handleClockOut(staff.id)}
-                      className="bg-red-100 text-red-800 px-3 py-1 rounded text-sm flex items-center"
-                    >
-                      <FiLogOut className="mr-1" /> Clock Out
-                    </button>
+          {staffMembers.length > 0 ? (
+            <>
+              <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Today's Attendance ({currentDate})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {staffMembers.map(staff => {
+                    const todayRecord = attendance.find(a => 
+                      a.staffId === staff.id && a.date === currentDate
+                    );
+                    
+                    return (
+                      <div key={staff.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{staff.name}</p>
+                            <p className="text-sm text-gray-500">{staff.position}</p>
+                          </div>
+                          {todayRecord?.clockIn ? (
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 flex items-center">
+                              <FiCheck className="mr-1" /> Clocked In at {todayRecord.clockIn}
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 flex items-center">
+                              <FiX className="mr-1" /> Not Clocked In
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-4 flex justify-between">
+                          <button 
+                            onClick={() => handleClockIn(staff.id)}
+                            disabled={todayRecord?.clockIn}
+                            className={`px-3 py-1 rounded text-sm flex items-center 
+                              ${todayRecord?.clockIn ? 
+                                'bg-gray-200 text-gray-500 cursor-not-allowed' : 
+                                'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
+                          >
+                            <FiLogIn className="mr-1" /> Clock In
+                          </button>
+                          <button 
+                            onClick={() => handleClockOut(staff.id)}
+                            disabled={!todayRecord?.clockIn || todayRecord?.clockOut}
+                            className={`px-3 py-1 rounded text-sm flex items-center 
+                              ${!todayRecord?.clockIn || todayRecord?.clockOut ? 
+                                'bg-gray-200 text-gray-500 cursor-not-allowed' : 
+                                'bg-red-100 text-red-800 hover:bg-red-200'}`}
+                          >
+                            <FiLogOut className="mr-1" /> Clock Out
+                          </button>
+                        </div>
+                        {todayRecord?.clockOut && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            Clocked out at {todayRecord.clockOut}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Attendance Records */}
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-800">Attendance History</h3>
+                  <div className="flex items-center">
+                    <label htmlFor="date-filter" className="mr-2 text-sm text-gray-600">Filter by date:</label>
+                    <input 
+                      type="date" 
+                      id="date-filter" 
+                      className="border border-gray-300 rounded px-2 py-1 text-sm"
+                    />
                   </div>
                 </div>
-              ))}
+                {attendance.length > 0 ? (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock In</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock Out</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {attendance.map(record => {
+                        let hoursWorked = 'N/A';
+                        if (record.clockIn && record.clockOut) {
+                          const [inHour, inMin] = record.clockIn.split(':').map(Number);
+                          const [outHour, outMin] = record.clockOut.split(':').map(Number);
+                          const totalMinutes = (outHour * 60 + outMin) - (inHour * 60 + inMin);
+                          hoursWorked = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+                        }
+                        
+                        return (
+                          <tr key={record.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{record.name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {record.clockIn || '--:--'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {record.clockOut || '--:--'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                ${record.status === 'present' ? 'bg-green-100 text-green-800' : 
+                                  record.status === 'late' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                                {record.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {hoursWorked}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-8">
+                    <FiClock className="mx-auto text-4xl text-gray-400 mb-4" />
+                    <p className="text-gray-500">No attendance records found</p>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No Staff Members Found</h3>
+              <p className="text-gray-500 mb-4">Add staff members to track attendance</p>
+              <button 
+                className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center mx-auto"
+                onClick={() => setActiveTab('profiles')}
+              >
+                <FiPlus className="mr-2" /> Add Staff
+              </button>
             </div>
-          </div>
-          
-          {/* Attendance Records */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock In</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock Out</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {attendance.map(record => (
-                  <tr key={record.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.date}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{record.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.clockIn}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.clockOut}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${record.status === 'present' ? 'bg-green-100 text-green-800' : 
-                          record.status === 'late' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                        {record.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          )}
         </div>
       )}
       
@@ -446,7 +767,14 @@ const Staff = () => {
                   <span className="w-2 h-2 bg-purple-600 rounded-full mr-2"></span>
                   View all reports
                 </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-purple-600 rounded-full mr-2"></span>
+                  Manage roles and permissions
+                </li>
               </ul>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500">Assigned to: {staffMembers.filter(s => s.role === 'admin').length} staff</p>
+              </div>
             </div>
             
             {/* Manager Role */}
@@ -469,7 +797,14 @@ const Staff = () => {
                   <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
                   Limited staff management
                 </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+                  Process refunds and discounts
+                </li>
               </ul>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500">Assigned to: {staffMembers.filter(s => s.role === 'manager').length} staff</p>
+              </div>
             </div>
             
             {/* Staff Role */}
@@ -492,7 +827,14 @@ const Staff = () => {
                   <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
                   Limited access to reports
                 </li>
+                <li className="flex items-center">
+                  <span className="w-2 h-2 bg-green-600 rounded-full mr-2"></span>
+                  Process sales transactions
+                </li>
               </ul>
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <p className="text-xs text-gray-500">Assigned to: {staffMembers.filter(s => s.role === 'staff').length} staff</p>
+              </div>
             </div>
           </div>
         </div>
