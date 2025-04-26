@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2, FiCheck, FiX, FiLock } from 'react-icons/fi';
+import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2, 
+  FiCheck, FiX, FiLock } from 'react-icons/fi';
 
 const Staff = () => {
   // State for form inputs
@@ -270,147 +271,148 @@ const Staff = () => {
             </button>
           </div>
           
+
           {/* Staff Form Modal */}
-          {showStaffFormModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-2xl">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-800">
-                    {editMode ? 'Edit Staff Profile' : 'Create Staff Profile'}
-                  </h3>
-                  <button 
-                    onClick={() => {
-                      setShowStaffFormModal(false);
-                      setEditMode(false);
-                    }}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <FiX className="text-xl" />
-                  </button>
-                </div>
-                <form onSubmit={handleStaffSubmit}>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                      <input
-                        type="text"
-                        name="name"
-                        value={staffForm.name}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <input
-                        type="email"
-                        name="email"
-                        value={staffForm.email}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-                      <input
-                        type="tel"
-                        name="phone"
-                        value={staffForm.phone}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
-                      <input
-                        type="text"
-                        name="position"
-                        value={staffForm.position}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                      <select
-                        name="role"
-                        value={staffForm.role}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="manager">Manager</option>
-                        <option value="staff">Staff</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                      <input
-                        type="password"
-                        name="password"
-                        value={staffForm.password}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required={!staffForm.pin}
-                        disabled={!!staffForm.pin}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        value={staffForm.confirmPassword}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        required={!staffForm.pin}
-                        disabled={!!staffForm.pin}
-                      />
-                    </div>
-                    <div className="md:col-span-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        <FiLock className="inline mr-1" /> 
-                        PIN (4 digits, optional - can be used instead of password)
-                      </label>
-                      <input
-                        type="password"
-                        name="pin"
-                        value={staffForm.pin}
-                        onChange={handleStaffFormChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                        maxLength="4"
-                        pattern="\d{4}"
-                        placeholder="Enter 4-digit PIN (optional)"
-                      />
-                    </div>
-                  </div>
-                  <div className="mt-6 flex space-x-4">
-                    <button
-                      type="submit"
-                      className="bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
-                    >
-                      {editMode ? 'Update Staff' : 'Create Staff'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowStaffFormModal(false);
-                        setEditMode(false);
-                      }}
-                      className="bg-gray-500 hover:bg-gray-700 text-white px-6 py-2 rounded-md"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
+{showStaffFormModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+      <div className="flex justify-between items-center sticky top-0 bg-white p-6 pb-0">
+        <h3 className="text-lg font-medium text-gray-800">
+          {editMode ? 'Edit Staff Profile' : 'Create Staff Profile'}
+        </h3>
+        <button 
+          onClick={() => {
+            setShowStaffFormModal(false);
+            setEditMode(false);
+          }}
+          className="text-gray-500 hover:text-gray-700"
+        >
+          <FiX className="text-xl" />
+        </button>
+      </div>
+      <form onSubmit={handleStaffSubmit} className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+            <input
+              type="text"
+              name="name"
+              value={staffForm.name}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={staffForm.email}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input
+              type="tel"
+              name="phone"
+              value={staffForm.phone}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+            <input
+              type="text"
+              name="position"
+              value={staffForm.position}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+            <select
+              name="role"
+              value={staffForm.role}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required
+            >
+              <option value="admin">Admin</option>
+              <option value="manager">Manager</option>
+              <option value="staff">Staff</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={staffForm.password}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required={!staffForm.pin}
+              disabled={!!staffForm.pin}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={staffForm.confirmPassword}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              required={!staffForm.pin}
+              disabled={!!staffForm.pin}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              <FiLock className="inline mr-1" /> 
+              PIN (4 digits, optional - can be used instead of password)
+            </label>
+            <input
+              type="password"
+              name="pin"
+              value={staffForm.pin}
+              onChange={handleStaffFormChange}
+              className="w-full px-3 py-2 border border-green-300 rounded-md"
+              maxLength="4"
+              pattern="\d{4}"
+              placeholder="Enter 4-digit PIN (optional)"
+            />
+          </div>
+        </div>
+        <div className="mt-6 flex space-x-4 sticky bottom-0 bg-white pt-4 pb-2">
+          <button
+            type="submit"
+            className="bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
+          >
+            {editMode ? 'Update Staff' : 'Create Staff'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setShowStaffFormModal(false);
+              setEditMode(false);
+            }}
+            className="bg-gray-500 hover:bg-gray-700 text-white px-6 py-2 rounded-md"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
           
           {/* Staff List */}
           {staffMembers.length > 0 ? (
@@ -472,12 +474,6 @@ const Staff = () => {
               <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
               <h3 className="text-lg font-medium text-gray-700 mb-2">No Staff Members Found</h3>
               <p className="text-gray-500 mb-4">Add your first staff member to get started</p>
-              <button 
-                className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center mx-auto"
-                onClick={() => setShowStaffFormModal(true)}
-              >
-                <FiPlus className="mr-2" /> Add Staff
-              </button>
             </div>
           )}
         </div>
@@ -502,7 +498,7 @@ const Staff = () => {
                     name="email"
                     value={loginForm.email}
                     onChange={handleLoginFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    className="w-full px-3 py-2 border border-green-300 rounded-md"
                     required
                   />
                 </div>
@@ -528,7 +524,7 @@ const Staff = () => {
                       name="pin"
                       value={loginForm.pin}
                       onChange={handleLoginFormChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-green-300 rounded-md"
                       maxLength="4"
                       pattern="\d{4}"
                       required
@@ -542,7 +538,7 @@ const Staff = () => {
                       name="password"
                       value={loginForm.password}
                       onChange={handleLoginFormChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                      className="w-full px-3 py-2 border border-green-300 rounded-md"
                       required
                     />
                   </div>
@@ -550,7 +546,7 @@ const Staff = () => {
                 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md"
+                  className="w-full bg-green-500 hover:bg-green-700 text-white px-6 py-2 rounded-md"
                 >
                   Login
                 </button>
