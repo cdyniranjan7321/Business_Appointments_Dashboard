@@ -413,59 +413,73 @@ const Staff = () => {
           )}
           
           {/* Staff List */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {staffMembers.map(staff => (
-                  <tr key={staff.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                          <FiUser className="text-gray-600" />
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{staff.name}</div>
-                          <div className="text-sm text-gray-500">{staff.email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.position}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                        ${staff.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
-                          staff.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                        {staff.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.phone}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button 
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                        onClick={() => handleEditStaff(staff)}
-                      >
-                        <FiEdit2 className="inline mr-1" /> Edit
-                      </button>
-                      <button 
-                        className="text-red-600 hover:text-red-900"
-                        onClick={() => handleDeleteStaff(staff.id)}
-                      >
-                        <FiTrash2 className="inline mr-1" /> Delete
-                      </button>
-                    </td>
+          {staffMembers.length > 0 ? (
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {staffMembers.map(staff => (
+                    <tr key={staff.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                            <FiUser className="text-gray-600" />
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">{staff.name}</div>
+                            <div className="text-sm text-gray-500">{staff.email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.position}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                          ${staff.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                            staff.role === 'manager' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
+                          {staff.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{staff.phone}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button 
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          onClick={() => handleEditStaff(staff)}
+                        >
+                          <FiEdit2 className="inline mr-1" /> Edit
+                        </button>
+                        <button 
+                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDeleteStaff(staff.id)}
+                        >
+                          <FiTrash2 className="inline mr-1" /> Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No Staff Members Found</h3>
+              <p className="text-gray-500 mb-4">Add your first staff member to get started</p>
+              <button 
+                className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center mx-auto"
+                onClick={() => setShowStaffFormModal(true)}
+              >
+                <FiPlus className="mr-2" /> Add Staff
+              </button>
+            </div>
+          )}
         </div>
       )}
       
@@ -546,27 +560,34 @@ const Staff = () => {
             {/* Account Status */}
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-medium text-gray-800 mb-4">Account Status</h3>
-              <div className="space-y-4">
-                {staffMembers.map(staff => (
-                  <div key={staff.id} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{staff.name}</p>
-                        <p className="text-sm text-gray-500">{staff.email}</p>
-                      </div>
-                      <div className="text-sm">
-                        <p className="text-gray-500">Last login: {staff.lastLogin}</p>
-                        <button 
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                          onClick={() => handleResetPassword(staff.id)}
-                        >
-                          Reset Password/PIN
-                        </button>
+              {staffMembers.length > 0 ? (
+                <div className="space-y-4">
+                  {staffMembers.map(staff => (
+                    <div key={staff.id} className="border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{staff.name}</p>
+                          <p className="text-sm text-gray-500">{staff.email}</p>
+                        </div>
+                        <div className="text-sm">
+                          <p className="text-gray-500">Last login: {staff.lastLogin}</p>
+                          <button 
+                            className="text-blue-600 hover:text-blue-800 text-sm"
+                            onClick={() => handleResetPassword(staff.id)}
+                          >
+                            Reset Password/PIN
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
+                  <p className="text-gray-500">No staff accounts available</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -578,126 +599,149 @@ const Staff = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-6">Staff Attendance</h2>
           
           {/* Current Status */}
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h3 className="text-lg font-medium text-gray-800 mb-4">Today's Attendance ({currentDate})</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {staffMembers.map(staff => {
-                const todayRecord = attendance.find(a => 
-                  a.staffId === staff.id && a.date === currentDate
-                );
-                
-                return (
-                  <div key={staff.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{staff.name}</p>
-                        <p className="text-sm text-gray-500">{staff.position}</p>
+          {staffMembers.length > 0 ? (
+            <>
+              <div className="bg-white rounded-lg shadow p-6 mb-8">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Today's Attendance ({currentDate})</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {staffMembers.map(staff => {
+                    const todayRecord = attendance.find(a => 
+                      a.staffId === staff.id && a.date === currentDate
+                    );
+                    
+                    return (
+                      <div key={staff.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <p className="font-medium">{staff.name}</p>
+                            <p className="text-sm text-gray-500">{staff.position}</p>
+                          </div>
+                          {todayRecord?.clockIn ? (
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 flex items-center">
+                              <FiCheck className="mr-1" /> Clocked In at {todayRecord.clockIn}
+                            </span>
+                          ) : (
+                            <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 flex items-center">
+                              <FiX className="mr-1" /> Not Clocked In
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-4 flex justify-between">
+                          <button 
+                            onClick={() => handleClockIn(staff.id)}
+                            disabled={todayRecord?.clockIn}
+                            className={`px-3 py-1 rounded text-sm flex items-center 
+                              ${todayRecord?.clockIn ? 
+                                'bg-gray-200 text-gray-500 cursor-not-allowed' : 
+                                'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
+                          >
+                            <FiLogIn className="mr-1" /> Clock In
+                          </button>
+                          <button 
+                            onClick={() => handleClockOut(staff.id)}
+                            disabled={!todayRecord?.clockIn || todayRecord?.clockOut}
+                            className={`px-3 py-1 rounded text-sm flex items-center 
+                              ${!todayRecord?.clockIn || todayRecord?.clockOut ? 
+                                'bg-gray-200 text-gray-500 cursor-not-allowed' : 
+                                'bg-red-100 text-red-800 hover:bg-red-200'}`}
+                          >
+                            <FiLogOut className="mr-1" /> Clock Out
+                          </button>
+                        </div>
+                        {todayRecord?.clockOut && (
+                          <div className="mt-2 text-sm text-gray-600">
+                            Clocked out at {todayRecord.clockOut}
+                          </div>
+                        )}
                       </div>
-                      {todayRecord?.clockIn ? (
-                        <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800 flex items-center">
-                          <FiCheck className="mr-1" /> Clocked In at {todayRecord.clockIn}
-                        </span>
-                      ) : (
-                        <span className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-800 flex items-center">
-                          <FiX className="mr-1" /> Not Clocked In
-                        </span>
-                      )}
-                    </div>
-                    <div className="mt-4 flex justify-between">
-                      <button 
-                        onClick={() => handleClockIn(staff.id)}
-                        disabled={todayRecord?.clockIn}
-                        className={`px-3 py-1 rounded text-sm flex items-center 
-                          ${todayRecord?.clockIn ? 
-                            'bg-gray-200 text-gray-500 cursor-not-allowed' : 
-                            'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
-                      >
-                        <FiLogIn className="mr-1" /> Clock In
-                      </button>
-                      <button 
-                        onClick={() => handleClockOut(staff.id)}
-                        disabled={!todayRecord?.clockIn || todayRecord?.clockOut}
-                        className={`px-3 py-1 rounded text-sm flex items-center 
-                          ${!todayRecord?.clockIn || todayRecord?.clockOut ? 
-                            'bg-gray-200 text-gray-500 cursor-not-allowed' : 
-                            'bg-red-100 text-red-800 hover:bg-red-200'}`}
-                      >
-                        <FiLogOut className="mr-1" /> Clock Out
-                      </button>
-                    </div>
-                    {todayRecord?.clockOut && (
-                      <div className="mt-2 text-sm text-gray-600">
-                        Clocked out at {todayRecord.clockOut}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* Attendance Records */}
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-800">Attendance History</h3>
-              <div className="flex items-center">
-                <label htmlFor="date-filter" className="mr-2 text-sm text-gray-600">Filter by date:</label>
-                <input 
-                  type="date" 
-                  id="date-filter" 
-                  className="border border-gray-300 rounded px-2 py-1 text-sm"
-                />
+                    );
+                  })}
+                </div>
               </div>
+              
+              {/* Attendance Records */}
+              <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-gray-800">Attendance History</h3>
+                  <div className="flex items-center">
+                    <label htmlFor="date-filter" className="mr-2 text-sm text-gray-600">Filter by date:</label>
+                    <input 
+                      type="date" 
+                      id="date-filter" 
+                      className="border border-gray-300 rounded px-2 py-1 text-sm"
+                    />
+                  </div>
+                </div>
+                {attendance.length > 0 ? (
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock In</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock Out</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {attendance.map(record => {
+                        let hoursWorked = 'N/A';
+                        if (record.clockIn && record.clockOut) {
+                          const [inHour, inMin] = record.clockIn.split(':').map(Number);
+                          const [outHour, outMin] = record.clockOut.split(':').map(Number);
+                          const totalMinutes = (outHour * 60 + outMin) - (inHour * 60 + inMin);
+                          hoursWorked = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
+                        }
+                        
+                        return (
+                          <tr key={record.id}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.date}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{record.name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {record.clockIn || '--:--'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {record.clockOut || '--:--'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                ${record.status === 'present' ? 'bg-green-100 text-green-800' : 
+                                  record.status === 'late' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                                {record.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {hoursWorked}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-8">
+                    <FiClock className="mx-auto text-4xl text-gray-400 mb-4" />
+                    <p className="text-gray-500">No attendance records found</p>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="bg-white rounded-lg shadow p-8 text-center">
+              <FiUser className="mx-auto text-4xl text-gray-400 mb-4" />
+              <h3 className="text-lg font-medium text-gray-700 mb-2">No Staff Members Found</h3>
+              <p className="text-gray-500 mb-4">Add staff members to track attendance</p>
+              <button 
+                className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center mx-auto"
+                onClick={() => setActiveTab('profiles')}
+              >
+                <FiPlus className="mr-2" /> Add Staff
+              </button>
             </div>
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock In</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clock Out</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hours</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {attendance.map(record => {
-                  let hoursWorked = 'N/A';
-                  if (record.clockIn && record.clockOut) {
-                    const [inHour, inMin] = record.clockIn.split(':').map(Number);
-                    const [outHour, outMin] = record.clockOut.split(':').map(Number);
-                    const totalMinutes = (outHour * 60 + outMin) - (inHour * 60 + inMin);
-                    hoursWorked = `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`;
-                  }
-                  
-                  return (
-                    <tr key={record.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.date}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{record.name}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {record.clockIn || '--:--'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {record.clockOut || '--:--'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${record.status === 'present' ? 'bg-green-100 text-green-800' : 
-                            record.status === 'late' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-                          {record.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {hoursWorked}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          )}
         </div>
       )}
       
