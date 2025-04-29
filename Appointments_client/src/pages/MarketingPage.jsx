@@ -183,7 +183,7 @@ const Marketing = () => {
               {/* Budget */}
               <div>
                 <label htmlFor="budget" className="block text-sm font-medium text-gray-700">
-                  Budget ($)
+                  Budget (रु)
                 </label>
                 <input
                   type="number"

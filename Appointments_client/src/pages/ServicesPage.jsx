@@ -17,12 +17,8 @@ const Services = () => {
   const [currentServiceId, setCurrentServiceId] = useState(null);
   const [showServiceModal, setShowServiceModal] = useState(false);
 
-  // Sample services data
-  const [services, setServices] = useState([
-    { id: 1, name: 'Haircut', description: 'Basic haircut service', duration: 30, price: 25, category: 'Hair', active: true },
-    { id: 2, name: 'Manicure', description: 'Basic manicure service', duration: 45, price: 35, category: 'Nails', active: true },
-    { id: 3, name: 'Massage', description: '60-minute full body massage', duration: 60, price: 80, category: 'Spa', active: true }
-  ]);
+  // Start with empty services array
+  const [services, setServices] = useState([]);
 
   // Handle form input changes
   const handleServiceFormChange = (e) => {
@@ -110,7 +106,7 @@ const Services = () => {
       <h1 className="text-3xl font-bold text-gray-800 mb-8">Service Management</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Add Service Button (replaces the form column) */}
+        {/* Add Service Button */}
         <div className="lg:col-span-1">
           <button
             onClick={openNewServiceModal}
@@ -156,8 +152,8 @@ const Services = () => {
                             {service.duration} min
                           </div>
                           <div className="flex items-center text-sm text-gray-500">
-                            <FiDollarSign className="mr-1.5" />
-                            ${service.price.toFixed(2)}
+                            <span className="mr-1.5">रु</span>
+                            {service.price.toFixed(2)}
                           </div>
                           {service.category && (
                             <div className="flex items-center text-sm text-gray-500">
@@ -246,9 +242,15 @@ const Services = () => {
                 ))}
               </div>
               
-              {services.filter(s => s.active).length === 0 && (
+              {services.filter(s => s.active).length === 0 && services.length > 0 && (
                 <div className="text-center py-8 text-gray-500">
                   No active services available for booking. Activate services to make them visible to customers.
+                </div>
+              )}
+
+              {services.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No services available for preview. Add services to see how they'll appear to customers.
                 </div>
               )}
             </div>
@@ -259,7 +261,7 @@ const Services = () => {
       {/* Service Form Modal */}
       {showServiceModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-800">
                 {isEditing ? 'Edit Service' : 'Create New Service'}
@@ -298,20 +300,19 @@ const Services = () => {
               
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)*</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration*</label>
                   <select
                     name="duration"
                     value={serviceForm.duration}
                     onChange={handleServiceFormChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                    required
                   >
-                    <option value="15">15 min</option>
-                    <option value="30">30 min</option>
-                    <option value="45">45 min</option>
-                    <option value="60">60 min</option>
-                    <option value="90">90 min</option>
-                    <option value="120">120 min</option>
+                    <option value="15">15 minutes</option>
+                    <option value="30">30 minutes</option>
+                    <option value="45">45 minutes</option>
+                    <option value="60">60 minutes</option>
+                    <option value="90">90 minutes</option>
+                    <option value="120">120 minutes</option>
                   </select>
                 </div>
                 
@@ -319,7 +320,7 @@ const Services = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">$</span>
+                      <span className="text-gray-500">रु</span>
                     </div>
                     <input
                       type="number"
