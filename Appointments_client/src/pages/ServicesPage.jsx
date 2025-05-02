@@ -268,7 +268,7 @@ const Services = () => {
               </h2>
               <button
                 onClick={resetFormAndClose}
-                className="text-gray-400 hover:text-gray-500"
+                className="text-gray-400 hover:text-red-500"
               >
                 <FiX className="h-6 w-6" />
               </button>
@@ -282,7 +282,7 @@ const Services = () => {
                   name="name"
                   value={serviceForm.name}
                   onChange={handleServiceFormChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-green-300 rounded-md"
                   required
                 />
               </div>
@@ -294,7 +294,7 @@ const Services = () => {
                   value={serviceForm.description}
                   onChange={handleServiceFormChange}
                   rows="3"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-green-300 rounded-md"
                 />
               </div>
               
@@ -317,7 +317,7 @@ const Services = () => {
                   </select>
                 </div>
                 */}
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
                   <div className="relative">
@@ -331,7 +331,7 @@ const Services = () => {
                       onChange={handleServiceFormChange}
                       min="0"
                       step="0.01"
-                      className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md"
+                      className="w-full pl-8 pr-3 py-2 border border-green-300 rounded-md"
                       required
                     />
                   </div>
@@ -345,7 +345,7 @@ const Services = () => {
                   name="category"
                   value={serviceForm.category}
                   onChange={handleServiceFormChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-3 py-2 border border-green-300 rounded-md"
                 />
               </div>
               
@@ -375,7 +375,7 @@ const Services = () => {
                 <button
                   type="button"
                   onClick={resetFormAndClose}
-                  className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 px-6 py-2 rounded-md"
+                  className="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 px-6 py-2 rounded-md"
                 >
                   Cancel
                 </button>
