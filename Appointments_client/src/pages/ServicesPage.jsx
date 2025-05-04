@@ -1,13 +1,12 @@
-import React, { useState } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiCalendar, FiClock, 
-  FiDollarSign, FiTag, FiInfo, FiX } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react'; // Added useEffect import
+import { FiPlus, FiEdit2, FiTrash2, FiTag, FiInfo, FiX } from 'react-icons/fi';
+import axios from 'axios';
 
 const Services = () => {
   // State for form inputs
   const [serviceForm, setServiceForm] = useState({
     name: '',
     description: '',
-    duration: 30,
     price: '',
     category: '',
     active: true
@@ -16,11 +15,22 @@ const Services = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [currentServiceId, setCurrentServiceId] = useState(null);
   const [showServiceModal, setShowServiceModal] = useState(false);
-
-  // Start with empty services array
   const [services, setServices] = useState([]);
 
-  // Handle form input changes
+  // Fetch services on component mount
+  useEffect(() => {
+    fetchServices();
+  }, []);
+
+  const fetchServices = async () => {
+    try {
+      const response = await axios.get('http://localhost:6001/api/services');
+      setServices(response.data.services);
+    } catch (error) {
+      console.error('Error fetching services:', error);
+    }
+  };
+
   const handleServiceFormChange = (e) => {
     const { name, value, type, checked } = e.target;
     setServiceForm(prev => ({
@@ -29,37 +39,38 @@ const Services = () => {
     }));
   };
 
-  // Form submission handler
-  const handleServiceSubmit = (e) => {
+  const handleServiceSubmit = async (e) => {
     e.preventDefault();
     
-    if (isEditing) {
-      // Update existing service
-      setServices(services.map(service => 
-        service.id === currentServiceId ? { ...serviceForm, id: currentServiceId } : service
-      ));
-    } else {
-      // Add new service
-      const newService = {
+    try {
+      const serviceData = {
         ...serviceForm,
-        id: services.length > 0 ? Math.max(...services.map(s => s.id)) + 1 : 1,
-        price: parseFloat(serviceForm.price),
-        duration: parseInt(serviceForm.duration)
+        price: parseFloat(serviceForm.price)
       };
-      setServices([...services, newService]);
+
+      const url = isEditing 
+        ? `http://localhost:6001/api/services/${currentServiceId}`
+        : 'http://localhost:6001/api/services';
+      
+      const method = isEditing ? 'put' : 'post';
+      
+      const response = await axios[method](url, serviceData);
+      
+      if (response.data.success) {
+        fetchServices();
+        resetFormAndClose();
+      }
+    } catch (error) {
+      console.error('Error saving service:', error);
+      alert(`Failed to ${isEditing ? 'update' : 'create'} service. Please try again.`);
     }
-    
-    // Reset and close
-    resetFormAndClose();
   };
 
-  // Edit service handler
-  const handleEditService = (service) => {
+  const handleEditClick = (service) => {
     setServiceForm({
       name: service.name,
       description: service.description,
-      duration: service.duration,
-      price: service.price,
+      price: service.price.toString(),
       category: service.category,
       active: service.active
     });
@@ -68,24 +79,41 @@ const Services = () => {
     setShowServiceModal(true);
   };
 
-  // Delete service handler
-  const handleDeleteService = (id) => {
-    setServices(services.filter(service => service.id !== id));
+  const handleDeleteService = async (id) => {
+    if (window.confirm('Are you sure you want to delete this service?')) {
+      try {
+        const response = await axios.delete(`http://localhost:6001/api/services/${id}`);
+        if (response.data.success) {
+          fetchServices();
+        }
+      } catch (error) {
+        console.error('Error deleting service:', error);
+        alert('Failed to delete service. Please try again.');
+      }
+    }
   };
 
-  // Toggle service status
-  const toggleServiceStatus = (id) => {
-    setServices(services.map(service => 
-      service.id === id ? { ...service, active: !service.active } : service
-    ));
+  const toggleServiceStatus = async (id) => {
+    try {
+      const service = services.find(s => s.id === id);
+      const response = await axios.put(
+        `http://localhost:6001/api/services/${id}`,
+        { active: !service.active }
+      );
+      
+      if (response.data.success) {
+        fetchServices();
+      }
+    } catch (error) {
+      console.error('Error toggling service status:', error);
+      alert('Failed to update service status. Please try again.');
+    }
   };
 
-  // Reset form and close modal
   const resetFormAndClose = () => {
     setServiceForm({
       name: '',
       description: '',
-      duration: 30,
       price: '',
       category: '',
       active: true
@@ -95,7 +123,6 @@ const Services = () => {
     setShowServiceModal(false);
   };
 
-  // Open modal for new service
   const openNewServiceModal = () => {
     resetFormAndClose();
     setShowServiceModal(true);
@@ -148,10 +175,6 @@ const Services = () => {
                         
                         <div className="mt-3 flex flex-wrap gap-4">
                           <div className="flex items-center text-sm text-gray-500">
-                            <FiClock className="mr-1.5" />
-                            {service.duration} min
-                          </div>
-                          <div className="flex items-center text-sm text-gray-500">
                             <span className="mr-1.5">रु</span>
                             {service.price.toFixed(2)}
                           </div>
@@ -166,7 +189,7 @@ const Services = () => {
                       
                       <div className="ml-4 flex-shrink-0 flex space-x-2">
                         <button
-                          onClick={() => handleEditService(service)}
+                         onClick={() => handleEditClick(service)} // Changed from handleEditService
                           className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-50"
                           title="Edit"
                         >
@@ -229,11 +252,7 @@ const Services = () => {
                     <h3 className="text-lg font-medium text-gray-800">{service.name}</h3>
                     <p className="mt-1 text-sm text-gray-600 line-clamp-2">{service.description}</p>
                     <div className="mt-3 flex justify-between items-center">
-                      <div>
-                        <span className="text-sm font-medium text-gray-900">रु{service.price.toFixed(2)}</span>
-                        <span className="mx-2 text-gray-300">•</span>
-                        <span className="text-sm text-gray-500">{service.duration} min</span>
-                      </div>
+                      <span className="text-sm font-medium text-gray-900">रु{service.price.toFixed(2)}</span>
                       <button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
                         Book Now
                       </button>
@@ -298,43 +317,22 @@ const Services = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                {/*
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Duration*</label>
-                  <select
-                    name="duration"
-                    value={serviceForm.duration}
-                    onChange={handleServiceFormChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  >
-                    <option value="15">15 minutes</option>
-                    <option value="30">30 minutes</option>
-                    <option value="45">45 minutes</option>
-                    <option value="60">60 minutes</option>
-                    <option value="90">90 minutes</option>
-                    <option value="120">120 minutes</option>
-                  </select>
-                </div>
-                */}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span className="text-gray-500">रु</span>
-                    </div>
-                    <input
-                      type="number"
-                      name="price"
-                      value={serviceForm.price}
-                      onChange={handleServiceFormChange}
-                      min="0"
-                      step="0.01"
-                      className="w-full pl-8 pr-3 py-2 border border-green-300 rounded-md"
-                      required
-                    />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500">रु</span>
                   </div>
+                  <input
+                    type="number"
+                    name="price"
+                    value={serviceForm.price}
+                    onChange={handleServiceFormChange}
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-8 pr-3 py-2 border border-green-300 rounded-md"
+                    required
+                  />
                 </div>
               </div>
               
