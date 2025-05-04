@@ -27,6 +27,9 @@ const client = new MongoClient(uri, {
 // Global variable to hold Database and Collection references
 let usersCollection;
 
+// Add services collection reference
+let servicesCollection;
+
 // ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
@@ -36,6 +39,8 @@ async function run() {
     // Get references to database and collection
     const database = client.db("Business_Dashboard_DB"); // Replace with your database name
     usersCollection = database.collection("users");      // User collection
+    servicesCollection = database.collection("services");
+
     
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -321,6 +326,144 @@ app.post('/api/business/signup', [
 
   } catch (err) {
     console.error('Business registration error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// POST /api/services - Create new service
+app.post('/api/services', [
+  check('name', 'Service name is required').not().isEmpty(),
+  check('price', 'Price must be a positive number').isFloat({ min: 0 }),
+  check('category', 'Category is required').optional().not().isEmpty()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Create new service document
+    const newService = {
+      ...req.body,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      active: req.body.active || true
+    };
+
+    // Insert into database
+    const result = await servicesCollection.insertOne(newService);
+
+    // Return success response with the created service
+    const createdService = await servicesCollection.findOne(
+      { _id: result.insertedId },
+      { projection: { _id: 0, id: '$_id' } } // Rename _id to id for frontend
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Service created successfully',
+      service: createdService
+    });
+
+  } catch (err) {
+    console.error('Service creation error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// GET /api/services - Get all services
+app.get('/api/services', async (req, res) => {
+  try {
+    const services = await servicesCollection.find({}).toArray();
+    
+    // Convert _id to id for frontend consistency
+    const formattedServices = services.map(service => ({
+      ...service,
+      id: service._id
+    }));
+
+    res.json({
+      success: true,
+      services: formattedServices
+    });
+  } catch (err) {
+    console.error('Error fetching services:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// PUT /api/services/:id - Update service
+app.put('/api/services/:id', [
+  check('name', 'Service name is required').optional().not().isEmpty(),
+  check('price', 'Price must be a positive number').optional().isFloat({ min: 0 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const updates = {
+      ...req.body,
+      updatedAt: new Date()
+    };
+
+    // Convert string ID to ObjectId
+    const result = await servicesCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updates }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Service not found' });
+    }
+
+    // Return updated service
+    const updatedService = await servicesCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      service: {
+        ...updatedService,
+        id: updatedService._id
+      }
+    });
+    
+
+  } catch (err) {
+    console.error('Error updating service:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// DELETE /api/services/:id - Delete service
+app.delete('/api/services/:id', async (req, res) => {
+  try {
+    const result = await servicesCollection.deleteOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Service not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Service deleted successfully'
+    });
+
+  } catch (err) {
+    console.error('Error deleting service:', err);
     res.status(500).json({ 
       error: 'Internal server error. Please try again later.' 
     });
