@@ -462,6 +462,7 @@ app.delete('/api/services/:id', async (req, res) => {
       message: 'Service deleted successfully'
     });
 
+    
   } catch (err) {
     console.error('Error deleting service:', err);
     res.status(500).json({ 
