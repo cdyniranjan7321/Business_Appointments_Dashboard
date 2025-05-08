@@ -30,6 +30,8 @@ let usersCollection;
 // Add services collection reference
 let servicesCollection;
 
+let ordersCollection;
+
 // ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
@@ -40,6 +42,7 @@ async function run() {
     const database = client.db("Business_Dashboard_DB"); // Replace with your database name
     usersCollection = database.collection("users");      // User collection
     servicesCollection = database.collection("services");
+    ordersCollection = database.collection("orders");    // Orders collection
 
     
     // Send a ping to confirm a successful connection
@@ -465,6 +468,159 @@ app.delete('/api/services/:id', async (req, res) => {
     
   } catch (err) {
     console.error('Error deleting service:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// GET /api/orders - Get all orders
+app.get('/api/orders', async (req, res) => {
+  try {
+    const orders = await ordersCollection.find({}).toArray();
+    
+    // Convert _id to id for frontend consistency
+    const formattedOrders = orders.map(order => ({
+      ...order,
+      id: order._id.toString()
+    }));
+
+    res.json({
+      success: true,
+      orders: formattedOrders
+    });
+  } catch (err) {
+    console.error('Error fetching orders:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// POST /api/orders - Create new order
+app.post('/api/orders', [
+  check('customer', 'Customer name is required').not().isEmpty(),
+  check('items', 'At least one item is required').isArray({ min: 1 }),
+  check('items.*.name', 'Item name is required').not().isEmpty(),
+  check('items.*.quantity', 'Item quantity must be at least 1').isInt({ min: 1 }),
+  check('items.*.price', 'Item price must be positive').isFloat({ min: 0 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Calculate total
+    const total = req.body.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+    // Create new order document
+    const newOrder = {
+      ...req.body,
+      total,
+      date: new Date().toISOString().split('T')[0],
+      paymentStatus: req.body.paymentStatus || 'Pending',
+      fulfillmentStatus: 'Unfulfilled',
+      deliveryStatus: 'Processing',
+      labelStatus: 'Not Printed',
+      returnStatus: 'None',
+      tags: ['Manual'],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    // Insert into database
+    const result = await ordersCollection.insertOne(newOrder);
+
+    // Return success response with the created order
+    const createdOrder = await ordersCollection.findOne(
+      { _id: result.insertedId },
+      { projection: { _id: 0, id: '$_id' } } // Rename _id to id for frontend
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Order created successfully',
+      order: createdOrder
+    });
+
+  } catch (err) {
+    console.error('Order creation error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// PUT /api/orders/:id - Update order
+app.put('/api/orders/:id', [
+  check('customer', 'Customer name is required').optional().not().isEmpty(),
+  check('items', 'At least one item is required').optional().isArray({ min: 1 }),
+  check('items.*.name', 'Item name is required').optional().not().isEmpty(),
+  check('items.*.quantity', 'Item quantity must be at least 1').optional().isInt({ min: 1 }),
+  check('items.*.price', 'Item price must be positive').optional().isFloat({ min: 0 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Calculate total if items are being updated
+    const updates = { ...req.body, updatedAt: new Date() };
+    if (req.body.items) {
+      updates.total = req.body.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+
+    // Convert string ID to ObjectId
+    const result = await ordersCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updates }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Return updated order
+    const updatedOrder = await ordersCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      order: {
+        ...updatedOrder,
+        id: updatedOrder._id.toString()
+      }
+    });
+
+  } catch (err) {
+    console.error('Error updating order:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// DELETE /api/orders/:id - Delete order
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    const result = await ordersCollection.deleteOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'Order deleted successfully'
+    });
+
+  } catch (err) {
+    console.error('Error deleting order:', err);
     res.status(500).json({ 
       error: 'Internal server error. Please try again later.' 
     });
