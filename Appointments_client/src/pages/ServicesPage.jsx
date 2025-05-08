@@ -228,6 +228,7 @@ const Services = () => {
             )}
           </div>
           
+          
           {/* Booking Preview Section */}
           <div className="mt-8 bg-white rounded-lg shadow overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200">
