@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from "framer-motion";
 import { 
@@ -33,68 +32,8 @@ import {
 import * as XLSX from 'xlsx';
 
 const Orders = () => {
-  // Sample order data
-  const initialOrders = [
-    {
-      id: 'ORD-1001',
-      date: '2023-05-15',
-      customer: 'John Doe',
-      salesChannel: 'Online Store',
-      total: 125.99,
-      paymentStatus: 'Paid',
-      fulfillmentStatus: 'Fulfilled',
-      items: [
-        { name: 'T-Shirt', quantity: 2, price: 25.99 },
-        { name: 'Jeans', quantity: 1, price: 74.00 }
-      ],
-      deliveryStatus: 'Delivered',
-      deliveryMethod: 'Standard Shipping',
-      tags: ['VIP', 'Repeat Customer'],
-      destination: '123 Main St, Anytown, USA',
-      labelStatus: 'Printed',
-      returnStatus: 'None'
-    },
-    {
-      id: 'ORD-1002',
-      date: '2023-05-16',
-      customer: 'Jane Smith',
-      salesChannel: 'POS',
-      total: 89.50,
-      paymentStatus: 'Pending',
-      fulfillmentStatus: 'Unfulfilled',
-      items: [
-        { name: 'Sneakers', quantity: 1, price: 89.50 }
-      ],
-      deliveryStatus: 'Processing',
-      deliveryMethod: 'In-Store Pickup',
-      tags: ['New Customer'],
-      destination: 'Store Pickup',
-      labelStatus: 'Not Needed',
-      returnStatus: 'None'
-    },
-    {
-      id: 'ORD-1003',
-      date: '2023-05-17',
-      customer: 'Mike Johnson',
-      salesChannel: 'Phone Order',
-      total: 210.75,
-      paymentStatus: 'Paid',
-      fulfillmentStatus: 'Partially Fulfilled',
-      items: [
-        { name: 'Jacket', quantity: 1, price: 129.99 },
-        { name: 'Hat', quantity: 1, price: 24.99 },
-        { name: 'Gloves', quantity: 2, price: 27.89 }
-      ],
-      deliveryStatus: 'Shipped',
-      deliveryMethod: 'Express Shipping',
-      tags: ['Wholesale'],
-      destination: '456 Business Ave, Industry City, USA',
-      labelStatus: 'Printed',
-      returnStatus: 'None'
-    }
-  ];
-
-  const [orders, setOrders] = useState(initialOrders);
+  // Start with empty orders array
+  const [orders, setOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -121,7 +60,6 @@ const Orders = () => {
   });
   const [selectedItems, setSelectedItems] = useState([]);
   const menuRef = useRef(null);
-
 
   // utility function to format numbers as Nepali currency.
   const formatNPR = (amount) => {
@@ -178,7 +116,6 @@ const Orders = () => {
     };
   }, []);
 
-
   // Toggle action menu
   const toggleMenu = (e, orderId) => {
     e.stopPropagation();
@@ -226,7 +163,7 @@ const Orders = () => {
       fulfillmentStatus: 'Unfulfilled',
       deliveryStatus: 'Processing',
       labelStatus: 'Not Printed',
-      tags: [...order.tags, 'Copied']
+      tags: [...(order.tags || []), 'Copied']
     };
     setOrders([newOrder, ...orders]);
     setOpenMenuId(null);
@@ -621,12 +558,11 @@ const Orders = () => {
                 type="button"
                 className="inline-flex justify-center py-2 px-3 md:px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                 onClick={() => {
-          
-                const order = orders.find(o => o.id === selectedOrderId);
-                setSelectedOrder(order); // Set the selected order to show details
-                setShowConfirmDialog(false); // Close the confirmation dialog
-                setSelectedOrderId(null); // Clear the selected order ID
-              }}
+                  const order = orders.find(o => o.id === selectedOrderId);
+                  setSelectedOrder(order); // Set the selected order to show details
+                  setShowConfirmDialog(false); // Close the confirmation dialog
+                  setSelectedOrderId(null); // Clear the selected order ID
+                }}
               >
                 View Details
               </button>
@@ -638,249 +574,248 @@ const Orders = () => {
   };
 
   // View order details in separate page
-const viewOrderDetails = (orderId) => {
-  setSelectedOrderId(orderId); // Set the selected order ID
-  setShowConfirmDialog(true); // Show the confirmation dialog
-}
+  const viewOrderDetails = (orderId) => {
+    setSelectedOrderId(orderId); // Set the selected order ID
+    setShowConfirmDialog(true); // Show the confirmation dialog
+  }
 
-// Close order details view
-const closeOrderDetails = () => {
-  setSelectedOrder(null);
-};
+  // Close order details view
+  const closeOrderDetails = () => {
+    setSelectedOrder(null);
+  };
 
-
-if (selectedOrder) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto p-6"
-    >
+  if (selectedOrder) {
+    return (
       <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
-        className="bg-white shadow-xl overflow-hidden rounded-xl p-6 max-w-6xl mx-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto p-6"
       >
-        <button 
-          onClick={closeOrderDetails}
-          className="flex items-center mb-6 text-blue-600 hover:text-blue-800 transition-colors duration-200"
-        >
-          <FiArrowLeft className="mr-2 transition-transform duration-200 hover:-translate-x-1" /> 
-          Back to Orders
-        </button>
-        
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
-          <motion.div 
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="text-3xl font-bold text-gray-800">Order #{selectedOrder.id}</h1>
-            <p className="text-gray-600 mt-1">Placed on {selectedOrder.date}</p>
-          </motion.div>
-          <motion.div 
-            initial={{ x: 10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex gap-3"
-          >
-            <button 
-              className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
-              onClick={() => handlePrintOrder(selectedOrder)}
-            >
-              <FiPrinter className="mr-2" /> Print
-            </button>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                <FiUser />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 ml-3">Customer</h2>
-            </div>
-            <p className="text-gray-800 font-medium">{selectedOrder.customer}</p>
-            <p className="text-sm text-gray-500 mt-1">{selectedOrder.salesChannel}</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-green-50 to-teal-50 p-5 rounded-xl border border-green-100 hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-green-100 rounded-lg text-green-600">
-                <FiCreditCard />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 ml-3">Payment</h2>
-            </div>
-            <div className="flex items-center">
-              {getStatusIcon(selectedOrder.paymentStatus)}
-              <span className="ml-2 font-medium">{selectedOrder.paymentStatus}</span>
-            </div>
-            <p className="text-lg font-bold text-gray-800 mt-2">{formatNPR(selectedOrder.total)}</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl border border-purple-100 hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                <FiTruck />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 ml-3">Delivery</h2>
-            </div>
-            <div className="flex items-center">
-              {getDeliveryIcon(selectedOrder.deliveryMethod)}
-              <span className="ml-2 font-medium">{selectedOrder.deliveryMethod}</span>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">{selectedOrder.deliveryStatus}</p>
-          </motion.div>
-        </div>
-
-        <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.6 }}
-           className="mb-10"
-        >
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-          <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
-          </h2>
-
-  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Item
-          </th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Quantity
-          </th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Price
-          </th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Total
-          </th>
-        </tr>
-      </thead>
-
-      <tbody className="bg-white divide-y divide-gray-200">
-        {selectedOrder.items.map((item, index) => (
-          <motion.tr
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 * index }}
-            className="hover:bg-gray-50 transition-colors duration-150"
-          >
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {item.name}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
-              {item.quantity}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
-              {formatNPR(item.price)}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
-              {formatNPR(item.quantity * item.price)}
-            </td>
-          </motion.tr>
-        ))}
-      </tbody>
-
-      <tfoot className="bg-gray-50">
-        <tr>
-          <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">
-            Total
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900">
-            {formatNPR(selectedOrder.total)}
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</motion.div>
-
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="bg-white shadow-xl overflow-hidden rounded-xl p-6 max-w-6xl mx-auto"
         >
-          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-5 rounded-xl border border-indigo-100 hover:shadow-md transition-shadow duration-300">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <FiTruck className="mr-2 text-indigo-500" /> Shipping Information
-            </h2>
-            <div className="space-y-2">
-              <p className="text-gray-800">{selectedOrder.destination}</p>
-              <div className="flex items-center">
-                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-                <span className="text-sm text-gray-600">Label Status: {selectedOrder.labelStatus}</span>
-              </div>
-              {selectedOrder.trackingNumber && (
-                <div className="mt-3 pt-3 border-t border-indigo-100">
-                  <p className="text-sm font-medium text-gray-700">Tracking Number:</p>
-                  <p className="text-sm text-indigo-600 font-mono">{selectedOrder.trackingNumber}</p>
-                </div>
-              )}
-            </div>
+          <button 
+            onClick={closeOrderDetails}
+            className="flex items-center mb-6 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+          >
+            <FiArrowLeft className="mr-2 transition-transform duration-200 hover:-translate-x-1" /> 
+            Back to Orders
+          </button>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
+            <motion.div 
+              initial={{ x: -10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h1 className="text-3xl font-bold text-gray-800">Order #{selectedOrder.id}</h1>
+              <p className="text-gray-600 mt-1">Placed on {selectedOrder.date}</p>
+            </motion.div>
+            <motion.div 
+              initial={{ x: 10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex gap-3"
+            >
+              <button 
+                className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+                onClick={() => handlePrintOrder(selectedOrder)}
+              >
+                <FiPrinter className="mr-2" /> Print
+              </button>
+            </motion.div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-100 hover:shadow-md transition-shadow duration-300">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <FiInfo className="mr-2 text-amber-500" /> Additional Information
-            </h2>
-            <div className="space-y-3">
-              {selectedOrder.tags && selectedOrder.tags.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Tags:</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedOrder.tags.map((tag, index) => (
-                      <span 
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center mb-3">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                  <FiUser />
                 </div>
-              )}
-              <div>
-                <p className="text-sm font-medium text-gray-700">Return Status:</p>
-                <p className="text-sm text-gray-800 mt-1">{selectedOrder.returnStatus}</p>
+                <h2 className="text-lg font-semibold text-gray-900 ml-3">Customer</h2>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Notes:</p>
-                <p className="text-sm text-gray-600 mt-1 italic">
-                  {selectedOrder.notes || "No additional notes"}
-                </p>
+              <p className="text-gray-800 font-medium">{selectedOrder.customer}</p>
+              <p className="text-sm text-gray-500 mt-1">{selectedOrder.salesChannel}</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gradient-to-br from-green-50 to-teal-50 p-5 rounded-xl border border-green-100 hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center mb-3">
+                <div className="p-2 bg-green-100 rounded-lg text-green-600">
+                  <FiCreditCard />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 ml-3">Payment</h2>
+              </div>
+              <div className="flex items-center">
+                {getStatusIcon(selectedOrder.paymentStatus)}
+                <span className="ml-2 font-medium">{selectedOrder.paymentStatus}</span>
+              </div>
+              <p className="text-lg font-bold text-gray-800 mt-2">{formatNPR(selectedOrder.total)}</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl border border-purple-100 hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center mb-3">
+                <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                  <FiTruck />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 ml-3">Delivery</h2>
+              </div>
+              <div className="flex items-center">
+                {getDeliveryIcon(selectedOrder.deliveryMethod)}
+                <span className="ml-2 font-medium">{selectedOrder.deliveryMethod}</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{selectedOrder.deliveryStatus}</p>
+            </motion.div>
+          </div>
+
+          <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             transition={{ delay: 0.6 }}
+             className="mb-10"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
+            </h2>
+
+            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Item
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Quantity
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {selectedOrder.items.map((item, index) => (
+                    <motion.tr
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                        {item.quantity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                        {formatNPR(item.price)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
+                        {formatNPR(item.quantity * item.price)}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">
+                      Total
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900">
+                      {formatNPR(selectedOrder.total)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-5 rounded-xl border border-indigo-100 hover:shadow-md transition-shadow duration-300">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <FiTruck className="mr-2 text-indigo-500" /> Shipping Information
+              </h2>
+              <div className="space-y-2">
+                <p className="text-gray-800">{selectedOrder.destination}</p>
+                <div className="flex items-center">
+                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                  <span className="text-sm text-gray-600">Label Status: {selectedOrder.labelStatus}</span>
+                </div>
+                {selectedOrder.trackingNumber && (
+                  <div className="mt-3 pt-3 border-t border-indigo-100">
+                    <p className="text-sm font-medium text-gray-700">Tracking Number:</p>
+                    <p className="text-sm text-indigo-600 font-mono">{selectedOrder.trackingNumber}</p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-100 hover:shadow-md transition-shadow duration-300">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <FiInfo className="mr-2 text-amber-500" /> Additional Information
+              </h2>
+              <div className="space-y-3">
+                {selectedOrder.tags && selectedOrder.tags.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Tags:</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedOrder.tags.map((tag, index) => (
+                        <span 
+                          key={index}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Return Status:</p>
+                  <p className="text-sm text-gray-800 mt-1">{selectedOrder.returnStatus}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Notes:</p>
+                  <p className="text-sm text-gray-600 mt-1 italic">
+                    {selectedOrder.notes || "No additional notes"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </motion.div>
-    </motion.div>
-  );
-}
+    );
+  }
   
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
@@ -910,18 +845,17 @@ if (selectedOrder) {
                   Export {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
                 </span>
           </div>
-        <button 
+          <button 
              className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-xs md:text-sm font-medium text-white hover:bg-green-700"
              onClick={() => {
-
-             setEditingOrder(null);
-             setShowCreateOrder(true);
+               setEditingOrder(null);
+               setShowCreateOrder(true);
              }}
-        >
-         <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
-        </button>
+          >
+           <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
+          </button>
+        </div>
       </div>
-    </div>
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
@@ -1047,7 +981,16 @@ if (selectedOrder) {
 
       {/* Orders Table */}
       <div className="bg-white shadow overflow-hidden rounded-lg">
-        {filteredOrders.length === 0 ? (
+        {orders.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gray-100 mb-4">
+              <FiShoppingBag className="h-6 w-6 text-gray-500" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-1">No orders yet</h3>
+            <p className="text-sm text-gray-500 mb-6">Get started by creating a new order.</p>
+    
+          </div>
+        ) : filteredOrders.length === 0 ? (
           <div className="p-4 text-center text-red-500">
             No orders found matching your search criteria.
           </div>
@@ -1102,11 +1045,11 @@ if (selectedOrder) {
                     <tr 
                        className="hover:bg-green-200 cursor-pointer" 
                        onClick={(e) => {
-                      // Only proceed if not clicking on checkbox or menu button
-                      if (!e.target.closest('.order-checkbox') && !e.target.closest('.action-menu-button')) {
-                        viewOrderDetails(order.id); // Call the modified function
-                        }
-                     }}
+                         // Only proceed if not clicking on checkbox or menu button
+                         if (!e.target.closest('.order-checkbox') && !e.target.closest('.action-menu-button')) {
+                           viewOrderDetails(order.id); // Call the modified function
+                         }
+                       }}
                     >
                       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         <div className="flex items-center">
