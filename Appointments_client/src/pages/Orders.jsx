@@ -851,7 +851,6 @@ const Orders = () => {
                setEditingOrder(null);
                setShowCreateOrder(true);
              }}
-             
           >
            <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
           </button>
