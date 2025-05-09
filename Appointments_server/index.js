@@ -505,9 +505,12 @@ app.post('/api/orders', [
   check('items.*.quantity', 'Item quantity must be at least 1').isInt({ min: 1 }),
   check('items.*.price', 'Item price must be positive').isFloat({ min: 0 })
 ], async (req, res) => {
-  const errors = validationResult(req);
+   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ 
+      success: false,
+      errors: errors.array() 
+    });
   }
 
   try {
@@ -535,13 +538,19 @@ app.post('/api/orders', [
     // Return success response with the created order
     const createdOrder = await ordersCollection.findOne(
       { _id: result.insertedId },
-      { projection: { _id: 0, id: '$_id' } } // Rename _id to id for frontend
+   //   { projection: { _id: 0, id: '$_id' } } // Rename _id to id for frontend
     );
+    // Convert _id to id and remove _id field
+    const { _id, ...orderWithoutId } = createdOrder;
+    const responseOrder = {
+      ...orderWithoutId,
+      id: _id.toString()
+    };
 
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      order: createdOrder
+      order: responseOrder  // Ensure this matches frontend expectation
     });
 
   } catch (err) {
