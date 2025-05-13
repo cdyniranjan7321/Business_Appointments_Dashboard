@@ -1,45 +1,31 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiCopy, FiMail, FiPhone, FiShare2 } from 'react-icons/fi';
 
 const DiscountsPage = () => {
-  const [discounts, setDiscounts] = useState([
-    {
-      id: '1',
-      code: 'SUMMER20',
-      type: 'percentage',
-      value: 20,
-      minOrder: 50,
-      startDate: '2023-06-01',
-      endDate: '2023-08-31',
-      usageLimit: 100,
-      used: 42,
-      active: true
-    },
-    {
-      id: '2',
-      code: 'FREESHIP',
-      type: 'fixed',
-      value: 5.99,
-      minOrder: 0,
-      startDate: '2023-05-15',
-      endDate: '2023-12-31',
-      usageLimit: null,
-      used: 18,
-      active: true
-    },
-    {
-      id: '3',
-      code: 'WELCOME10',
-      type: 'percentage',
-      value: 10,
-      minOrder: 0,
-      startDate: '2023-01-01',
-      endDate: '2023-12-31',
-      usageLimit: 500,
-      used: 327,
-      active: true
-    }
-  ]);
+  const [discounts, setDiscounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch discounts from API
+  useEffect(() => {
+    const fetchDiscounts = async () => {
+      try {
+        const response = await fetch('http://localhost:6001/api/discounts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch discounts');
+        }
+        const data = await response.json();
+        setDiscounts(data.discounts);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchDiscounts();
+  }, []);
+
 
   const [newDiscount, setNewDiscount] = useState({
     code: '',
@@ -65,28 +51,38 @@ const DiscountsPage = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState('');
 
-  const handleCreateDiscount = (e) => {
+  const handleCreateDiscount = async (e) => {
     e.preventDefault();
-    const discount = {
-      ...newDiscount,
-      id: Date.now().toString(),
-      value: parseFloat(newDiscount.value),
-      minOrder: newDiscount.minOrder ? parseFloat(newDiscount.minOrder) : 0,
-      usageLimit: newDiscount.usageLimit ? parseInt(newDiscount.usageLimit) : null,
-      used: 0
-    };
-    setDiscounts([...discounts, discount]);
-    setNewDiscount({
-      code: '',
-      type: 'percentage',
-      value: '',
-      minOrder: '',
-      startDate: '',
-      endDate: '',
-      usageLimit: '',
-      active: true
-    });
-    setShowCreateModal(false);
+    try {
+      const response = await fetch('http://localhost:6001/api/discounts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newDiscount),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create discount');
+      }
+      
+      const data = await response.json();
+      setDiscounts([...discounts, data.discount]);
+      setNewDiscount({
+        code: '',
+        type: 'percentage',
+        value: '',
+        minOrder: '',
+        startDate: '',
+        endDate: '',
+        usageLimit: '',
+        active: true
+      });
+      setShowCreateModal(false);
+    } catch (err) {
+      console.error('Error creating discount:', err);
+      alert('Failed to create discount: ' + err.message);
+    }
   };
 
   const handleShareDiscount = (e) => {
@@ -97,10 +93,24 @@ const DiscountsPage = () => {
     alert(`Discount shared via ${shareData.method}!`);
   };
 
-  const toggleDiscountStatus = (id) => {
-    setDiscounts(discounts.map(d => 
-      d.id === id ? { ...d, active: !d.active } : d
-    ));
+  const toggleDiscountStatus = async (id) => {
+    try {
+      const response = await fetch(`/api/discounts/${id}/toggle`, {
+        method: 'PUT',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to toggle discount status');
+      }
+      
+      const data = await response.json();
+      setDiscounts(discounts.map(d => 
+        d.id === id ? { ...d, active: data.active } : d
+      ));
+    } catch (err) {
+      console.error('Error toggling discount status:', err);
+      alert('Failed to toggle discount status: ' + err.message);
+    }
   };
 
   const copyToClipboard = (code) => {
@@ -186,9 +196,9 @@ const DiscountsPage = () => {
                     {discount.type}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {discount.type === 'percentage' ? `${discount.value}%` : `$${discount.value.toFixed(2)}`}
+                    {discount.type === 'percentage' ? `${discount.value}%` : `रु ${discount.value.toFixed(2)}`}
                     {discount.minOrder > 0 && (
-                      <div className="text-xs text-gray-400">Min order: ${discount.minOrder}</div>
+                      <div className="text-xs text-gray-400">Min order: रु {discount.minOrder}</div>
                     )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
@@ -245,9 +255,9 @@ const DiscountsPage = () => {
 
       {/* Create Discount Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-            <div className="p-6">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md my-8">
+            <div className="p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
               <h2 className="text-xl font-bold text-gray-900 mb-4">Create New Discount</h2>
               <form onSubmit={handleCreateDiscount}>
                 <div className="space-y-4">
@@ -292,7 +302,7 @@ const DiscountsPage = () => {
                           />
                         ) : (
                           <div className="relative">
-                            <span className="absolute left-3 top-2 text-gray-500">$</span>
+                            <span className="absolute left-3 top-2 text-gray-500">रु</span>
                             <input
                               type="number"
                               min="0.01"
@@ -311,7 +321,7 @@ const DiscountsPage = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Amount</label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2 text-gray-500">$</span>
+                      <span className="absolute left-3 top-2 text-gray-500">रु</span>
                       <input
                         type="number"
                         min="0"
@@ -466,7 +476,7 @@ const DiscountsPage = () => {
                         const discount = discounts.find(d => d.id === shareData.discountId);
                         return discount?.type === 'percentage' 
                           ? `${discount.value}% off` 
-                          : `$${discount.value.toFixed(2)} off`;
+                          : `रु ${discount.value.toFixed(2)} off`;
                       })()}
                     </p>
                   </div>

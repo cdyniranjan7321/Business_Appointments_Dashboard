@@ -30,7 +30,11 @@ let usersCollection;
 // Add services collection reference
 let servicesCollection;
 
+// Add orders collection reference
 let ordersCollection;
+
+// Add discounts collection reference
+let discountsCollection;
 
 // ========== DATABASE CONNECTION ========== //
 async function run() {
@@ -43,6 +47,7 @@ async function run() {
     usersCollection = database.collection("users");      // User collection
     servicesCollection = database.collection("services");
     ordersCollection = database.collection("orders");    // Orders collection
+    discountsCollection = database.collection("discounts");
 
     
     // Send a ping to confirm a successful connection
@@ -630,6 +635,314 @@ app.delete('/api/orders/:id', async (req, res) => {
 
   } catch (err) {
     console.error('Error deleting order:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {get} /api/discounts Get all discounts
+ * @apiName GetDiscounts
+ * @apiGroup Discounts
+ */
+app.get('/api/discounts', async (req, res) => {
+  try {
+    const discounts = await discountsCollection.find({}).toArray();
+    
+    // Convert _id to id and format dates for frontend
+    const formattedDiscounts = discounts.map(discount => ({
+      ...discount,
+      id: discount._id.toString(),
+      startDate: formatDateForFrontend(discount.startDate),
+      endDate: formatDateForFrontend(discount.endDate)
+    }));
+
+    res.json({
+      success: true,
+      discounts: formattedDiscounts
+    });
+  } catch (err) {
+    console.error('Error fetching discounts:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+// Helper function to format dates
+function formatDateForFrontend(date) {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toISOString().split('T')[0];
+}
+
+/**
+ * @api {post} /api/discounts Create a new discount
+ * @apiName CreateDiscount
+ * @apiGroup Discounts
+ * 
+ * @apiParam {String} code Discount code (required)
+ * @apiParam {String="percentage","fixed"} type Discount type (required)
+ * @apiParam {Number} value Discount value (required)
+ * @apiParam {Number} [minOrder=0] Minimum order amount
+ * @apiParam {String} startDate Start date (YYYY-MM-DD) (required)
+ * @apiParam {String} endDate End date (YYYY-MM-DD) (required)
+ * @apiParam {Number} [usageLimit] Maximum usage limit
+ * @apiParam {Boolean} [active=true] Whether discount is active
+ */
+app.post('/api/discounts', [
+  check('code', 'Discount code is required').not().isEmpty(),
+  check('type', 'Discount type must be "percentage" or "fixed"').isIn(['percentage', 'fixed']),
+  check('value', 'Discount value must be a positive number').isFloat({ min: 0 }),
+  check('minOrder', 'Minimum order must be a positive number').optional().isFloat({ min: 0 }),
+  check('startDate', 'Start date is required').isISO8601(),
+  check('endDate', 'End date is required').isISO8601(),
+  check('usageLimit', 'Usage limit must be a positive integer').optional().isInt({ min: 1 }),
+  check('active', 'Active status must be a boolean').optional().isBoolean()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Check if discount code already exists
+    const existingDiscount = await discountsCollection.findOne({ 
+      code: req.body.code.toUpperCase() 
+    });
+    
+    if (existingDiscount) {
+      return res.status(400).json({ 
+        error: 'Discount code already exists' 
+      });
+    }
+
+    // Create new discount document
+    const newDiscount = {
+      code: req.body.code.toUpperCase(),
+      type: req.body.type,
+      value: parseFloat(req.body.value),
+      minOrder: req.body.minOrder ? parseFloat(req.body.minOrder) : 0,
+      startDate: new Date(req.body.startDate),
+      endDate: new Date(req.body.endDate),
+      usageLimit: req.body.usageLimit ? parseInt(req.body.usageLimit) : null,
+      used: 0,
+      active: req.body.active !== undefined ? req.body.active : true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    // Insert into database
+    const result = await discountsCollection.insertOne(newDiscount);
+
+    // Return success response with the created discount
+    const createdDiscount = await discountsCollection.findOne(
+      { _id: result.insertedId }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Discount created successfully',
+      discount: {
+        ...createdDiscount,
+        id: createdDiscount._id.toString(),
+        startDate: formatDateForFrontend(createdDiscount.startDate),
+        endDate: formatDateForFrontend(createdDiscount.endDate)
+      }
+    });
+
+  } catch (err) {
+    console.error('Discount creation error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {put} /api/discounts/:id Update a discount
+ * @apiName UpdateDiscount
+ * @apiGroup Discounts
+ * 
+ * @apiParam {String} id Discount ID (required)
+ * @apiParam {String} [code] Discount code
+ * @apiParam {String="percentage","fixed"} [type] Discount type
+ * @apiParam {Number} [value] Discount value
+ * @apiParam {Number} [minOrder] Minimum order amount
+ * @apiParam {String} [startDate] Start date (YYYY-MM-DD)
+ * @apiParam {String} [endDate] End date (YYYY-MM-DD)
+ * @apiParam {Number} [usageLimit] Maximum usage limit
+ * @apiParam {Boolean} [active] Whether discount is active
+ */
+app.put('/api/discounts/:id', [
+  check('code', 'Discount code must be unique').optional().not().isEmpty(),
+  check('type', 'Discount type must be "percentage" or "fixed"').optional().isIn(['percentage', 'fixed']),
+  check('value', 'Discount value must be a positive number').optional().isFloat({ min: 0 }),
+  check('minOrder', 'Minimum order must be a positive number').optional().isFloat({ min: 0 }),
+  check('startDate', 'Start date must be valid').optional().isISO8601(),
+  check('endDate', 'End date must be valid').optional().isISO8601(),
+  check('usageLimit', 'Usage limit must be a positive integer').optional().isInt({ min: 1 }),
+  check('active', 'Active status must be a boolean').optional().isBoolean()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Check if discount exists
+    const existingDiscount = await discountsCollection.findOne({ 
+      _id: new ObjectId(req.params.id) 
+    });
+    
+    if (!existingDiscount) {
+      return res.status(404).json({ 
+        error: 'Discount not found' 
+      });
+    }
+
+    // Check if new code already exists (if being updated)
+    if (req.body.code && req.body.code !== existingDiscount.code) {
+      const codeExists = await discountsCollection.findOne({ 
+        code: req.body.code.toUpperCase(),
+        _id: { $ne: new ObjectId(req.params.id) }
+      });
+      
+      if (codeExists) {
+        return res.status(400).json({ 
+          error: 'Discount code already exists' 
+        });
+      }
+    }
+
+    // Prepare update object
+    const updates = {
+      updatedAt: new Date()
+    };
+
+    // Add fields to update if provided
+    if (req.body.code) updates.code = req.body.code.toUpperCase();
+    if (req.body.type) updates.type = req.body.type;
+    if (req.body.value) updates.value = parseFloat(req.body.value);
+    if (req.body.minOrder !== undefined) updates.minOrder = parseFloat(req.body.minOrder) || 0;
+    if (req.body.startDate) updates.startDate = new Date(req.body.startDate);
+    if (req.body.endDate) updates.endDate = new Date(req.body.endDate);
+    if (req.body.usageLimit !== undefined) {
+      updates.usageLimit = req.body.usageLimit ? parseInt(req.body.usageLimit) : null;
+    }
+    if (req.body.active !== undefined) updates.active = req.body.active;
+
+    // Update in database
+    const result = await discountsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updates }
+    );
+
+    // Return updated discount
+    const updatedDiscount = await discountsCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      message: 'Discount updated successfully',
+      discount: {
+        ...updatedDiscount,
+        id: updatedDiscount._id.toString(),
+        startDate: formatDateForFrontend(updatedDiscount.startDate),
+        endDate: formatDateForFrontend(updatedDiscount.endDate)
+      }
+    });
+
+  } catch (err) {
+    console.error('Discount update error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {delete} /api/discounts/:id Delete a discount
+ * @apiName DeleteDiscount
+ * @apiGroup Discounts
+ * 
+ * @apiParam {String} id Discount ID (required)
+ */
+app.delete('/api/discounts/:id', async (req, res) => {
+  try {
+    // Check if discount exists
+    const existingDiscount = await discountsCollection.findOne({ 
+      _id: new ObjectId(req.params.id) 
+    });
+    
+    if (!existingDiscount) {
+      return res.status(404).json({ 
+        error: 'Discount not found' 
+      });
+    }
+
+    // Delete from database
+    const result = await discountsCollection.deleteOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      message: 'Discount deleted successfully'
+    });
+
+  } catch (err) {
+    console.error('Discount deletion error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {put} /api/discounts/:id/toggle Toggle discount status
+ * @apiName ToggleDiscount
+ * @apiGroup Discounts
+ * 
+ * @apiParam {String} id Discount ID (required)
+ */
+app.put('/api/discounts/:id/toggle', async (req, res) => {
+  try {
+    // Check if discount exists
+    const existingDiscount = await discountsCollection.findOne({ 
+      _id: new ObjectId(req.params.id) 
+    });
+    
+    if (!existingDiscount) {
+      return res.status(404).json({ 
+        error: 'Discount not found' 
+      });
+    }
+
+    // Toggle active status
+    const newStatus = !existingDiscount.active;
+
+    // Update in database
+    const result = await discountsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { 
+        $set: { 
+          active: newStatus,
+          updatedAt: new Date()
+        } 
+      }
+    );
+
+    res.json({
+      success: true,
+      message: `Discount ${newStatus ? 'activated' : 'deactivated'} successfully`,
+      active: newStatus
+    });
+
+  } catch (err) {
+    console.error('Discount toggle error:', err);
     res.status(500).json({ 
       error: 'Internal server error. Please try again later.' 
     });
