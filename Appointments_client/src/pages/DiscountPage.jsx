@@ -26,7 +26,6 @@ const DiscountsPage = () => {
     fetchDiscounts();
   }, []);
 
-
   const [newDiscount, setNewDiscount] = useState({
     code: '',
     type: 'percentage',
