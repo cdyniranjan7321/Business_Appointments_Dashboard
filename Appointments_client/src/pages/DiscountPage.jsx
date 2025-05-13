@@ -95,7 +95,7 @@ const DiscountsPage = () => {
 
   const toggleDiscountStatus = async (id) => {
     try {
-      const response = await fetch(`/api/discounts/${id}/toggle`, {
+      const response = await fetch(`http://localhost:6001/api/discounts/${id}/toggle`, {
         method: 'PUT',
       });
       
