@@ -795,22 +795,22 @@ const handleAddVariant = () => {
                     </div>        
 
             
-{/* Variants */}
-<div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
-  <h3 className="text-lg font-medium">Variants</h3>
-  <button 
-    type="button"
-    onClick={addVariant}
-    className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
-  >
-    <FiPlus className="mr-1" /> Add another option
-  </button>
+               {/* Variants */}
+        <div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
+          <h3 className="text-lg font-medium">Variants</h3>
+            <button 
+              type="button"
+              onClick={addVariant}
+              className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
+            >
+           <FiPlus className="mr-1" /> Add another option
+           </button>
   
-  {showVariantBox && (
-    <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
-      <div>
-        <label className="block text-sm font-medium mb-1">Size</label>
-        <input
+      {showVariantBox && (
+        <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
+         <div>
+          <label className="block text-sm font-medium mb-1">Size</label>
+          <input
           type="text"
           name="values"
           placeholder="Enter comma-separated values (e.g., 3kg, 6kg)"
