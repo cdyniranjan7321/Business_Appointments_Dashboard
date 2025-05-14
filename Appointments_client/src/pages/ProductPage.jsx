@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from 'react';
-import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiChevronDown, FiX, FiImage, FiPrinter, FiCopy, FiEdit2, FiTrash2, FiChevronUp, FiEye } from 'react-icons/fi';
+import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiChevronDown, FiX, FiImage, FiPrinter, 
+  FiCopy, FiEdit2, FiTrash2, FiChevronUp, FiEye } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -288,7 +289,7 @@ const handleDetails = () => {
     price: 0.00,
     compareAtPrice: 0.00,
     costPerItem: 0.00,
-    trackQuantity: true,
+    trackQuantity: false,
     continueSelling: false,
     hasSKU: false,
     quantity: '',
@@ -793,7 +794,8 @@ const handleDetails = () => {
                           </div>
 
                           {/* Country of Origin */}
-                          <div>
+                         {/* 
+                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Country/Region of origin</label>
                             <select
                               name="countryOfOrigin"
@@ -809,6 +811,9 @@ const handleDetails = () => {
                               
                             </select>
                           </div>
+                         
+                         */}
+                          
                         </div>
                       )}
                     </div>
