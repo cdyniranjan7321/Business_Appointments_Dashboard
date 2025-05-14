@@ -25,9 +25,9 @@ const Booking = () => {
 
   // Sample data - replace with actual data from your backend
   const [services] = useState([
-    { id: 1, name: 'Haircut', duration: 30, price: 25 },
-    { id: 2, name: 'Manicure', duration: 45, price: 35 },
-    { id: 3, name: 'Massage', duration: 60, price: 80 }
+    { id: 1, name: 'Haircut', duration: 30, price: 2500 },
+    { id: 2, name: 'Manicure', duration: 45, price: 3500 },
+    { id: 3, name: 'Massage', duration: 60, price: 8000 }
   ]);
 
   const [staffMembers] = useState([
@@ -47,7 +47,7 @@ const Booking = () => {
       date: '2023-06-15', 
       time: '10:00', 
       duration: 30, 
-      price: 25, 
+      price: 2500, 
       status: 'confirmed',
       source: 'online',
       createdAt: '2023-06-10 09:30'
@@ -62,7 +62,7 @@ const Booking = () => {
       date: '2023-06-15', 
       time: '14:30', 
       duration: 45, 
-      price: 35, 
+      price: 3500, 
       status: 'pending',
       source: 'online',
       createdAt: '2023-06-11 11:15'
@@ -77,7 +77,7 @@ const Booking = () => {
       date: '2023-06-16', 
       time: '11:00', 
       duration: 60, 
-      price: 80, 
+      price: 8000, 
       status: 'completed',
       source: 'manual',
       createdAt: '2023-06-12 15:45'
@@ -320,7 +320,7 @@ const Booking = () => {
             <option value="">Select Service</option>
             {services.map(service => (
               <option key={service.id} value={service.id}>
-                {service.name} (${service.price})
+                {service.name} (रु {service.price})
               </option>
             ))}
           </select>
@@ -457,7 +457,7 @@ const Booking = () => {
         </div>
       )}
       
-      {/* Booking Requests - Keep existing implementation */}
+      {/* Booking Requests */}
       {activeTab === 'requests' && (
         <div>
           {/* Filters */}
@@ -525,7 +525,7 @@ const Booking = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">{booking.service}</div>
-                          <div className="text-sm text-gray-500">${booking.price} • {booking.duration} min</div>
+                          <div className="text-sm text-gray-500">रु {booking.price} • {booking.duration} min</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{booking.staff}</td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -578,7 +578,7 @@ const Booking = () => {
                                 onClick={() => updateBookingStatus(booking.id, 'cancelled')}
                                 className="text-red-600 hover:text-red-900"
                                 title="Cancel"
-                              >
+                                >
                                 <FiX />
                               </button>
                             )}

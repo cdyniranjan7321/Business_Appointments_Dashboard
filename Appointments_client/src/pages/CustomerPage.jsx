@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
@@ -19,6 +18,8 @@ const CustomerPage = () => {
   });
   const [activeTab, setActiveTab] = useState('details');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [showDetailsButton, setShowDetailsButton] = useState(false);
 
   useEffect(() => {
     // Fetch all customers data
@@ -27,40 +28,65 @@ const CustomerPage = () => {
       const mockCustomers = [
         {
           id: '1',
-          name: 'John Doe',
-          email: 'john@example.com',
-          phone: '+1 (555) 123-4567',
-          address: '123 Main St, Anytown, USA',
+          name: 'Niranjan chaudhary',
+          email: 'cdyniranjan7321@.com',
+          phone: '+977 9869148791',
+          address: 'ranipauwa, pokhara, Nepal',
           joinDate: '2023-01-15',
           notes: 'Prefers morning appointments. Allergic to peanuts.',
           cohortIds: ['cohort1', 'cohort2'],
           lifetimeValue: 1250.00,
-          lastVisit: '2023-10-28'
+          lastVisit: '2023-10-28',
+          subscription: 'Premium',
+          orders: 5,
+          location: 'Pokhara'
         },
         {
           id: '2',
           name: 'Jane Smith',
           email: 'jane@example.com',
-          phone: '+1 (555) 987-6543',
-          address: '456 Oak Ave, Somewhere, USA',
+          phone: '+977 984567-8901',
+          address: 'putali sadak, kathmandu, Nepal',
           joinDate: '2023-03-22',
           notes: 'Loyal customer, refers many friends.',
           cohortIds: ['cohort1'],
           lifetimeValue: 890.00,
-          lastVisit: '2023-11-05'
+          lastVisit: '2023-11-05',
+          subscription: 'Basic',
+          orders: 3,
+          location: 'kathmandu'
         },
         {
           id: '3',
-          name: 'Robert Johnson',
-          email: 'robert@example.com',
-          phone: '+1 (555) 456-7890',
-          address: '789 Pine Rd, Nowhere, USA',
+          name: 'Ram Thapa',
+          email: 'ram@example.com',
+          phone: '+977 981234-5678',
+          address: 'NewRoad, pokhara, Nepal',
           joinDate: '2023-05-10',
           notes: 'Prefers email communication.',
           cohortIds: ['cohort3'],
           lifetimeValue: 450.00,
-          lastVisit: '2023-09-18'
-        }
+          lastVisit: '2023-09-18',
+          subscription: 'None',
+          orders: 1,
+          location: 'kaski'
+        },
+        {
+          id: '4',
+          name: 'Emily Wilson',
+          email: 'emily@example.com',
+          phone: '+1 (555) 789-0123',
+          address: '321 Elm St, Anywhere, USA',
+          joinDate: '2023-07-30',
+          notes: 'New customer, interested in premium services.',
+          cohortIds: ['cohort3'],
+          lifetimeValue: 320.00,
+          lastVisit: '2023-12-01',
+          subscription: 'Trial',
+          orders: 2,
+          location: 'Houston'
+        },
+          
       ];
       setCustomers(mockCustomers);
       
@@ -93,6 +119,14 @@ const CustomerPage = () => {
         ],
         '3': [
           { id: 's6', name: 'Haircut', date: '2023-09-18', price: 40.00, status: 'completed' }
+        ],
+        '4': [
+          { id: 's7', name: 'Consultation', date: '2023-12-01', price: 0.00, status: 'completed' },
+          { id: 's8', name: 'Facial', date: '2023-12-10', price: 75.00, status: 'upcoming' }
+        ],
+        '5': [
+          { id: 's9', name: 'Team Package', date: '2023-11-20', price: 500.00, status: 'completed' },
+          { id: 's10', name: 'Team Package', date: '2023-10-15', price: 500.00, status: 'completed' }
         ]
       };
       setServices(mockServices[id] || []);
@@ -124,6 +158,8 @@ const CustomerPage = () => {
   const handleBackToList = () => {
     navigate('/customer');
     setCustomer(null);
+    setSelectedCustomers([]);
+    setShowDetailsButton(false);
   };
 
   const handleInputChange = (e) => {
@@ -138,20 +174,6 @@ const CustomerPage = () => {
     // Update the customers list with the edited customer
     setCustomers(customers.map(c => c.id === customer.id ? customer : c));
   };
-
-  {/* 
-    const handleAddService = () => {
-    // Here you would typically make an API call to add the service
-    const serviceToAdd = {
-      ...newService,
-      id: `s${services.length + 1}`,
-      price: parseFloat(newService.price)
-    };
-    setServices([...services, serviceToAdd]);
-    setNewService({ name: '', date: '', price: '', status: 'pending' });
-  };
-  
-    */}
 
   const handleAddToCohort = () => {
     if (!selectedCohort) return;
@@ -178,6 +200,34 @@ const CustomerPage = () => {
     setCustomer(updatedCustomer);
     // Update the customers list
     setCustomers(customers.map(c => c.id === customer.id ? updatedCustomer : c));
+  };
+
+  const handleSelectCustomer = (customerId, isChecked) => {
+    if (isChecked) {
+      setSelectedCustomers([...selectedCustomers, customerId]);
+    } else {
+      setSelectedCustomers(selectedCustomers.filter(id => id !== customerId));
+    }
+    setShowDetailsButton(selectedCustomers.length + (isChecked ? 1 : -1) === 1);
+  };
+
+  const handleSelectAllCustomers = (isChecked) => {
+    if (isChecked) {
+      setSelectedCustomers(filteredCustomers.map(customer => customer.id));
+      setShowDetailsButton(filteredCustomers.length === 1);
+    } else {
+      setSelectedCustomers([]);
+      setShowDetailsButton(false);
+    }
+  };
+
+  const handleShowDetails = () => {
+    if (selectedCustomers.length === 1) {
+      const selectedCustomer = customers.find(c => c.id === selectedCustomers[0]);
+      if (selectedCustomer) {
+        handleCustomerClick(selectedCustomer);
+      }
+    }
   };
 
   const filteredCustomers = customers.filter(customer =>
@@ -217,41 +267,109 @@ const CustomerPage = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCustomers.map((customer) => (
-            <div
-              key={customer.id}
-              onClick={() => handleCustomerClick(customer)}
-              className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+        {showDetailsButton && (
+          <div className="mb-4">
+            <button
+              onClick={handleShowDetails}
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-700 transition"
             >
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="flex-shrink-0">
-                  <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                    {customer.name.charAt(0)}
-                  </div>
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold">{customer.name}</h2>
-                  <p className="text-sm text-gray-500">{customer.email}</p>
-                </div>
-              </div>
-              <div className="space-y-2">
-                
-                <p className="text-sm"><span className="font-medium">Member Since:</span> {new Date(customer.joinDate).toLocaleDateString()}</p>
-                
-              </div>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {customer.cohortIds.map(cohortId => {
-                  const cohort = cohorts.find(c => c.id === cohortId);
-                  return cohort ? (
-                    <span key={cohort.id} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                      {cohort.name}
-                    </span>
-                  ) : null;
-                })}
-              </div>
-            </div>
-          ))}
+              Show Details
+            </button>
+          </div>
+        )}
+
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      onChange={(e) => handleSelectAllCustomers(e.target.checked)}
+                      checked={selectedCustomers.length === filteredCustomers.length && filteredCustomers.length > 0}
+                    />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subscription</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Orders</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount Spent</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredCustomers.map((customer) => (
+                  <tr 
+                    key={customer.id}
+                    className={`${selectedCustomers.includes(customer.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        checked={selectedCustomers.includes(customer.id)}
+                        onChange={(e) => handleSelectCustomer(customer.id, e.target.checked)}
+                      />
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap cursor-pointer"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                          {customer.name.charAt(0)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">{customer.name}</div>
+                          <div className="text-sm text-gray-500">{customer.phone}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      {customer.email}
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap cursor-pointer"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        customer.subscription === 'Premium' ? 'bg-purple-100 text-purple-800' :
+                        customer.subscription === 'Basic' ? 'bg-blue-100 text-blue-800' :
+                        customer.subscription === 'Enterprise' ? 'bg-green-100 text-green-800' :
+                        customer.subscription === 'Trial' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {customer.subscription}
+                      </span>
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      {customer.location}
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 cursor-pointer"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      {customer.orders}
+                    </td>
+                    <td 
+                      className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 cursor-pointer"
+                      onClick={() => handleCustomerClick(customer)}
+                    >
+                      रु  {customer.lifetimeValue.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     );
@@ -385,6 +503,18 @@ const CustomerPage = () => {
                   <p><span className="font-medium">Email:</span> {customer.email}</p>
                   <p><span className="font-medium">Phone:</span> {customer.phone}</p>
                   <p><span className="font-medium">Address:</span> {customer.address}</p>
+                  <p><span className="font-medium">Location:</span> {customer.location}</p>
+                  <p><span className="font-medium">Subscription:</span> 
+                    <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      customer.subscription === 'Premium' ? 'bg-purple-100 text-purple-800' :
+                      customer.subscription === 'Basic' ? 'bg-blue-100 text-blue-800' :
+                      customer.subscription === 'Enterprise' ? 'bg-green-100 text-green-800' :
+                      customer.subscription === 'Trial' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {customer.subscription}
+                    </span>
+                  </p>
                   <p><span className="font-medium">Member Since:</span> {new Date(customer.joinDate).toLocaleDateString()}</p>
                 </div>
               )}
@@ -433,7 +563,7 @@ const CustomerPage = () => {
                     <tr key={service.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{service.name}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(service.date).toLocaleDateString()}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${service.price.toFixed(2)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">रु{service.price.toFixed(2)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           service.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -520,11 +650,11 @@ const CustomerPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-blue-800">Lifetime Value</h3>
-                <p className="text-2xl font-bold text-blue-900 mt-2">${customer.lifetimeValue.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-blue-900 mt-2">रु{customer.lifetimeValue.toFixed(2)}</p>
               </div>
               <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="text-sm font-medium text-green-800">Total Services</h3>
-                <p className="text-2xl font-bold text-green-900 mt-2">{services.length}</p>
+                <h3 className="text-sm font-medium text-green-800">Total Orders</h3>
+                <p className="text-2xl font-bold text-green-900 mt-2">{customer.orders}</p>
               </div>
               <div className="bg-purple-100 p-4 rounded-lg">
                 <h3 className="text-sm font-medium text-purple-800">Last Visit</h3>
