@@ -295,7 +295,7 @@ const handleDetails = () => {
     quantity: '',
     sku: '',
     barcode: '',
-    physicalProduct: true,
+    physicalProduct: false,
     weight: 0.0,
     weightUnit: 'kg',
     countryOfOrigin: '',
@@ -310,10 +310,78 @@ const handleDetails = () => {
     variants: [],
   });
 
-  const [variantOptions, setVariantOptions] = useState({
-    name: '',
-    values: ''
+// Handler for variant detail changes
+const handleVariantDetailChange = (variantIndex, valueIndex, field, value) => {
+  setNewProduct(prev => {
+    const updatedVariants = [...prev.variants];
+    if (!updatedVariants[variantIndex][field]) {
+      updatedVariants[variantIndex][field] = [];
+    }
+    updatedVariants[variantIndex][field][valueIndex] = value;
+    return {
+      ...prev,
+      variants: updatedVariants
+    };
   });
+};
+
+// Handler for variant image upload
+const handleVariantImageUpload = (variantIndex, valueIndex, e) => {
+  const file = e.target.files[0];
+  if (file) {
+    setNewProduct(prev => {
+      const updatedVariants = [...prev.variants];
+      if (!updatedVariants[variantIndex].images) {
+        updatedVariants[variantIndex].images = [];
+      }
+      updatedVariants[variantIndex].images[valueIndex] = file;
+      return {
+        ...prev,
+        variants: updatedVariants
+      };
+    });
+  }
+};
+
+// Modified handleAddVariant
+const handleAddVariant = () => {
+  const values = variantOptions.values.split(',').map(v => v.trim());
+  setNewProduct(prev => ({
+    ...prev,
+    variants: [
+      ...prev.variants,
+      {
+        name: variantOptions.name,
+        values: values,
+        sku: Array(values.length).fill(''),
+        prices: Array(values.length).fill(''),
+        available: Array(values.length).fill(''),
+        images: Array(values.length).fill(null)
+      }
+    ]
+  }));
+  setShowVariantBox(false);
+  setVariantOptions({ name: '', values: '' });
+};
+
+  const [variantOptions, setVariantOptions] = useState({
+    values: '',
+  });
+
+
+  const handleVariantCheckboxChange = (variantIndex, valueIndex, checked) => {
+  setNewProduct(prev => {
+    const updatedVariants = [...prev.variants];
+    if (!updatedVariants[variantIndex].active) {
+      updatedVariants[variantIndex].active = [];
+    }
+    updatedVariants[variantIndex].active[valueIndex] = checked;
+    return {
+      ...prev,
+      variants: updatedVariants
+    };
+  });
+};
 
   // Handle image upload
   const handleImageUpload = (e) => {
@@ -382,7 +450,7 @@ const handleDetails = () => {
       quantity: '',
       sku: '',
       barcode: '',
-      physicalProduct: true,
+      physicalProduct: false,
       weight: 0.0,
       weightUnit: 'kg',
       countryOfOrigin: '',
@@ -441,25 +509,7 @@ const handleDetails = () => {
     }));
   };
 
-  const handleAddVariant = () => {
-    if (variantOptions.name && variantOptions.values) {
-      const newVariant = {
-        name: variantOptions.name,
-        values: variantOptions.values.split(',').map(v => v.trim())
-      };
-      
-      setNewProduct(prev => ({
-        ...prev,
-        variants: [...prev.variants, newVariant]
-      }));
-      
-      setShowVariantBox(false);
-      setVariantOptions({
-        name: '',
-        values: ''
-      });
-    }
-  };
+  
   
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
@@ -598,6 +648,7 @@ const handleDetails = () => {
       </div>
     </div>
   </div>
+  
   {/* Charge Tax Checkbox */}
   <div className="mt-4 flex items-center">
     <input
@@ -741,176 +792,144 @@ const handleDetails = () => {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </div>        
 
-                    {/* Shipping */}
-                    <div className="space-y-2 border border-spacing-2 py-3 px-3 pb-4 shadow-md rounded-lg">
-                      <h3 className="text-lg font-medium">Shipping</h3>
+            
+{/* Variants */}
+<div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
+  <h3 className="text-lg font-medium">Variants</h3>
+  <button 
+    type="button"
+    onClick={addVariant}
+    className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
+  >
+    <FiPlus className="mr-1" /> Add another option
+  </button>
+  
+  {showVariantBox && (
+    <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
+      <div>
+        <label className="block text-sm font-medium mb-1">Size</label>
+        <input
+          type="text"
+          name="values"
+          placeholder="Enter comma-separated values (e.g., 3kg, 6kg)"
+          className="w-full p-2 border border-gray-300 rounded text-sm"
+          value={variantOptions.values}
+          onChange={handleVariantInputChange}
+        />
+        <p className="text-xs text-gray-500 mt-1">Separate options with a comma</p>
+      </div>
+      <div className="flex justify-between mt-4">
+        <button 
+          type="button"
+          className="px-3 py-1 bg-white text-red-500 rounded text-sm hover:bg-gray-300"
+          onClick={() => {
+            setShowVariantBox(false);
+            setVariantOptions({
+              values: ''
+            });
+          }}
+        >
+          Delete
+        </button>
+        <button 
+          type="button"
+          className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+          onClick={handleAddVariant}
+          disabled={!variantOptions.values}
+        >
+          Done
+        </button>
+      </div>
+    </div>
+  )}
 
-                      {/* Physical Product Checkbox */}
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          id="physicalProduct"
-                          name="physicalProduct"
-                          checked={newProduct.physicalProduct}
-                          onChange={handleInputChange}
-                          className="h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
-                        />
-                        <label htmlFor="physicalProduct" className="ml-2 block text-sm text-gray-700">
-                          This is a physical product
-                        </label>
+  {/* Display added variants */}
+  {newProduct.variants.length > 0 && (
+    <div className="mt-4 space-y-4">
+      <h4 className="text-md font-medium mb-2">Current Variants</h4>
+      
+      {/* Variant options - Simplified to match screenshot */}
+      <div className="border border-gray-200 rounded p-4">
+        {/* Header row */}
+        <div className="flex items-center mb-2 border-b pb-2">
+          <span className="font-medium w-10"></span> {/* Checkbox space */}
+          <span className="font-medium w-40">Variant</span> {/* Combined photo + size */}
+          <span className="font-medium flex-1">Price</span>
+          <span className="font-medium w-32">Available</span>
+        </div>
+        
+        {/* Variant rows */}
+        {newProduct.variants.map((variant, index) => (
+          <div key={index} className="space-y-2">
+            {variant.values.map((value, valueIndex) => (
+              <div key={valueIndex} className="flex items-center py-2">
+                {/* Checkbox - now on far left */}
+                <div className="w-10 flex items-center justify-center">
+                  <input 
+                    type="checkbox" 
+                    className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                    checked={variant.active?.[valueIndex] !== false}
+                    onChange={(e) => handleVariantCheckboxChange(index, valueIndex, e.target.checked)}
+                  />
+                </div>
+                
+                {/* Combined photo + size name */}
+                <div className="w-40 flex items-center">
+                  <div className="mr-3">
+                    {variant.images?.[valueIndex] ? (
+                      <img 
+                        src={URL.createObjectURL(variant.images[valueIndex])} 
+                        alt={value}
+                        className="h-10 w-10 object-cover rounded"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
+                        <FiImage className="text-gray-400" />
                       </div>
-
-                      {newProduct.physicalProduct && (
-                        <div className="space-y-4 mt-4">
-                          {/* Weight Input */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
-                            <div className="flex space-x-2">
-                              <input
-                                type="number"
-                                name="weight"
-                                value={newProduct.weight}
-                                onChange={handleInputChange}
-                                className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
-                                step="0.1"
-                                min="0"
-                                placeholder="0.0"
-                              />
-                              {/* Unit Dropdown */}
-                              <select
-                                name="weightUnit"
-                                value={newProduct.weightUnit}
-                                onChange={handleInputChange}
-                                className="w-20 p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500 appearance-none bg-gray-50"
-                              >
-                                <option value="kg">kg</option>
-                                <option value="g">gm</option>
-                                <option value="lb">lb</option>
-                                <option value="oz">oz</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          {/* Country of Origin */}
-                         {/* 
-                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Country/Region of origin</label>
-                            <select
-                              name="countryOfOrigin"
-                              value={newProduct.countryOfOrigin}
-                              onChange={handleInputChange}
-                              className="w-full p-2 text-sm border border-gray-300 rounded focus:ring-green-500 focus:border-green-500"
-                            >
-                              <option value="">Select</option>
-                              <option value="NP">Nepal</option>
-                              <option value="US">United States</option>
-                              <option value="AU">Australia</option>
-                              <option value="CN">China</option>
-                              
-                            </select>
-                          </div>
-                         
-                         */}
-                          
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Variants */}
-                    <div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
-                      <h3 className="text-lg font-medium">Variants</h3>
-                      <button 
-                        type="button"
-                        onClick={addVariant}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
-                      >
-                        <FiPlus className="mr-1" /> Add options like size or color
-                      </button>
-                      
-                      {showVariantBox && (
-                        <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
-                          <div className="grid grid-cols-3 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Option name</label>
-                              <input
-                                type="text"
-                                name="name"
-                                placeholder="e.g. Size, Color"
-                                className="w-full p-2 border border-gray-300 rounded text-sm"
-                                value={variantOptions.name}
-                                onChange={handleVariantInputChange}
-                              />
-                            </div>
-                            <div className="col-span-2">
-                              <label className="block text-sm font-medium mb-1">Option values</label>
-                              <input
-                                type="text"
-                                name="values"
-                                placeholder="Enter comma-separated values"
-                                className="w-full p-2 border border-gray-300 rounded text-sm"
-                                value={variantOptions.values}
-                                onChange={handleVariantInputChange}
-                              />
-                              <p className="text-xs text-gray-500 mt-1">Separate options with a comma</p>
-                            </div>
-                          </div>
-                          <div className="flex justify-between mt-4">
-                            <button 
-                              type="button"
-                              className="px-3 py-1 bg-white text-red-500 rounded text-sm hover:bg-gray-300"
-                              onClick={() => {
-                                setShowVariantBox(false);
-                                setVariantOptions({
-                                  name: '',
-                                  values: ''
-                                });
-                              }}
-                            >
-                              Delete
-                            </button>
-                            <button 
-                              type="button"
-                              className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                              onClick={handleAddVariant}
-                              disabled={!variantOptions.name || !variantOptions.values}
-                            >
-                              Done
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Display added variants */}
-                      {newProduct.variants.length > 0 && (
-                        <div className="mt-4 border border-gray-200 rounded p-4">
-                          <h4 className="text-md font-medium mb-2">Current Variants</h4>
-                          <div className="space-y-2">
-                            {newProduct.variants.map((variant, index) => (
-                              <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                                <div>
-                                  <span className="font-medium">{variant.name}: </span>
-                                  <span>{variant.values.join(', ')}</span>
-                                </div>
-                                <button 
-                                  onClick={() => {
-                                    setNewProduct(prev => ({
-                                      ...prev,
-                                      variants: prev.variants.filter((_, i) => i !== index)
-                                    }));
-                                  }}
-                                  className="text-red-500 hover:text-red-700"
-                                >
-                                  <FiX />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
+                  <span>{value}</span>
+                </div>
+                
+                {/* Price */}
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="रु"
+                    className="w-34 p-2 border border-gray-300 rounded text-sm"
+                    value={variant.prices?.[valueIndex] || ''}
+                    onChange={(e) => handleVariantDetailChange(index, valueIndex, 'prices', e.target.value)}
+                  />
+                </div>
+                
+                {/* Available */}
+                <div className="w-30 px-2">
+                  <input
+                    type="text"
+                    placeholder="Available value"
+                    className="w-full p-2 border border-gray-300 rounded text-sm"
+                    value={variant.available?.[valueIndex] || ''}
+                    onChange={(e) => handleVariantDetailChange(index, valueIndex, 'available', e.target.value)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* Inventory summary */}
+      <div className="border border-gray-200 rounded p-4 bg-gray-50">
+        <p className="text-sm">
+          Total inventory at 10/44 dundas st: <span className="font-medium">5 available</span>
+        </p>
+      </div>
+    </div>
+  )}
+</div>
+</div>
 
                   {/* Right Column */}
                   <div className="space-y-6">
