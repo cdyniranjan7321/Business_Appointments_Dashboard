@@ -796,21 +796,22 @@ const handleAddVariant = () => {
 
             
                {/* Variants */}
-        <div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
-          <h3 className="text-lg font-medium">Variants</h3>
-            <button 
-              type="button"
-              onClick={addVariant}
-              className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
-            >
-           <FiPlus className="mr-1" /> Add another option
-           </button>
-  
-      {showVariantBox && (
-        <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
-         <div>
-          <label className="block text-sm font-medium mb-1">Size</label>
-          <input
+        {/* Variants */}
+<div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
+  <h3 className="text-lg font-medium">Variants</h3>
+  <button 
+    type="button"
+    onClick={addVariant}
+    className="px-3 py-1 text-sm border border-gray-300 rounded flex items-center hover:bg-gray-200"
+  >
+    <FiPlus className="mr-1" /> Add another option
+  </button>
+
+  {showVariantBox && (
+    <div className="border border-gray-200 rounded p-4 mt-2 bg-white">
+      <div>
+        <label className="block text-sm font-medium mb-1">Size</label>
+        <input
           type="text"
           name="values"
           placeholder="Enter comma-separated values (e.g., 3kg, 6kg)"
@@ -875,22 +876,29 @@ const handleAddVariant = () => {
                   />
                 </div>
                 
-                {/* Combined photo + size name */}
-                <div className="w-40 flex items-center">
-                  <div className="mr-3">
-                    {variant.images?.[valueIndex] ? (
-                      <img 
-                        src={URL.createObjectURL(variant.images[valueIndex])} 
-                        alt={value}
-                        className="h-10 w-10 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                        <FiImage className="text-gray-400" />
-                      </div>
-                    )}
+                {/* Combined photo + size name + SKU */}
+                <div className="w-40">
+                  <div className="flex items-center">
+                    <div className="mr-3">
+                      {variant.images?.[valueIndex] ? (
+                        <img 
+                          src={URL.createObjectURL(variant.images[valueIndex])} 
+                          alt={value}
+                          className="h-10 w-10 object-cover rounded"
+                        />
+                      ) : (
+                        <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
+                          <FiImage className="text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <span className="block">{value}</span>
+                      <span className="block text-xs text-gray-500">
+                        SKU: {variant.sku?.[valueIndex] || 'N/A'}
+                      </span>
+                    </div>
                   </div>
-                  <span>{value}</span>
                 </div>
                 
                 {/* Price */}
@@ -920,12 +928,13 @@ const handleAddVariant = () => {
         ))}
       </div>
 
-      {/* Inventory summary */}
+      {/* Inventory summary 
       <div className="border border-gray-200 rounded p-4 bg-gray-50">
         <p className="text-sm">
           Total inventory at 10/44 dundas st: <span className="font-medium">5 available</span>
         </p>
       </div>
+      */}
     </div>
   )}
 </div>
