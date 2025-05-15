@@ -1330,16 +1330,17 @@ if (selectedOrder) {
                           onChange={(e) => updateItem(index, 'quantity', e.target.value)}
                         />
                       </div>
-                      <div className="col-span-6 sm:col-span-4">
-                        <input
-                          type="number"
-                          placeholder="Price"
-                          step="0.01"
-                          className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-                          value={item.price}
-                          onChange={(e) => updateItem(index, 'price', e.target.value)}
+                      <div className="col-span-6 sm:col-span-4 flex items-center border border-gray-300 rounded-md shadow-sm">
+                        <span className="pl-3 pr-2 text-gray-500">रु</span>
+                         <input
+                            type="number"
+                            placeholder="0.00"
+                            step="0.01"
+                            className="flex-1 py-2 pr-3 border-0 focus:ring-0 focus:outline-none sm:text-sm"
+                            value={item.price}
+                            onChange={(e) => updateItem(index, 'price', e.target.value)}
                         />
-                      </div>
+                     </div>
                     </div>
                   ))}
                   <button
