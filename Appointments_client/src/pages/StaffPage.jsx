@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useEffect } from 'react';
 import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2, 
   FiCheck, FiX, FiLock } from 'react-icons/fi';
 
@@ -29,6 +30,10 @@ const Staff = () => {
   // Staff and attendance data
   const [staffMembers, setStaffMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
 
   const handleStaffFormChange = (e) => {
     const { name, value } = e.target;
@@ -95,26 +100,28 @@ const Staff = () => {
   };
 
   const handleLoginSubmit = (e) => {
-    e.preventDefault();
-    const staff = staffMembers.find(s => s.email === loginForm.email);
-    
-    if (staff) {
-      if (
-        (!loginForm.usePin && staff.password === loginForm.password) ||
-        (loginForm.usePin && staff.pin === loginForm.pin)
-      ) {
-        alert(`Welcome back, ${staff.name}!`);
-        setStaffMembers(staffMembers.map(s => 
-          s.id === staff.id ? { ...s, lastLogin: new Date().toLocaleString() } : s
-        ));
-      } else {
-        alert('Invalid credentials!');
-      }
+  e.preventDefault();
+  const staff = staffMembers.find(s => s.email === loginForm.email);
+  
+  if (staff) {
+    if (
+      (!loginForm.usePin && staff.password === loginForm.password) ||
+      (loginForm.usePin && staff.pin === loginForm.pin)
+    ) {
+      alert(`Welcome back, ${staff.name}!`);
+      setStaffMembers(staffMembers.map(s => 
+        s.id === staff.id ? { ...s, lastLogin: new Date().toLocaleString() } : s
+      ));
+      // Redirect to attendance tab after successful login
+      setActiveTab('attendance');
     } else {
-      alert('Staff member not found!');
+      alert('Invalid credentials!');
     }
-    setLoginForm({ email: '', password: '', pin: '', usePin: false });
-  };
+  } else {
+    alert('Staff member not found!');
+  }
+  setLoginForm({ email: '', password: '', pin: '', usePin: false });
+};
 
   const handleEditStaff = (staff) => {
     setStaffForm({
@@ -177,7 +184,7 @@ const Staff = () => {
 
   const getAttendanceStatus = (clockInTime) => {
     const [hours, minutes] = clockInTime.split(':').map(Number);
-    if (hours > 9 || (hours === 9 && minutes > 0)) return 'late';
+    if (hours > 8 || (hours === 8 && minutes > 0)) return 'late';
     return 'present';
   };
 
@@ -348,7 +355,7 @@ const Staff = () => {
               <option value="admin">Admin</option>
               <option value="manager">Manager</option>
               <option value="staff">Staff</option>
-              <option value="staff">Software Developer</option>
+              <option value="software developer">Software Developer</option>
             </select>
           </div>
           <div>
