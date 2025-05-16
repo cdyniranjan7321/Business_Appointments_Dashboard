@@ -927,14 +927,6 @@ const handleAddVariant = () => {
           </div>
         ))}
       </div>
-
-      {/* Inventory summary 
-      <div className="border border-gray-200 rounded p-4 bg-gray-50">
-        <p className="text-sm">
-          Total inventory at 10/44 dundas st: <span className="font-medium">5 available</span>
-        </p>
-      </div>
-      */}
     </div>
   )}
 </div>
