@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FiUser, FiClock, FiKey, FiSettings, FiLogIn, FiLogOut, FiPlus, FiEdit2, FiTrash2, 
   FiCheck, FiX, FiLock } from 'react-icons/fi';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Staff = () => {
   // State for form inputs
@@ -30,10 +31,38 @@ const Staff = () => {
   // Staff and attendance data
   const [staffMembers, setStaffMembers] = useState([]);
   const [attendance, setAttendance] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [activeTab]);
+  const fetchStaff = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('http://localhost:6001/api/staff');
+      setStaffMembers(res.data.staff);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to fetch staff');
+      toast.error(err.response?.data?.error || 'Failed to fetch staff');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchStaff();
+}, []);
+
+useEffect(() => {
+  const fetchAttendance = async () => {
+    try {
+      const res = await axios.get('http://localhost:6001/api/staff/attendance');
+      setAttendance(res.data.attendance);
+    } catch (err) {
+      console.error('Failed to fetch attendance:', err);
+    }
+  };
+
+  fetchAttendance();
+}, []);
 
   const handleStaffFormChange = (e) => {
     const { name, value } = e.target;
@@ -45,45 +74,33 @@ const Staff = () => {
     setLoginForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleStaffSubmit = (e) => {
-    e.preventDefault();
+  const handleStaffSubmit = async (e) => {
+  e.preventDefault();
+  
+  try {
+    setLoading(true);
     
-    // Validate passwords match if not using PIN
     if (!staffForm.pin && staffForm.password !== staffForm.confirmPassword) {
-      alert("Passwords don't match!");
-      return;
+      throw new Error("Passwords don't match!");
     }
 
-    // Validate PIN is 4 digits if provided
     if (staffForm.pin && !/^\d{4}$/.test(staffForm.pin)) {
-      alert("PIN must be 4 digits!");
-      return;
+      throw new Error("PIN must be 4 digits!");
     }
 
     if (editMode) {
+      const res = await axios.put(`/api/staff/${currentStaffId}`, staffForm);
       setStaffMembers(staffMembers.map(staff => 
-        staff.id === currentStaffId ? { ...staff, ...staffForm } : staff
+        staff.id === currentStaffId ? res.data.staff : staff
       ));
+      toast.success('Staff updated successfully');
     } else {
-      const newStaff = {
-        id: staffMembers.length > 0 ? Math.max(...staffMembers.map(s => s.id)) + 1 : 1,
-        ...staffForm,
-        lastLogin: 'Never'
-      };
-      setStaffMembers([...staffMembers, newStaff]);
-      
-      const newAttendance = {
-        id: attendance.length > 0 ? Math.max(...attendance.map(a => a.id)) + 1 : 1,
-        staffId: newStaff.id,
-        name: newStaff.name,
-        date: currentDate,
-        clockIn: '',
-        clockOut: '',
-        status: 'absent'
-      };
-      setAttendance([...attendance, newAttendance]);
+      const res = await axios.post('http://localhost:6001/api/staff', staffForm);
+      setStaffMembers([...staffMembers, res.data.staff]);
+      toast.success('Staff added successfully');
     }
 
+    // Reset form
     setStaffForm({
       name: '',
       email: '',
@@ -97,30 +114,31 @@ const Staff = () => {
     setEditMode(false);
     setCurrentStaffId(null);
     setShowStaffFormModal(false);
-  };
-
-  const handleLoginSubmit = (e) => {
-  e.preventDefault();
-  const staff = staffMembers.find(s => s.email === loginForm.email);
-  
-  if (staff) {
-    if (
-      (!loginForm.usePin && staff.password === loginForm.password) ||
-      (loginForm.usePin && staff.pin === loginForm.pin)
-    ) {
-      alert(`Welcome back, ${staff.name}!`);
-      setStaffMembers(staffMembers.map(s => 
-        s.id === staff.id ? { ...s, lastLogin: new Date().toLocaleString() } : s
-      ));
-      // Redirect to attendance tab after successful login
-      setActiveTab('attendance');
-    } else {
-      alert('Invalid credentials!');
-    }
-  } else {
-    alert('Staff member not found!');
+  } catch (err) {
+    setError(err.response?.data?.error || err.message);
+    toast.error(err.response?.data?.error || err.message);
+  } finally {
+    setLoading(false);
   }
-  setLoginForm({ email: '', password: '', pin: '', usePin: false });
+};
+
+  const handleLoginSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    setLoading(true);
+    const res = await axios.post('http://localhost:6001/api/staff/login', loginForm);
+    toast.success(`Welcome back, ${res.data.staff.name}!`);
+    
+    setStaffMembers(staffMembers.map(s => 
+      s.id === res.data.staff.id ? { ...s, lastLogin: new Date().toLocaleString() } : s
+    ));
+  } catch (err) {
+    setError(err.response?.data?.error || 'Login failed');
+    toast.error(err.response?.data?.error || 'Login failed');
+  } finally {
+    setLoading(false);
+    setLoginForm({ email: '', password: '', pin: '', usePin: false });
+  }
 };
 
   const handleEditStaff = (staff) => {
@@ -139,7 +157,13 @@ const Staff = () => {
     setShowStaffFormModal(true);
   };
 
-  const handleClockIn = (staffId) => {
+  const handleClockIn = async (staffId) => {
+  try {
+    await axios.post('http://localhost:6001/api/staff/attendance', { 
+      staffId, 
+      action: 'clockIn' 
+    });
+    
     const now = new Date();
     const timeString = now.toTimeString().substring(0, 5);
     
@@ -168,9 +192,19 @@ const Staff = () => {
       };
       setAttendance([...attendance, newAttendanceRecord]);
     }
-  };
+    toast.success('Clocked in successfully');
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Failed to clock in');
+  }
+};
 
-  const handleClockOut = (staffId) => {
+const handleClockOut = async (staffId) => {
+  try {
+    await axios.post('http://localhost:6001/api/staff/attendance', { 
+      staffId, 
+      action: 'clockOut' 
+    });
+    
     const now = new Date();
     const timeString = now.toTimeString().substring(0, 5);
     
@@ -180,7 +214,11 @@ const Staff = () => {
         clockOut: timeString 
       } : a
     ));
-  };
+    toast.success('Clocked out successfully');
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Failed to clock out');
+  }
+};
 
   const getAttendanceStatus = (clockInTime) => {
     const [hours, minutes] = clockInTime.split(':').map(Number);
@@ -188,37 +226,49 @@ const Staff = () => {
     return 'present';
   };
 
-  const handleDeleteStaff = (id) => {
-    if (window.confirm('Are you sure you want to delete this staff member?')) {
+  const handleDeleteStaff = async (id) => {
+  if (window.confirm('Are you sure you want to delete this staff member?')) {
+    try {
+      await axios.delete(`http://localhost:6001/api/staff/${id}`);
       setStaffMembers(staffMembers.filter(staff => staff.id !== id));
       setAttendance(attendance.filter(record => record.staffId !== id));
+      toast.success('Staff member deleted');
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Failed to delete staff');
     }
-  };
+  }
+};
 
-  const handleResetPassword = (id) => {
-    const staff = staffMembers.find(s => s.id === id);
-    const resetType = window.confirm("Reset password? Click OK for password, Cancel for PIN");
-    
+  const handleResetPassword = async (id) => {
+  const staff = staffMembers.find(s => s.id === id);
+  const resetType = window.confirm("Reset password? Click OK for password, Cancel for PIN");
+  
+  try {
     if (resetType) {
       const newPassword = prompt("Enter new password for this staff member:");
       if (newPassword) {
+        await axios.put(`http://localhost:6001/api/staff/${id}`, { password: newPassword });
         setStaffMembers(staffMembers.map(s => 
           s.id === id ? { ...s, password: newPassword } : s
         ));
-        alert(`Password for ${staff.name} has been reset.`);
+        toast.success(`Password for ${staff.name} has been reset.`);
       }
     } else {
       const newPin = prompt("Enter new 4-digit PIN for this staff member:");
       if (newPin && /^\d{4}$/.test(newPin)) {
+        await axios.put(`http://localhost:6001/api/staff/${id}`, { pin: newPin });
         setStaffMembers(staffMembers.map(s => 
           s.id === id ? { ...s, pin: newPin } : s
         ));
-        alert(`PIN for ${staff.name} has been reset.`);
+        toast.success(`PIN for ${staff.name} has been reset.`);
       } else {
-        alert("PIN must be 4 digits!");
+        toast.error("PIN must be 4 digits!");
       }
     }
-  };
+  } catch (err) {
+    toast.error(err.response?.data?.error || 'Failed to reset credentials');
+  }
+};
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -355,7 +405,7 @@ const Staff = () => {
               <option value="admin">Admin</option>
               <option value="manager">Manager</option>
               <option value="staff">Staff</option>
-              <option value="software developer">Software Developer</option>
+              <option value="staff">Software Developer</option>
             </select>
           </div>
           <div>

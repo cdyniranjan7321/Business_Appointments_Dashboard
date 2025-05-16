@@ -1,4 +1,3 @@
-
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 6001;
@@ -36,6 +35,9 @@ let ordersCollection;
 // Add discounts collection reference
 let discountsCollection;
 
+// Create staff collection reference
+let staffCollection;
+
 // ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
@@ -48,6 +50,7 @@ async function run() {
     servicesCollection = database.collection("services");
     ordersCollection = database.collection("orders");    // Orders collection
     discountsCollection = database.collection("discounts");
+    staffCollection = database.collection("staff");
 
     
     // Send a ping to confirm a successful connection
@@ -948,6 +951,255 @@ app.put('/api/discounts/:id/toggle', async (req, res) => {
     });
   }
 });
+
+// POST /api/staff - Create new staff member
+app.post('/api/staff', [
+  check('name', 'Name is required').not().isEmpty(),
+  check('email', 'Valid email is required').isEmail(),
+  check('phone', 'Valid phone number is required').isMobilePhone(),
+  check('position', 'Position is required').not().isEmpty(),
+  check('role', 'Valid role is required').isIn(['admin', 'manager', 'staff', 'developer']),
+  check('password', 'Password must be at least 6 characters').isLength({ min: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Check if staff already exists
+    const existingStaff = await staffCollection.findOne({ 
+      $or: [
+        { email: req.body.email },
+        { phone: req.body.phone }
+      ]
+    });
+
+    if (existingStaff) {
+      return res.status(400).json({ error: 'Staff with this email or phone already exists' });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+    // Create new staff
+    const newStaff = {
+      ...req.body,
+      password: hashedPassword,
+      pin: req.body.pin || null,
+      lastLogin: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const result = await staffCollection.insertOne(newStaff);
+    const createdStaff = await staffCollection.findOne({ _id: result.insertedId });
+
+    res.status(201).json({
+      success: true,
+      staff: {
+        ...createdStaff,
+        id: createdStaff._id.toString()
+      }
+    });
+  } catch (err) {
+    console.error('Staff creation error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// GET /api/staff - Get all staff members
+app.get('/api/staff', async (req, res) => {
+  try {
+    const staff = await staffCollection.find({}).toArray();
+    const formattedStaff = staff.map(member => ({
+      ...member,
+      id: member._id.toString()
+    }));
+    res.json({ success: true, staff: formattedStaff });
+  } catch (err) {
+    console.error('Error fetching staff:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// PUT /api/staff/:id - Update staff member
+app.put('/api/staff/:id', [
+  check('name', 'Name is required').optional().not().isEmpty(),
+  check('email', 'Valid email is required').optional().isEmail(),
+  check('phone', 'Valid phone number is required').optional().isMobilePhone(),
+  check('position', 'Position is required').optional().not().isEmpty(),
+  check('role', 'Valid role is required').optional().isIn(['admin', 'manager', 'staff', 'developer'])
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const updates = {
+      ...req.body,
+      updatedAt: new Date()
+    };
+
+    // If password is being updated, hash it
+    if (req.body.password) {
+      const salt = await bcrypt.genSalt(10);
+      updates.password = await bcrypt.hash(req.body.password, salt);
+    }
+
+    const result = await staffCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updates }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Staff member not found' });
+    }
+
+    const updatedStaff = await staffCollection.findOne({ _id: new ObjectId(req.params.id) });
+    res.json({
+      success: true,
+      staff: {
+        ...updatedStaff,
+        id: updatedStaff._id.toString()
+      }
+    });
+  } catch (err) {
+    console.error('Staff update error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// DELETE /api/staff/:id - Delete staff member
+app.delete('/api/staff/:id', async (req, res) => {
+  try {
+    const result = await staffCollection.deleteOne({ _id: new ObjectId(req.params.id) });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Staff member not found' });
+    }
+    res.json({ success: true, message: 'Staff member deleted' });
+  } catch (err) {
+    console.error('Staff deletion error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/staff/login - Staff login
+app.post('/api/staff/login', [
+  check('email', 'Valid email is required').isEmail(),
+  check('password', 'Password is required').not().isEmpty()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const staff = await staffCollection.findOne({ email: req.body.email });
+    if (!staff) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    const isMatch = await bcrypt.compare(req.body.password, staff.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // Update last login
+    await staffCollection.updateOne(
+      { _id: staff._id },
+      { $set: { lastLogin: new Date() } }
+    );
+
+    res.json({
+      success: true,
+      staff: {
+        id: staff._id.toString(),
+        name: staff.name,
+        email: staff.email,
+        role: staff.role
+      }
+    });
+  } catch (err) {
+    console.error('Staff login error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/staff/attendance - Record attendance
+app.post('/api/staff/attendance', [
+  check('staffId', 'Staff ID is required').not().isEmpty(),
+  check('action', 'Action must be "clockIn" or "clockOut"').isIn(['clockIn', 'clockOut'])
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const time = new Date().toTimeString().substring(0, 5);
+    
+    if (req.body.action === 'clockIn') {
+      // Check if already clocked in today
+      const existingRecord = await staffCollection.findOne({
+        staffId: req.body.staffId,
+        date: today
+      });
+      
+      if (existingRecord) {
+        return res.status(400).json({ error: 'Already clocked in today' });
+      }
+
+      // Create new attendance record
+      const staff = await staffCollection.findOne({ _id: new ObjectId(req.body.staffId) });
+      if (!staff) {
+        return res.status(404).json({ error: 'Staff member not found' });
+      }
+
+      const newRecord = {
+        staffId: req.body.staffId,
+        name: staff.name,
+        date: today,
+        clockIn: time,
+        clockOut: null,
+        status: getAttendanceStatus(time),
+        createdAt: new Date()
+      };
+
+      await staffCollection.insertOne(newRecord);
+      res.json({ success: true, message: 'Clocked in successfully' });
+    } else {
+      // Clock out
+      const result = await staffCollection.updateOne(
+        { 
+          staffId: req.body.staffId,
+          date: today,
+          clockOut: null
+        },
+        { $set: { clockOut: time } }
+      );
+
+      if (result.matchedCount === 0) {
+        return res.status(400).json({ error: 'No active clock-in found' });
+      }
+
+      res.json({ success: true, message: 'Clocked out successfully' });
+    }
+  } catch (err) {
+    console.error('Attendance error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Helper function to determine attendance status
+function getAttendanceStatus(clockInTime) {
+  const [hours, minutes] = clockInTime.split(':').map(Number);
+  if (hours > 8 || (hours === 8 && minutes > 0)) return 'late';
+  return 'present';
+}
 
 
 // Basic route
