@@ -1,7 +1,7 @@
-// ProductDetailsPage.jsx
+
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { FiArrowLeft, FiEdit, FiTrash2, FiPrinter } from 'react-icons/fi';
+import { FiArrowLeft, FiPrinter } from 'react-icons/fi';
 
 const ProductDetailsPage = () => {
   const { productId } = useParams();
@@ -31,6 +31,10 @@ const ProductDetailsPage = () => {
     fetchProductDetails();
   }, [productId]);
 
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (loading) {
     return <div className="p-4">Loading...</div>;
   }
@@ -57,17 +61,29 @@ const ProductDetailsPage = () => {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-bold">{product.name}</h1>
         <div className="flex space-x-3">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded flex items-center hover:bg-blue-700">
+          {/*
+             <button className="px-4 py-2 bg-blue-600 text-white rounded flex items-center hover:bg-blue-700">
             <FiEdit className="mr-2" /> Edit
           </button>
           <button className="px-4 py-2 bg-red-600 text-white rounded flex items-center hover:bg-red-700">
             <FiTrash2 className="mr-2" /> Delete
           </button>
-          <button className="px-4 py-2 bg-gray-200 rounded flex items-center hover:bg-gray-300">
+          */}
+          
+          <button 
+           onClick={handlePrint}
+          className="px-4 py-2 bg-gray-200 rounded flex items-center hover:bg-gray-300">
             <FiPrinter className="mr-2" /> Print
           </button>
         </div>
       </div>
+
+      {/* Print header - only visible when printing */}
+      <div className="hidden print:block mb-6">
+        <h1 className="text-2xl font-bold">{product.name}</h1>
+        <p className="text-gray-500">Printed on {new Date().toLocaleDateString()}</p>
+      </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column - Product Image */}
