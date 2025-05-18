@@ -4,6 +4,7 @@ import { FiMoreHorizontal, FiUpload, FiPlus, FiSearch, FiChevronDown, FiX, FiIma
   FiCopy, FiEdit2, FiTrash2, FiChevronUp, FiEye } from 'react-icons/fi';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { useNavigate } from 'react-router-dom';
 
 const ProductPages = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -17,12 +18,15 @@ const ProductPages = () => {
   const [showMoreActions, setShowMoreActions] = useState(false);
   const moreActionsRef = useRef(null);
   const [showSortOptions, setShowSortOptions] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [sortConfig, setSortConfig] = useState({
 
     key: 'name',
     direction: 'asc'
   });
   const sortRef = useRef(null);
+
+  const navigate = useNavigate();
 
 
   // Close more actions dropdown when clicking outside
@@ -85,57 +89,127 @@ const getSortedProducts = (items) => {
   };
 
   // Handle update action
-  const handleUpdate = () => {
-    if (selectedProducts.length === 1) {
-      const productToUpdate = products.find(p => p.id === selectedProducts[0]);
-      setNewProduct({
-        ...productToUpdate,
-        title: productToUpdate.name,
-        quantity: productToUpdate.inventory,
-        variants: productToUpdate.variants || []
-      });
-      if (productToUpdate.photo) {
-        setUploadedImage(productToUpdate.photo);
-      }
-      setShowAddProduct(true);
-      setShowMoreActions(false);
-    } else {
-      alert('Please select exactly one product to update');
+  const handleUpdate = async () => {
+  if (selectedProducts.length !== 1) {
+    alert('Please select exactly one product to update');
+    return;
+  }
+
+  try {
+    const productId = selectedProducts[0];
+    const productToUpdate = products.find(p => p.id === productId);
+    
+    // Set the product data in your form state
+    setNewProduct({
+      title: productToUpdate.name || '',
+      description: productToUpdate.description || '',
+      status: productToUpdate.status || 'active',
+      price: productToUpdate.price || 0,
+      compareAtPrice: productToUpdate.compareAtPrice || 0,
+      costPerItem: productToUpdate.costPerItem || 0,
+      trackQuantity: productToUpdate.trackQuantity || false,
+      quantity: productToUpdate.inventory || productToUpdate.quantity || 0,
+      continueSelling: productToUpdate.continueSelling || false,
+      sku: productToUpdate.sku || '',
+      barcode: productToUpdate.barcode || '',
+      category: productToUpdate.category || '',
+      type: productToUpdate.type || '',
+      vendor: productToUpdate.vendor || '',
+      collections: productToUpdate.collections || '',
+      tags: productToUpdate.tags?.join(', ') || '',
+      variants: productToUpdate.variants || [],
+      image: productToUpdate.image || null
+    });
+
+    if (productToUpdate.image) {
+      setUploadedImage(productToUpdate.image);
     }
-  };
+
+    // Set the editing product ID
+    setEditingProduct(productId);
+    
+    // Open the modal
+    setShowAddProduct(true);
+
+  } catch (error) {
+    console.error('Error preparing product for update:', error);
+    alert('Failed to prepare product for update');
+  }
+};
 
   // Handle delete action
-  const handleDelete = () => {
-    if (selectedProducts.length > 0) {
-      if (window.confirm(`Are you sure you want to delete ${selectedProducts.length} selected product(s)?`)) {
-        setProducts(products.filter(product => !selectedProducts.includes(product.id)));
-        setSelectedProducts([]);
-        setShowMoreActions(false);
-      }
-    } else {
-      alert('Please select at least one product to delete');
-    }
-  };
+  const handleDelete = async () => {
+  if (selectedProducts.length === 0) {
+    alert('Please select at least one product to delete');
+    return;
+  }
 
-  // Handle duplicate action
-  const handleDuplicate = () => {
-    if (selectedProducts.length > 0) {
-      const duplicatedProducts = products
-        .filter(product => selectedProducts.includes(product.id))
-        .map(product => ({
-          ...product,
-          id: Math.max(...products.map(p => p.id)) + 1,
-          name: `${product.name} (Copy)`,
-          inventory: 0
-        }));
-      
-      setProducts([...products, ...duplicatedProducts]);
+  if (!window.confirm(`Are you sure you want to delete ${selectedProducts.length} selected product(s)?`)) {
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:6001/api/products/bulk-delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        productIds: selectedProducts
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Refresh products list
+      const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+      const refreshData = await refreshResponse.json();
+      if (refreshData.success) {
+        setProducts(refreshData.products);
+      }
       setSelectedProducts([]);
       setShowMoreActions(false);
-    } else {
-      alert('Please select at least one product to duplicate');
     }
-  };
+  } catch (error) {
+    console.error('Error deleting products:', error);
+  }
+};
+
+  // Handle duplicate action
+  const handleDuplicate = async () => {
+  if (selectedProducts.length === 0) {
+    alert('Please select at least one product to duplicate');
+    return;
+  }
+
+  try {
+    const response = await fetch('http://localhost:6001/api/products/bulk-duplicate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        productIds: selectedProducts
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.success) {
+      // Refresh products list
+      const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+      const refreshData = await refreshResponse.json();
+      if (refreshData.success) {
+        setProducts(refreshData.products);
+      }
+      setSelectedProducts([]);
+      setShowMoreActions(false);
+    }
+  } catch (error) {
+    console.error('Error duplicating products:', error);
+  }
+};
 
   const handlePrint = () => {
     try {
@@ -157,7 +231,7 @@ const getSortedProducts = (items) => {
 
       // Add the table
       autoTable(doc, {
-        head: [['Product', 'Status', 'Inventory', 'Sales Channels', 'Markets', 'Category', 'Type']],
+        head: [['Product', 'Status', 'Inventory', 'Size', 'Quantity', 'Category', 'Type']],
         body: tableData,
         startY: 20,
         styles: {
@@ -184,13 +258,13 @@ const handleDetails = () => {
   if (selectedProducts.length === 1) {
     const productToView = products.find(p => p.id === selectedProducts[0]);
     // Navigate to details page with the product ID
-    window.location.href = `/products/${productToView.id}`;
+   navigate(`/products/${productToView.id}`);
   } else {
     alert('Please select exactly one product to view details');
   }
 };
   
-  const handleExport = () => {
+   const handleExport = () => {
     try {
       const doc = new jsPDF();
       
@@ -202,15 +276,15 @@ const handleDetails = () => {
         product.name || 'N/A',
         product.status || 'N/A',
         product.inventory !== '' ? product.inventory : 'N/A',
-        product.salesChannels || 'N/A',
-        product.markets || 'N/A',
+        product.size || 'N/A',
+        product.quantity || 'N/A',
         product.category || 'N/A',
         product.type || 'N/A'
       ]);
       
       // Add the table
       autoTable(doc, {
-        head: [['Product', 'Status', 'Inventory', 'Sales Channels', 'Markets', 'Category', 'Type']],
+        head: [['Product', 'Status', 'Inventory', 'Size', 'Quantity', 'Category', 'Type']],
         body: tableData,
         startY: 20,
         styles: {
@@ -232,60 +306,36 @@ const handleDetails = () => {
     }
   };
 
+
   // Sample initial product data
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: 'Max & Molly Smart ID Cat Collar - Cherry Bloom',
-      status: 'active',
-      inventory: 0,
-      salesChannels: 6,
-      markets: 2,
-      category: 'Pet Collars & Harnesses',
-      type: 'Clothing',
-      photo: 'https://example.com/cat-collar.jpg'
-    },
-    {
-      id: 2,
-      name: 'Max & Molly Bandana for Cats & Dogs - Donuts',
-      status: 'active',
-      inventory: 344,
-      salesChannels: 6,
-      markets: 2,
-      category: 'Pet Apparel',
-      type: 'Clothing',
-      photo: 'https://example.com/bandana.jpg'
-    },
-    {
-      id: 3,
-      name: 'Fellway Pheromone for Cats - 48ml Refill Bottle',
-      status: 'active',
-      inventory: 7,
-      salesChannels: 6,
-      markets: 2,
-      category: 'Cat Supplies',
-      type: '',
-      photo: 'https://example.com/pheromone.jpg'
-    },
-    {
-      id: 4,
-      name: 'West Paw Hurley Fetch',
-      status: 'draft',
-      inventory: '',
-      salesChannels: '',
-      markets: '',
-      category: '',
-      type: '',
-      photo: 'https://example.com/fetch-toy.jpg'
+  const [products, setProducts] = useState([]);
+
+ const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`http://localhost:6001/api/products?status=${activeTab}&search=${searchQuery}&sort=${sortConfig.key}&direction=${sortConfig.direction}`);
+      const data = await response.json();
+      if (data.success) {
+        setProducts(data.products);
+      }
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  fetchProducts();
+}, [activeTab, searchQuery, sortConfig]);
 
   const [newProduct, setNewProduct] = useState({
     title: '',
     description: '',
     status: 'active',
     salesChannels: ['Online Store', 'Google & YouTube', 'Point of Sale'],
-    markets: ['Australia', 'International'],
+    markets: ['Nepal', 'International'],
     price: 0.00,
     compareAtPrice: 0.00,
     costPerItem: 0.00,
@@ -293,6 +343,7 @@ const handleDetails = () => {
     continueSelling: false,
     hasSKU: false,
     quantity: '',
+    size: '',
     sku: '',
     barcode: '',
     physicalProduct: false,
@@ -401,75 +452,93 @@ const handleAddVariant = () => {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Create a new product object with all form data
-    const productToAdd = {
-      id: products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1,
-      name: newProduct.title || "Untitled Product",
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  
+  try {
+    const productData = {
+      name: newProduct.title,
       description: newProduct.description,
       status: newProduct.status,
-      inventory: newProduct.trackQuantity ? newProduct.quantity : 0,
-      salesChannels: newProduct.salesChannels?.length || 3,
-      markets: newProduct.markets?.length || 2,
       price: newProduct.price,
       compareAtPrice: newProduct.compareAtPrice,
       costPerItem: newProduct.costPerItem,
-      category: newProduct.category || "Uncategorized",
-      type: newProduct.type || "General",
+      trackQuantity: newProduct.trackQuantity,
+      inventory: newProduct.quantity,
+      continueSelling: newProduct.continueSelling,
+      sku: newProduct.sku,
+      barcode: newProduct.barcode,
+      category: newProduct.category,
+      type: newProduct.type,
       vendor: newProduct.vendor,
       collections: newProduct.collections,
-      tags: newProduct.tags,
-      weight: newProduct.weight,
-      weightUnit: newProduct.weightUnit,
-      countryOfOrigin: newProduct.countryOfOrigin,
+      tags: newProduct.tags.split(',').map(tag => tag.trim()),
       variants: newProduct.variants,
-      photo: uploadedImage || 'https://via.placeholder.com/150'
+      image: uploadedImage
     };
+
+    let response;
+    if (editingProduct) {
+      // Update existing product
+      response = await fetch(`http://localhost:6001/api/products/${editingProduct}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData)
+      });
+    } else {
+      // Create new product
+      response = await fetch('http://localhost:6001/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productData)
+      });
+    }
+
+    const data = await response.json();
     
-    // Add the new product to the products array
-    setProducts([...products, productToAdd]);
-    handleCloseModal();
-  };
+    if (data.success) {
+      // Refresh products list
+      const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+      const refreshData = await refreshResponse.json();
+      if (refreshData.success) {
+        setProducts(refreshData.products);
+      }
+      handleCloseModal();
+    }
+  } catch (error) {
+    console.error('Error saving product:', error);
+    alert('Failed to save product');
+  }
+};
 
   const handleCloseModal = () => {
-    // Reset form
-    setNewProduct({
-      title: '',
-      description: '',
-      status: 'active',
-      salesChannels: ['Online Store', 'Google & YouTube', 'Point of Sale'],
-      markets: ['Australia', 'International'],
-      price: 0.00,
-      compareAtPrice: 0.00,
-      costPerItem: 0.00,
-      trackQuantity: true,
-      continueSelling: false,
-      hasSKU: false,
-      quantity: '',
-      sku: '',
-      barcode: '',
-      physicalProduct: false,
-      weight: 0.0,
-      weightUnit: 'kg',
-      countryOfOrigin: '',
-      hsCode: '',
-      category: '',
-      vendor: '',
-      collections: '',
-      tags: '',
-      seoTitle: '',
-      seoDescription: '',
-      template: 'Default product',
-      variants: []
-    });
-    
-    // Close the modal
-    setUploadedImage(null);
-    setImageLoading(false);
-    setShowAddProduct(false);
-  };
+  setNewProduct({
+    title: '',
+    description: '',
+    status: 'active',
+    price: 0.00,
+    compareAtPrice: 0.00,
+    costPerItem: 0.00,
+    trackQuantity: true,
+    continueSelling: false,
+    quantity: '',
+    sku: '',
+    barcode: '',
+    category: '',
+    type: '',
+    vendor: '',
+    collections: '',
+    tags: '',
+    variants: []
+  });
+  setUploadedImage(null);
+  setEditingProduct(null);
+  setShowAddProduct(false);
+};
 
   // Filter products based on active tab and search query
   const filteredProducts = getSortedProducts(
@@ -794,8 +863,6 @@ const handleAddVariant = () => {
                       </div>
                     </div>        
 
-            
-               {/* Variants */}
         {/* Variants */}
 <div className="space-y-2 border border-spacing-2 py-3 px-3 shadow-md rounded-lg">
   <h3 className="text-lg font-medium">Variants</h3>
@@ -1235,8 +1302,8 @@ const handleAddVariant = () => {
         sortConfig.direction === 'asc' ? <FiChevronUp className="ml-1" /> : <FiChevronDown className="ml-1" />
       )}
     </div>
-    <div className="col-span-1">Sales channels</div>
-    <div className="col-span-1">Markets</div>
+    <div className="col-span-1">Size</div>
+    <div className="col-span-1">Quantity</div>
     <div className="col-span-2">Category</div>
     <div className="col-span-1">Type</div>
   </div>
@@ -1255,9 +1322,9 @@ const handleAddVariant = () => {
                 </div>
                 <div className="col-span-4 flex items-center">
                   <div className="w-10 h-10 bg-gray-200 rounded-md mr-3 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                    {product.photo ? (
+                    {product.image ? (
                       <img 
-                        src={product.photo} 
+                        src={product.image} 
                         alt={product.name} 
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -1286,10 +1353,10 @@ const handleAddVariant = () => {
                   {product.inventory !== '' ? `${product.inventory} in stock` : ''}
                 </div>
                 <div className="col-span-1">
-                  {product.salesChannels || ''}
+                  {product.size || ''}
                 </div>
                 <div className="col-span-1">
-                  {product.markets || ''}
+                  {product.quantity || ''}
                 </div>
                 <div className="col-span-2">
                   {product.category || ''}
