@@ -15,6 +15,7 @@ import StaffPage from './pages/StaffPage';
 import ServicesPage from'./pages/ServicesPage';
 import BookingPage from './pages/BookingPage';
 import Analytics from './pages/Analytics';
+import ProductDetailsPage from './pages/ProductDetailsPage';
 
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
         <Route path="/apps" element={<Apps />} /> {/* Add Apps route */}
         <Route path="/orders" element={<Orders />} />
         <Route path="/products" element={<ProductPage />} />
+        <Route path="/products/:productId" element={<ProductDetailsPage />} />
         <Route path="/customer" element={<CustomerPage />} />
         <Route path="/discount" element={<DiscountPage />} />
         <Route path="/marketing" element={<MarketingPage />} />

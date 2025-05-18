@@ -38,6 +38,10 @@ let discountsCollection;
 // Create staff collection reference
 let staffCollection;
 
+// Add products collection reference
+let productsCollection;
+
+
 // ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
@@ -51,6 +55,7 @@ async function run() {
     ordersCollection = database.collection("orders");    // Orders collection
     discountsCollection = database.collection("discounts");
     staffCollection = database.collection("staff");
+    productsCollection = database.collection("products");
 
     
     // Send a ping to confirm a successful connection
@@ -1201,6 +1206,490 @@ function getAttendanceStatus(clockInTime) {
   return 'present';
 }
 
+/**
+ * @api {get} /api/products Get products with filtering and sorting
+ * @apiName GetProducts
+ * @apiGroup Products
+ * 
+ * @apiParam {String} [status] Filter by status (active/draft/archived)
+ * @apiParam {String} [search] Search query
+ * @apiParam {String} [sort] Sort field (name/status/inventory)
+ * @apiParam {String} [direction] Sort direction (asc/desc)
+ */
+app.get('/api/products', async (req, res) => {
+  try {
+    const { status, search, sort, direction } = req.query;
+    
+    // Build query
+    const query = {};
+    
+    // Status filter
+    if (status && ['active', 'draft', 'archived'].includes(status)) {
+      query.status = status;
+    }
+    
+    // Search filter
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+        { type: { $regex: search, $options: 'i' } }
+      ];
+    }
+    
+    // Build sort object
+    const sortOptions = {};
+    if (sort && ['name', 'status', 'inventory'].includes(sort)) {
+      sortOptions[sort] = direction === 'desc' ? -1 : 1;
+    } else {
+      sortOptions.name = 1; // Default sort by name ascending
+    }
+    
+    const products = await productsCollection.find(query)
+      .sort(sortOptions)
+      .toArray();
+    
+    // Format for frontend
+    const formattedProducts = products.map(product => ({
+      ...product,
+      id: product._id.toString(),
+      size: product.size || (product.variants && product.variants.length > 0 
+        ? product.variants[0].values.join(', ') 
+        : ''),
+      quantity: product.quantity || product.inventory || 0,
+      variants: product.variants || []
+    }));
+    
+    res.json({
+      success: true,
+      products: formattedProducts
+    });
+    
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {get} /api/products/:id Get single product
+ * @apiName GetProduct
+ * @apiGroup Products
+ */
+app.get('/api/products/:id', async (req, res) => {
+  try {
+    const product = await productsCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+    
+    if (!product) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+    
+    res.json({
+      success: true,
+      product: {
+        ...product,
+        id: product._id.toString()
+      }
+    });
+    
+  } catch (err) {
+    console.error('Error fetching product:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {post} /api/products Create new product
+ * @apiName CreateProduct
+ * @apiGroup Products
+ * 
+ * @apiParam {String} name Product name (required)
+ * @apiParam {String} [description] Product description
+ * @apiParam {String} [status=active] Product status (active/draft/archived)
+ * @apiParam {Number} [price=0] Product price
+ * @apiParam {Number} [compareAtPrice=0] Compare-at price
+ * @apiParam {Number} [costPerItem=0] Cost per item
+ * @apiParam {Boolean} [trackQuantity=true] Track inventory
+ * @apiParam {Number} [inventory=0] Inventory quantity
+ * @apiParam {Boolean} [continueSelling=false] Continue selling when out of stock
+ * @apiParam {String} [sku] SKU
+ * @apiParam {String} [barcode] Barcode
+ * @apiParam {String} [category] Product category
+ * @apiParam {String} [type] Product type
+ * @apiParam {String} [vendor] Vendor
+ * @apiParam {String} [collections] Collections
+ * @apiParam {String} [tags] Tags (comma-separated)
+ * @apiParam {Array} [variants] Product variants
+ * @apiParam {String} [image] Base64 encoded image
+ */
+app.post('/api/products', [
+  check('name', 'Product name is required').not().isEmpty(),
+  check('status', 'Status must be active, draft or archived').optional().isIn(['active', 'draft', 'archived']),
+  check('price', 'Price must be a positive number').optional().isFloat({ min: 0 }),
+  check('compareAtPrice', 'Compare-at price must be a positive number').optional().isFloat({ min: 0 }),
+  check('costPerItem', 'Cost per item must be a positive number').optional().isFloat({ min: 0 }),
+  check('inventory', 'Inventory must be a positive integer').optional().isInt({ min: 0 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Extract size and quantity from variants if they exist
+    const size = req.body.variants && req.body.variants.length > 0 
+      ? req.body.variants[0].values.join(', ') 
+      : '';
+    const quantity = req.body.inventory || 0;
+
+    // Create new product document
+    const newProduct = {
+      name: req.body.name,
+      description: req.body.description || '',
+      status: req.body.status || 'active',
+      price: parseFloat(req.body.price) || 0,
+      compareAtPrice: parseFloat(req.body.compareAtPrice) || 0,
+      costPerItem: parseFloat(req.body.costPerItem) || 0,
+      trackQuantity: req.body.trackQuantity !== false, // default true
+      inventory: quantity,
+      size: size, // Add size field
+      quantity: quantity, // Add quantity field
+      continueSelling: req.body.continueSelling || false,
+      sku: req.body.sku || '',
+      barcode: req.body.barcode || '',
+      category: req.body.category || '',
+      type: req.body.type || '',
+      vendor: req.body.vendor || '',
+      collections: req.body.collections || '',
+      tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()) : [],
+      variants: req.body.variants || [],
+      image: req.body.image || null,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    // Insert into database
+    const result = await productsCollection.insertOne(newProduct);
+
+    // Return created product
+    const createdProduct = await productsCollection.findOne(
+      { _id: result.insertedId }
+    );
+
+    res.status(201).json({
+      success: true,
+      product: {
+        ...createdProduct,
+        id: createdProduct._id.toString()
+      }
+    });
+
+  } catch (err) {
+    console.error('Product creation error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+/**
+ * @api {put} /api/products/:id Update product
+ * @apiName UpdateProduct
+ * @apiGroup Products
+ */
+app.put('/api/products/:id', [
+  check('name', 'Product name is required').optional().not().isEmpty(),
+  check('status', 'Status must be active, draft or archived').optional().isIn(['active', 'draft', 'archived']),
+  check('price', 'Price must be a positive number').optional().isFloat({ min: 0 }),
+  check('compareAtPrice', 'Compare-at price must be a positive number').optional().isFloat({ min: 0 }),
+  check('costPerItem', 'Cost per item must be a positive number').optional().isFloat({ min: 0 }),
+  check('inventory', 'Inventory must be a positive integer').optional().isInt({ min: 0 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Check if product exists
+    const existingProduct = await productsCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+    
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Prepare updates
+    const updates = {
+      updatedAt: new Date()
+    };
+
+    // Add fields to update if provided
+    if (req.body.name) updates.name = req.body.name;
+    if (req.body.description !== undefined) updates.description = req.body.description;
+    if (req.body.status) updates.status = req.body.status;
+    if (req.body.price !== undefined) updates.price = parseFloat(req.body.price);
+    if (req.body.compareAtPrice !== undefined) updates.compareAtPrice = parseFloat(req.body.compareAtPrice);
+    if (req.body.costPerItem !== undefined) updates.costPerItem = parseFloat(req.body.costPerItem);
+    if (req.body.trackQuantity !== undefined) updates.trackQuantity = req.body.trackQuantity;
+    if (req.body.inventory !== undefined) updates.inventory = parseInt(req.body.inventory);
+    if (req.body.continueSelling !== undefined) updates.continueSelling = req.body.continueSelling;
+    if (req.body.sku !== undefined) updates.sku = req.body.sku;
+    if (req.body.barcode !== undefined) updates.barcode = req.body.barcode;
+    if (req.body.category !== undefined) updates.category = req.body.category;
+    if (req.body.type !== undefined) updates.type = req.body.type;
+    if (req.body.vendor !== undefined) updates.vendor = req.body.vendor;
+    if (req.body.collections !== undefined) updates.collections = req.body.collections;
+    if (req.body.tags !== undefined) {
+      updates.tags = Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map(tag => tag.trim());
+    }
+    if (req.body.variants !== undefined) updates.variants = req.body.variants;
+    if (req.body.image !== undefined) updates.image = req.body.image;
+
+    // Update size and quantity from variants if they exist
+    if (req.body.variants && req.body.variants.length > 0) {
+      updates.size = req.body.variants[0].values.join(', ');
+      updates.quantity = req.body.inventory || existingProduct.inventory;
+    }
+
+    // Update in database
+    await productsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updates }
+    );
+
+    // Return updated product
+    const updatedProduct = await productsCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      product: {
+        ...updatedProduct,
+        id: updatedProduct._id.toString(),
+        size: updatedProduct.size || (updatedProduct.variants && updatedProduct.variants.length > 0 
+          ? updatedProduct.variants[0].values.join(', ') 
+          : ''),
+        quantity: updatedProduct.quantity || updatedProduct.inventory || 0
+      }
+    });
+
+  } catch (err) {
+    console.error('Product update error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {delete} /api/products/:id Delete product
+ * @apiName DeleteProduct
+ * @apiGroup Products
+ */
+app.delete('/api/products/:id', async (req, res) => {
+  try {
+    // Check if product exists
+    const existingProduct = await productsCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+    
+    if (!existingProduct) {
+      return res.status(404).json({ error: 'Product not found' });
+    }
+
+    // Delete product
+    await productsCollection.deleteOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      message: 'Product deleted successfully'
+    });
+
+  } catch (err) {
+    console.error('Product deletion error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {post} /api/products/bulk-delete Bulk delete products
+ * @apiName BulkDeleteProducts
+ * @apiGroup Products
+ * 
+ * @apiParam {Array} productIds Array of product IDs to delete
+ */
+app.post('/api/products/bulk-delete', [
+  check('productIds', 'Product IDs are required').isArray({ min: 1 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Convert string IDs to ObjectIds
+    const productIds = req.body.productIds.map(id => new ObjectId(id));
+
+    // Delete products
+    const result = await productsCollection.deleteMany({
+      _id: { $in: productIds }
+    });
+
+    res.json({
+      success: true,
+      message: `${result.deletedCount} products deleted successfully`
+    });
+
+  } catch (err) {
+    console.error('Bulk delete error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {post} /api/products/bulk-duplicate Bulk duplicate products
+ * @apiName BulkDuplicateProducts
+ * @apiGroup Products
+ * 
+ * @apiParam {Array} productIds Array of product IDs to duplicate
+ */
+app.post('/api/products/bulk-duplicate', [
+  check('productIds', 'Product IDs are required').isArray({ min: 1 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Convert string IDs to ObjectIds
+    const productIds = req.body.productIds.map(id => new ObjectId(id));
+
+    // Find products to duplicate
+    const productsToDuplicate = await productsCollection.find({
+      _id: { $in: productIds }
+    }).toArray();
+
+    if (productsToDuplicate.length === 0) {
+      return res.status(404).json({ error: 'No products found to duplicate' });
+    }
+
+    // Prepare duplicated products
+    const duplicatedProducts = productsToDuplicate.map(product => ({
+      ...product,
+      _id: new ObjectId(),
+      name: `${product.name} (Copy)`,
+      inventory: 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }));
+
+    // Insert duplicated products
+    await productsCollection.insertMany(duplicatedProducts);
+
+    res.json({
+      success: true,
+      message: `${duplicatedProducts.length} products duplicated successfully`
+    });
+
+  } catch (err) {
+    console.error('Bulk duplicate error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
+
+/**
+ * @api {post} /api/products/export Export products to PDF
+ * @apiName ExportProducts
+ * @apiGroup Products
+ * 
+ * @apiParam {Array} [productIds] Array of product IDs to export (empty for all)
+ */
+app.post('/api/products/export', async (req, res) => {
+  try {
+    let products;
+    
+    if (req.body.productIds && req.body.productIds.length > 0) {
+      // Export selected products
+      const productIds = req.body.productIds.map(id => new ObjectId(id));
+      products = await productsCollection.find({
+        _id: { $in: productIds }
+      }).toArray();
+    } else {
+      // Export all products
+      products = await productsCollection.find({}).toArray();
+    }
+
+    if (products.length === 0) {
+      return res.status(404).json({ error: 'No products found to export' });
+    }
+
+    // Create PDF
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.text('Products Export', 14, 15);
+    
+    // Prepare data for the table
+    const tableData = products.map(product => [
+      product.name || 'N/A',
+      product.status || 'N/A',
+      product.trackQuantity ? (product.inventory || 0) : 'N/A',
+      product.category || 'N/A',
+      product.type || 'N/A',
+      product.vendor || 'N/A'
+    ]);
+
+    // Add the table
+    autoTable(doc, {
+      head: [['Product', 'Status', 'Inventory', 'Category', 'Type', 'Vendor']],
+      body: tableData,
+      startY: 20,
+      styles: {
+        fontSize: 8,
+        cellPadding: 2,
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [34, 139, 34],
+        textColor: 255
+      }
+    });
+
+    // Generate PDF buffer
+    const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
+    
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=products_export.pdf');
+    
+    // Send PDF
+    res.send(pdfBuffer);
+
+  } catch (err) {
+    console.error('Export error:', err);
+    res.status(500).json({ 
+      error: 'Internal server error. Please try again later.' 
+    });
+  }
+});
 
 // Basic route
 app.get('/', (req, res) => {
