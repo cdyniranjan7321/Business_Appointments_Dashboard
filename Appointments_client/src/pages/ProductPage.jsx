@@ -452,20 +452,26 @@ const handleAddVariant = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+ const handleSubmit = async (e) => {
   e.preventDefault();
   
+  // Basic validation
+  if (!newProduct.title.trim()) {
+    alert('Product name is required');
+    return;
+  }
+
   try {
     const productData = {
-      name: newProduct.title,
+      name: newProduct.title, // Map 'title' to 'name'
       description: newProduct.description,
       status: newProduct.status,
-      price: newProduct.price,
-      compareAtPrice: newProduct.compareAtPrice,
-      costPerItem: newProduct.costPerItem,
-      trackQuantity: newProduct.trackQuantity,
-      inventory: newProduct.quantity,
-      continueSelling: newProduct.continueSelling,
+      price: parseFloat(newProduct.price) || 0,
+      compareAtPrice: parseFloat(newProduct.compareAtPrice) || 0,
+      costPerItem: parseFloat(newProduct.costPerItem) || 0,
+      trackQuantity: newProduct.trackQuantity !== false,
+      inventory: parseInt(newProduct.quantity) || 0,
+      continueSelling: newProduct.continueSelling || false,
       sku: newProduct.sku,
       barcode: newProduct.barcode,
       category: newProduct.category,
@@ -473,45 +479,51 @@ const handleAddVariant = () => {
       vendor: newProduct.vendor,
       collections: newProduct.collections,
       tags: newProduct.tags.split(',').map(tag => tag.trim()),
-      variants: newProduct.variants,
+      variants: newProduct.variants.map(variant => ({
+        ...variant,
+        prices: variant.prices.map(price => parseFloat(price) || 0),
+        available: variant.available.map(avail => parseInt(avail) || 0)
+      })),
       image: uploadedImage
     };
 
-    let response;
-    if (editingProduct) {
-      // Update existing product
-      response = await fetch(`http://localhost:6001/api/products/${editingProduct}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData)
-      });
-    } else {
-      // Create new product
-      response = await fetch('http://localhost:6001/api/products', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(productData)
-      });
-    }
+    console.log('Submitting product:', productData); // Debug log
+
+    const method = editingProduct ? 'PUT' : 'POST';
+    const url = editingProduct 
+      ? `http://localhost:6001/api/products/${editingProduct}`
+      : 'http://localhost:6001/api/products';
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(productData)
+    });
 
     const data = await response.json();
-    
-    if (data.success) {
-      // Refresh products list
-      const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
-      const refreshData = await refreshResponse.json();
-      if (refreshData.success) {
-        setProducts(refreshData.products);
-      }
-      handleCloseModal();
+    console.log('API response:', data); // Debug log
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to save product');
     }
+
+    // Refresh the product list
+    const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+    const refreshData = await refreshResponse.json();
+    
+    if (refreshData.success) {
+      setProducts(refreshData.products);
+      handleCloseModal();
+      alert(editingProduct ? 'Product updated!' : 'Product added!');
+    } else {
+      throw new Error('Failed to refresh products');
+    }
+
   } catch (error) {
     console.error('Error saving product:', error);
-    alert('Failed to save product');
+    alert(`Error: ${error.message}`);
   }
 };
 

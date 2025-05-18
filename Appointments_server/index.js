@@ -1329,6 +1329,7 @@ app.get('/api/products/:id', async (req, res) => {
  * @apiParam {Array} [variants] Product variants
  * @apiParam {String} [image] Base64 encoded image
  */
+// POST /api/products - Create new product (updated version)
 app.post('/api/products', [
   check('name', 'Product name is required').not().isEmpty(),
   check('status', 'Status must be active, draft or archived').optional().isIn(['active', 'draft', 'archived']),
@@ -1339,28 +1340,23 @@ app.post('/api/products', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
+    return res.status(400).json({ 
+      success: false,
+      errors: errors.array() 
+    });
   }
 
   try {
-    // Extract size and quantity from variants if they exist
-    const size = req.body.variants && req.body.variants.length > 0 
-      ? req.body.variants[0].values.join(', ') 
-      : '';
-    const quantity = req.body.inventory || 0;
-
-    // Create new product document
+    // Create new product document with all required fields
     const newProduct = {
-      name: req.body.name,
+      name: req.body.name || req.body.title || '', // Handle both 'name' and 'title'
       description: req.body.description || '',
       status: req.body.status || 'active',
       price: parseFloat(req.body.price) || 0,
       compareAtPrice: parseFloat(req.body.compareAtPrice) || 0,
       costPerItem: parseFloat(req.body.costPerItem) || 0,
       trackQuantity: req.body.trackQuantity !== false, // default true
-      inventory: quantity,
-      size: size, // Add size field
-      quantity: quantity, // Add quantity field
+      inventory: parseInt(req.body.inventory || req.body.quantity || 0), // Handle both 'inventory' and 'quantity'
       continueSelling: req.body.continueSelling || false,
       sku: req.body.sku || '',
       barcode: req.body.barcode || '',
@@ -1368,7 +1364,9 @@ app.post('/api/products', [
       type: req.body.type || '',
       vendor: req.body.vendor || '',
       collections: req.body.collections || '',
-      tags: req.body.tags ? req.body.tags.split(',').map(tag => tag.trim()) : [],
+      tags: req.body.tags 
+        ? (Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map(tag => tag.trim())) 
+        : [],
       variants: req.body.variants || [],
       image: req.body.image || null,
       createdAt: new Date(),
@@ -1378,26 +1376,27 @@ app.post('/api/products', [
     // Insert into database
     const result = await productsCollection.insertOne(newProduct);
 
-    // Return created product
+    // Return success response with the created product
     const createdProduct = await productsCollection.findOne(
-      { _id: result.insertedId }
+      { _id: result.insertedId },
+      { projection: { _id: 0, id: '$_id' } } // Rename _id to id for frontend
     );
 
     res.status(201).json({
       success: true,
-      product: {
-        ...createdProduct,
-        id: createdProduct._id.toString()
-      }
+      message: 'Product created successfully',
+      product: createdProduct
     });
 
   } catch (err) {
     console.error('Product creation error:', err);
     res.status(500).json({ 
+      success: false,
       error: 'Internal server error. Please try again later.' 
     });
   }
 });
+
 /**
  * @api {put} /api/products/:id Update product
  * @apiName UpdateProduct
