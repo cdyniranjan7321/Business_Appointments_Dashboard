@@ -1178,15 +1178,7 @@ if (selectedOrder) {
                                 >
                                   <FiCopy className="mr-2" /> Duplicate
                                 </button>
-                                <button
-                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handlePrintOrder(order);
-                                  }}
-                                >
-                                  <FiPrinter className="mr-2" /> Print
-                                </button>
+                    
                                 <button
                                   className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-800"
                                   onClick={(e) => {
