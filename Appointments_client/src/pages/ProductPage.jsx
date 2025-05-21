@@ -306,7 +306,6 @@ const handleDetails = () => {
     }
   };
 
-
   // Sample initial product data
   const [products, setProducts] = useState([]);
 
@@ -1122,17 +1121,17 @@ const handleAddVariant = () => {
           <div className="flex space-x-2">
             <button
                onClick={handlePrint}
-            className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+            className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-200">
               <FiPrinter className="mr-2" /> Print
             </button>
             <button 
                onClick={handleExport}
-            className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white">
+            className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-200">
               <FiUpload className="mr-2" /> Export
             </button>
             <div className="relative" ref={moreActionsRef}>
               <button 
-                className="px-3 py-2 bg-gray-200 border border-gray-300 rounded-md text-sm flex items-center hover:bg-white"
+                className="px-3 py-2 bg-white border border-gray-300 rounded-md text-sm flex items-center hover:bg-gray-200"
                 onClick={() => setShowMoreActions(!showMoreActions)}
                 disabled={selectedProducts.length === 0}
               >
