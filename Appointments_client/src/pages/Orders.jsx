@@ -19,6 +19,8 @@ import {
   FiTruck,
   FiShoppingBag,
   FiInfo,
+  FiMoreHorizontal,
+  FiEye,
 } from 'react-icons/fi';
 
 import { 
@@ -40,8 +42,6 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [newOrder, setNewOrder] = useState({
     customer: '',
     salesChannel: 'Online Store',
@@ -168,47 +168,90 @@ const Orders = () => {
 
   // Delete order
   const handleDeleteOrder = async (orderId) => {
-    if (window.confirm(`Are you sure you want to delete order ${orderId}?`)) {
-      try {
-        await axios.delete(`http://localhost:6001/api/orders/${orderId}`);
-        setOrders(orders.filter(order => order.id !== orderId));
-        setSelectedItems(selectedItems.filter(id => id !== orderId));
-      } catch (err) {
-        console.error('Error deleting order:', err);
-        setError('Failed to delete order. Please try again.');
+    try {
+      const response = await axios.delete(`http://localhost:6001/api/orders/${orderId}`);
+      
+      if (response.data.success) {
+        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+        setSelectedItems(prevItems => prevItems.filter(id => id !== orderId));
+        setError(null);
+      } else {
+        throw new Error(response.data.message || 'Failed to delete order');
       }
+    } catch (err) {
+      console.error('Error deleting order:', err);
+      setError(`Failed to delete order: ${err.message}`);
     }
-    setOpenMenuId(null);
+  };
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (selectedItems.length === 0) return;
+    
+    try {
+      if (window.confirm(`Are you sure you want to delete ${selectedItems.length} selected orders?`)) {
+        const deletePromises = selectedItems.map(id => 
+          axios.delete(`http://localhost:6001/api/orders/${id}`)
+        );
+        
+        await Promise.all(deletePromises);
+        setOrders(orders.filter(order => !selectedItems.includes(order.id)));
+        setSelectedItems([]);
+      }
+    } catch (err) {
+      console.error('Error during bulk delete:', err);
+      setError('Failed to delete some orders. Please try again.');
+    }
   };
 
   // Duplicate order
-  const handleDuplicateOrder = (order) => {
-    const newOrder = {
-      ...order,
-      id: `ORD-${1000 + orders.length + 1}`,
-      date: new Date().toISOString().split('T')[0],
-      paymentStatus: 'Pending',
-      fulfillmentStatus: 'Unfulfilled',
-      deliveryStatus: 'Processing',
-      labelStatus: 'Not Printed',
-      tags: [...(order.tags || []), 'Copied']
-    };
-    setOrders([newOrder, ...orders]);
-    setOpenMenuId(null);
+  const handleDuplicateOrder = async (order) => {
+    try {
+      // Create a clean copy without the original ID
+      const { _id, id, ...orderData } = order;
+      const response = await axios.post('http://localhost:6001/api/orders', {
+        ...orderData,
+        date: new Date().toISOString().split('T')[0],
+        paymentStatus: 'Pending',
+        fulfillmentStatus: 'Unfulfilled',
+        deliveryStatus: 'Processing',
+        labelStatus: 'Not Printed',
+        tags: [...(order.tags || []), 'Copied']
+      });
+
+      if (response.data.success) {
+        setOrders(prevOrders => [response.data.order, ...prevOrders]);
+        setError(null);
+      } else {
+        throw new Error(response.data.message || 'Failed to duplicate order');
+      }
+    } catch (err) {
+      console.error('Error duplicating order:', err);
+      setError(`Failed to duplicate order: ${err.message}`);
+    }
   };
 
   // Start editing order
-  const handleEditOrder = (order) => {
-    setEditingOrder(order);
-    setNewOrder({
-      customer: order.customer,
-      salesChannel: order.salesChannel,
-      items: order.items,
-      paymentStatus: order.paymentStatus,
-      deliveryMethod: order.deliveryMethod
-    });
-    setShowCreateOrder(true);
-    setOpenMenuId(null);
+  const handleEditOrder = async (order) => {
+    try {
+      setEditingOrder(order);
+      setNewOrder({
+        customer: order.customer,
+        salesChannel: order.salesChannel,
+        items: order.items.map(item => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price
+        })),
+        paymentStatus: order.paymentStatus,
+        deliveryMethod: order.deliveryMethod
+      });
+      setShowCreateOrder(true);
+      setError(null);
+    } catch (err) {
+      console.error('Error preparing order for edit:', err);
+      setError('Failed to prepare order for editing. Please try again.');
+    }
   };
 
   // Print order
@@ -460,84 +503,82 @@ const Orders = () => {
 
   // Create or update order
   const handleCreateOrder = async () => {
-  try {
-    // Validate at least one item has a name
-    const validItems = newOrder.items.filter(item => item.name.trim() !== '');
-    if (validItems.length === 0) {
-      setError('Please add at least one item');
-      return;
-    }
+    try {
+      // Validate at least one item has a name
+      const validItems = newOrder.items.filter(item => item.name.trim() !== '');
+      if (validItems.length === 0) {
+        setError('Please add at least one item');
+        return;
+      }
 
-    // Prepare order data
-    const orderData = {
-      customer: newOrder.customer || 'Walk-in Customer',
-      salesChannel: newOrder.salesChannel,
-      items: validItems,
-      paymentStatus: newOrder.paymentStatus,
-      deliveryMethod: newOrder.deliveryMethod,
-      // Calculate total from valid items only
-      total: validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    };
+      // Prepare order data
+      const orderData = {
+        customer: newOrder.customer || 'Walk-in Customer',
+        salesChannel: newOrder.salesChannel,
+        items: validItems,
+        paymentStatus: newOrder.paymentStatus,
+        deliveryMethod: newOrder.deliveryMethod,
+        total: validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      };
 
-    console.log('Submitting order:', orderData); // Debug log
-
-    let response;
-    if (editingOrder) {
-      response = await axios.put(`http://localhost:6001/api/orders/${editingOrder.id}`, orderData);
-    } else {
-      response = await axios.post(`http://localhost:6001/api/orders`, orderData);
-    }
-
-    console.log('API Response:', response.data); // Debug log
-
-    // Handle response based on your API structure
-    if (response.data.success) {
-      const createdOrder = response.data.order;
-      
-      // Update state using functional update
+      let response;
       if (editingOrder) {
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.id === editingOrder.id ? createdOrder : order
-          )
+        // Update existing order
+        response = await axios.put(
+          `http://localhost:6001/api/orders/${editingOrder.id}`, 
+          orderData
         );
       } else {
-        setOrders(prevOrders => [createdOrder, ...prevOrders]);
+        // Create new order
+        response = await axios.post(
+          'http://localhost:6001/api/orders', 
+          orderData
+        );
       }
 
-      // Reset form
-      setShowCreateOrder(false);
-      setNewOrder({
-        customer: '',
-        salesChannel: 'Online Store',
-        items: [{ name: '', quantity: 1, price: 0 }],
-        paymentStatus: 'Pending',
-        deliveryMethod: 'Standard Shipping'
-      });
-      setEditingOrder(null);
-      setError(null);
-    } else {
-      throw new Error(response.data.message || 'Failed to save order');
-    }
+      if (response.data.success) {
+        const updatedOrder = response.data.order;
+        
+        if (editingOrder) {
+          setOrders(prevOrders => 
+            prevOrders.map(order => 
+              order.id === editingOrder.id ? updatedOrder : order
+            )
+          );
+        } else {
+          setOrders(prevOrders => [updatedOrder, ...prevOrders]);
+        }
 
-  } catch (err) {
-    console.error('Order submission error:', err);
-    
-    // Handle different error formats
-    let errorMessage = 'Failed to save order. Please try again.';
-    if (err.response) {
-      if (err.response.data.errors) {
-        errorMessage = err.response.data.errors.map(e => e.msg).join(', ');
-      } else if (err.response.data.error) {
-        errorMessage = err.response.data.error;
+        // Reset form
+        setShowCreateOrder(false);
+        setNewOrder({
+          customer: '',
+          salesChannel: 'Online Store',
+          items: [{ name: '', quantity: 1, price: 0 }],
+          paymentStatus: 'Pending',
+          deliveryMethod: 'Standard Shipping'
+        });
+        setEditingOrder(null);
+        setError(null);
+      } else {
+        throw new Error(response.data.message || 'Failed to save order');
       }
-    } else if (err.message) {
-      errorMessage = err.message;
+    } catch (err) {
+      console.error('Order submission error:', err);
+      let errorMessage = 'Failed to save order. Please try again.';
+      if (err.response) {
+        if (err.response.data.errors) {
+          errorMessage = err.response.data.errors.map(e => e.msg).join(', ');
+        } else if (err.response.data.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
     }
-    
-    setError(errorMessage);
-  }
-};
+  };
+
   // Add new item to manual order
   const addNewItem = () => {
     setNewOrder({
@@ -590,335 +631,366 @@ const Orders = () => {
     });
   };
 
-  const ConfirmDialog = () => {
-    if (!showConfirmDialog) return null;
-  
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-2 md:p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-screen overflow-y-auto">
-          <div className="px-4 md:px-6 py-3 md:py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">View Order Details</h2>
-          </div>
-          <div className="p-4 md:p-6">
-            <p className="text-sm text-gray-700 mb-4">
-              Are you sure you want to view the details of order {selectedOrderId}?
-            </p>
-            <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                className="bg-white py-2 px-3 md:px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                onClick={() => {
-                  setShowConfirmDialog(false);
-                  setSelectedOrderId(null);
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="inline-flex justify-center py-2 px-3 md:px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                onClick={() => {
-          
-                const order = orders.find(o => o.id === selectedOrderId);
-                setSelectedOrder(order); // Set the selected order to show details
-                setShowConfirmDialog(false); // Close the confirmation dialog
-                setSelectedOrderId(null); // Clear the selected order ID
-              }}
-              >
-                View Details
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  // View order details
+const viewOrderDetails = (orderId) => {
+  const order = orders.find(o => o.id === orderId);
+  if (order) {
+    setSelectedOrder(order);
+  }
+}
+
+  // Close order details view
+  const closeOrderDetails = () => {
+    setSelectedOrder(null);
   };
 
-  // View order details in separate page
-const viewOrderDetails = (orderId) => {
-  setSelectedOrderId(orderId); // Set the selected order ID
-  setShowConfirmDialog(true); // Show the confirmation dialog
-}
-
-// Close order details view
-const closeOrderDetails = () => {
-  setSelectedOrder(null);
-};
-
-
-if (selectedOrder) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.3 }}
-      className="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto p-6"
-    >
+  if (selectedOrder) {
+    return (
       <motion.div 
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.1, duration: 0.3 }}
-        className="bg-white shadow-xl overflow-hidden rounded-xl p-6 max-w-6xl mx-auto"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100 overflow-auto p-6"
       >
-        <button 
-          onClick={closeOrderDetails}
-          className="flex items-center mb-6 text-blue-600 hover:text-blue-800 transition-colors duration-200"
-        >
-          <FiArrowLeft className="mr-2 transition-transform duration-200 hover:-translate-x-1" /> 
-          Back to Orders
-        </button>
-        
-        <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-4">
-          <motion.div 
-            initial={{ x: -10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            <h1 className="text-3xl font-bold text-gray-800">Order #{selectedOrder.id}</h1>
-            <p className="text-gray-600 mt-1">Placed on {selectedOrder.date}</p>
-          </motion.div>
-          <motion.div 
-            initial={{ x: 10, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex gap-3"
-          >
-            <button 
-              className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
-              onClick={() => handlePrintOrder(selectedOrder)}
-            >
-              <FiPrinter className="mr-2" /> Print
-            </button>
-          </motion.div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
-                <FiUser />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 ml-3">Customer</h2>
-            </div>
-            <p className="text-gray-800 font-medium">{selectedOrder.customer}</p>
-            <p className="text-sm text-gray-500 mt-1">{selectedOrder.salesChannel}</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-br from-green-50 to-teal-50 p-5 rounded-xl border border-green-100 hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-green-100 rounded-lg text-green-600">
-                <FiCreditCard />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 ml-3">Payment</h2>
-            </div>
-            <div className="flex items-center">
-              {getStatusIcon(selectedOrder.paymentStatus)}
-              <span className="ml-2 font-medium">{selectedOrder.paymentStatus}</span>
-            </div>
-            <p className="text-lg font-bold text-gray-800 mt-2">{formatNPR(selectedOrder.total)}</p>
-          </motion.div>
-
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl border border-purple-100 hover:shadow-md transition-shadow duration-300"
-          >
-            <div className="flex items-center mb-3">
-              <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
-                <FiTruck />
-              </div>
-              <h2 className="text-lg font-semibold text-gray-900 ml-3">Delivery</h2>
-            </div>
-            <div className="flex items-center">
-              {getDeliveryIcon(selectedOrder.deliveryMethod)}
-              <span className="ml-2 font-medium">{selectedOrder.deliveryMethod}</span>
-            </div>
-            <p className="text-sm text-gray-500 mt-2">{selectedOrder.deliveryStatus}</p>
-          </motion.div>
-        </div>
-
-        <motion.div
-           initial={{ opacity: 0 }}
-           animate={{ opacity: 1 }}
-           transition={{ delay: 0.6 }}
-           className="mb-10"
-        >
-          <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-          <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
-          </h2>
-
-  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-    <table className="min-w-full divide-y divide-gray-200">
-      <thead className="bg-gray-50">
-        <tr>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Item
-          </th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Quantity
-          </th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Price
-          </th>
-          <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-            Total
-          </th>
-        </tr>
-      </thead>
-
-      <tbody className="bg-white divide-y divide-gray-200">
-        {selectedOrder.items.map((item, index) => (
-          <motion.tr
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 * index }}
-            className="hover:bg-gray-50 transition-colors duration-150"
-          >
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-              {item.name}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
-              {item.quantity}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
-              {formatNPR(item.price)}
-            </td>
-            <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
-              {formatNPR(item.quantity * item.price)}
-            </td>
-          </motion.tr>
-        ))}
-      </tbody>
-
-      <tfoot className="bg-gray-50">
-        <tr>
-          <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">
-            Total
-          </td>
-          <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900">
-            {formatNPR(selectedOrder.total)}
-          </td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-</motion.div>
-
         <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="bg-white shadow-xl overflow-hidden rounded-xl p-6 max-w-6xl mx-auto"
         >
-          <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-5 rounded-xl border border-indigo-100 hover:shadow-md transition-shadow duration-300">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <FiTruck className="mr-2 text-indigo-500" /> Shipping Information
-            </h2>
-            <div className="space-y-2">
-              <p className="text-gray-800">{selectedOrder.destination}</p>
-              <div className="flex items-center">
-                <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
-                <span className="text-sm text-gray-600">Label Status: {selectedOrder.labelStatus}</span>
-              </div>
-              {selectedOrder.trackingNumber && (
-                <div className="mt-3 pt-3 border-t border-indigo-100">
-                  <p className="text-sm font-medium text-gray-700">Tracking Number:</p>
-                  <p className="text-sm text-indigo-600 font-mono">{selectedOrder.trackingNumber}</p>
-                </div>
-              )}
-            </div>
+          <button 
+            onClick={closeOrderDetails}
+            className="flex items-center mb-6 text-blue-600 hover:text-blue-800 transition-colors duration-200"
+          >
+            <FiArrowLeft className="mr-2 transition-transform duration-200 hover:-translate-x-1" /> 
+            Back to Orders
+          </button>
+          
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <motion.div 
+              initial={{ x: -10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <h1 className="text-3xl font-bold text-gray-800">Order #{selectedOrder.id}</h1>
+              <p className="text-gray-600 mt-1">Placed on {selectedOrder.date}</p>
+            </motion.div>
+            <motion.div 
+              initial={{ x: 10, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex gap-3"
+            >
+              <button 
+                className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition-all duration-200"
+                onClick={() => handlePrintOrder(selectedOrder)}
+              >
+                <FiPrinter className="mr-2" /> Print
+              </button>
+            </motion.div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-100 hover:shadow-md transition-shadow duration-300">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-              <FiInfo className="mr-2 text-amber-500" /> Additional Information
-            </h2>
-            <div className="space-y-3">
-              {selectedOrder.tags && selectedOrder.tags.length > 0 && (
-                <div>
-                  <p className="text-sm font-medium text-gray-700">Tags:</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    {selectedOrder.tags.map((tag, index) => (
-                      <span 
-                        key={index}
-                        className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="bg-gradient-to-br from-blue-50 to-indigo-50 p-5 rounded-xl border border-blue-100 hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center mb-3">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+                  <FiUser />
                 </div>
-              )}
-              <div>
-                <p className="text-sm font-medium text-gray-700">Return Status:</p>
-                <p className="text-sm text-gray-800 mt-1">{selectedOrder.returnStatus}</p>
+                <h2 className="text-lg font-semibold text-gray-900 ml-3">Customer</h2>
               </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">Notes:</p>
-                <p className="text-sm text-gray-600 mt-1 italic">
-                  {selectedOrder.notes || "No additional notes"}
-                </p>
+              <p className="text-gray-800 font-medium">{selectedOrder.customer}</p>
+              <p className="text-sm text-gray-500 mt-1">{selectedOrder.salesChannel}</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="bg-gradient-to-br from-green-50 to-teal-50 p-5 rounded-xl border border-green-100 hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center mb-3">
+                <div className="p-2 bg-green-100 rounded-lg text-green-600">
+                  <FiCreditCard />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 ml-3">Payment</h2>
+              </div>
+              <div className="flex items-center">
+                {getStatusIcon(selectedOrder.paymentStatus)}
+                <span className="ml-2 font-medium">{selectedOrder.paymentStatus}</span>
+              </div>
+              <p className="text-lg font-bold text-gray-800 mt-2">{formatNPR(selectedOrder.total)}</p>
+            </motion.div>
+
+            <motion.div 
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="bg-gradient-to-br from-purple-50 to-pink-50 p-5 rounded-xl border border-purple-100 hover:shadow-md transition-shadow duration-300"
+            >
+              <div className="flex items-center mb-3">
+                <div className="p-2 bg-purple-100 rounded-lg text-purple-600">
+                  <FiTruck />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900 ml-3">Delivery</h2>
+              </div>
+              <div className="flex items-center">
+                {getDeliveryIcon(selectedOrder.deliveryMethod)}
+                <span className="ml-2 font-medium">{selectedOrder.deliveryMethod}</span>
+              </div>
+              <p className="text-sm text-gray-500 mt-2">{selectedOrder.deliveryStatus}</p>
+            </motion.div>
+          </div>
+
+          <motion.div
+             initial={{ opacity: 0 }}
+             animate={{ opacity: 1 }}
+             transition={{ delay: 0.6 }}
+             className="mb-10"
+          >
+            <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+            <FiShoppingBag className="mr-2 text-blue-500" /> Order Items
+            </h2>
+
+            <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Item
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Quantity
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Price
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Total
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {selectedOrder.items.map((item, index) => (
+                    <motion.tr
+                      key={index}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 * index }}
+                      className="hover:bg-gray-50 transition-colors duration-150"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {item.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                        {item.quantity}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-500">
+                        {formatNPR(item.price)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-gray-900 font-medium">
+                        {formatNPR(item.quantity * item.price)}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+
+                <tfoot className="bg-gray-50">
+                  <tr>
+                    <td colSpan="3" className="px-6 py-4 text-right text-sm font-medium text-gray-500">
+                      Total
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-right text-gray-900">
+                      {formatNPR(selectedOrder.total)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.7 }}
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+          >
+            <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-5 rounded-xl border border-indigo-100 hover:shadow-md transition-shadow duration-300">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <FiTruck className="mr-2 text-indigo-500" /> Shipping Information
+              </h2>
+              <div className="space-y-2">
+                <p className="text-gray-800">{selectedOrder.destination}</p>
+                <div className="flex items-center">
+                  <span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-2"></span>
+                  <span className="text-sm text-gray-600">Label Status: {selectedOrder.labelStatus}</span>
+                </div>
+                {selectedOrder.trackingNumber && (
+                  <div className="mt-3 pt-3 border-t border-indigo-100">
+                    <p className="text-sm font-medium text-gray-700">Tracking Number:</p>
+                    <p className="text-sm text-indigo-600 font-mono">{selectedOrder.trackingNumber}</p>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-5 rounded-xl border border-amber-100 hover:shadow-md transition-shadow duration-300">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <FiInfo className="mr-2 text-amber-500" /> Additional Information
+              </h2>
+              <div className="space-y-3">
+                {selectedOrder.tags && selectedOrder.tags.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700">Tags:</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {selectedOrder.tags.map((tag, index) => (
+                        <span 
+                          key={index}
+                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Return Status:</p>
+                  <p className="text-sm text-gray-800 mt-1">{selectedOrder.returnStatus}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Notes:</p>
+                  <p className="text-sm text-gray-600 mt-1 italic">
+                    {selectedOrder.notes || "No additional notes"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         </motion.div>
       </motion.div>
-    </motion.div>
-  );
-}
+    );
+  }
   
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Orders Details</h1>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto">
-          <div className="relative group">
-            <button 
-                   className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
-                   onClick={handlePrintAll}
-            >
-            <FiPrinter className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Print</span>
-           </button>
-              <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
-                    Print {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
-              </span>
-          </div>
-          <div className="relative group">
-              <button 
-                      className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
-                      onClick={handleExportOrders}
-              >
-                 <FiDownload className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Export</span>
-                 </button>
-                <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
-                  Export {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
-                </span>
-          </div>
-        <button 
-             className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-xs md:text-sm font-medium text-white hover:bg-green-700"
-             onClick={() => {
-
-             setEditingOrder(null);
-             setShowCreateOrder(true);
-             }}
-        >
-         <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
-        </button>
-      </div>
+<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+  <h1 className="text-xl md:text-2xl font-bold text-gray-800">Orders Details</h1>
+  <div className="flex flex-wrap gap-2 w-full md:w-auto">
+    <div className="relative group">
+      <button 
+        className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+        onClick={handlePrintAll}
+      >
+        <FiPrinter className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Print</span>
+      </button>
+      <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+        Print {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+      </span>
     </div>
+    
+    {/* New Actions Dropdown */}
+    <div className="relative group" ref={menuRef}>
+  <button 
+    className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+    onClick={() => setOpenMenuId(openMenuId === 'actions' ? null : 'actions')}
+    disabled={selectedItems.length === 0}
+  >
+    <FiMoreHorizontal className="mr-1 md:mr-2" /> <span className="hidden sm:inline">More actions</span>
+  </button>
+  
+  {openMenuId === 'actions' && (
+  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+    <div className="py-1">
+      <button
+        className={`flex items-center w-full text-left px-4 py-2 text-sm ${selectedItems.length === 1 ? 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' : 'text-gray-400 cursor-not-allowed'}`}
+        onClick={() => {
+          if (selectedItems.length === 1) {
+            viewOrderDetails(selectedItems[0]);
+          }
+          setOpenMenuId(null);
+        }}
+        disabled={selectedItems.length !== 1}
+      >
+        <FiEye className="mr-2" /> View Details
+      </button>
+      <button
+        className={`flex items-center w-full text-left px-4 py-2 text-sm ${selectedItems.length === 1 ? 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' : 'text-gray-400 cursor-not-allowed'}`}
+        onClick={() => {
+          if (selectedItems.length === 1) {
+            const orderToEdit = orders.find(order => order.id === selectedItems[0]);
+            if (orderToEdit) handleEditOrder(orderToEdit);
+          }
+          setOpenMenuId(null);
+        }}
+        disabled={selectedItems.length !== 1}
+      >
+        <FiEdit2 className="mr-2" /> Update
+      </button>
+      <button
+        className={`flex items-center w-full text-left px-4 py-2 text-sm ${selectedItems.length === 1 ? 'text-gray-700 hover:bg-gray-100 hover:text-gray-900' : 'text-gray-400 cursor-not-allowed'}`}
+        onClick={() => {
+          if (selectedItems.length === 1) {
+            const orderToDuplicate = orders.find(order => order.id === selectedItems[0]);
+            if (orderToDuplicate) handleDuplicateOrder(orderToDuplicate);
+          }
+          setOpenMenuId(null);
+        }}
+        disabled={selectedItems.length !== 1}
+      >
+        <FiCopy className="mr-2" /> Duplicate
+      </button>
+      <button
+        className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-800"
+        onClick={() => {
+          handleBulkDelete();
+          setOpenMenuId(null);
+        }}
+      >
+        <FiTrash2 className="mr-2" /> Delete
+      </button>
+    </div>
+  </div>
+)}
+
+  {/* Tooltip for actions */}
+{/*
+    <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+    Actions for Selected Orders
+  </span>
+*/}
+  
+</div>
+    
+    <div className="relative group">
+      <button 
+        className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+        onClick={handleExportOrders}
+      >
+        <FiDownload className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Export</span>
+      </button>
+      <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+        Export {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+      </span>
+    </div>
+    
+    <button 
+      className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-xs md:text-sm font-medium text-white hover:bg-green-700"
+      onClick={() => {
+        setEditingOrder(null);
+        setShowCreateOrder(true);
+      }}
+    >
+      <FiPlus className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Create Order</span>
+    </button>
+  </div>
+</div>
 
       {/* Search and Filter */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-2">
@@ -1051,157 +1123,103 @@ if (selectedOrder) {
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                        checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
-                        onChange={selectAllItems}
-                      />
-                    </div>
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order
-                  </th>
-                  <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                    Date
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    Customer
-                  </th>
-                  <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                    Channel
-                  </th>
-                  <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
-                    Payment
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
-                    Fulfillment
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
-                    Delivery
-                  </th>
-                  <th scope="col" className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => (
-                  <React.Fragment key={order.id}>
-                    <tr 
-                       className="hover:bg-green-200 cursor-pointer" 
-                       onClick={(e) => {
-                      // Only proceed if not clicking on checkbox or menu button
-                      if (!e.target.closest('.order-checkbox') && !e.target.closest('.action-menu-button')) {
-                        viewOrderDetails(order.id); // Call the modified function
-                        }
-                     }}
-                    >
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-                            checked={selectedItems.includes(order.id)}
-                            onChange={(e) => toggleItemSelection(order.id, e)}
-                          />
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {order.id}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                        {order.date}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                        {order.customer}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                        {order.salesChannel}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
-                       {formatNPR(order.total)}
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
-                        <div className="flex items-center">
-                          {getStatusIcon(order.paymentStatus)}
-                          <span className="ml-1 hidden md:inline">{order.paymentStatus}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
-                        <div className="flex items-center">
-                          {getStatusIcon(order.fulfillmentStatus)}
-                          <span className="ml-1 hidden lg:inline">{order.fulfillmentStatus}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
-                        <div className="flex items-center">
-                          {getDeliveryIcon(order.deliveryMethod)}
-                          <span className="ml-1">{order.deliveryStatus}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium relative">
-                        <div ref={menuRef}>
-                          <button 
-                            className="action-menu-button text-black hover:text-red-600 focus:outline-none"
-                            onClick={(e) => toggleMenu(e, order.id)}
-                          >
-                            <FiMoreVertical />
-                          </button>
-                          
-                          {openMenuId === order.id && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
-                              <div className="py-1">
-                                <button
-                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleEditOrder(order);
-                                  }}
-                                >
-                                  <FiEdit2 className="mr-2" /> Update
-                                </button>
-                                <button
-                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDuplicateOrder(order);
-                                  }}
-                                >
-                                  <FiCopy className="mr-2" /> Duplicate
-                                </button>
-                    
-                                <button
-                                  className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-800"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDeleteOrder(order.id);
-                                  }}
-                                >
-                                  <FiTrash2 className="mr-2" /> Delete
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                    
-                  </React.Fragment>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              {/* Table Header */}
+<thead className="bg-gray-50">
+  <tr>
+    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+          checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
+          onChange={selectAllItems}
+        />
       </div>
+    </th>
+    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Order
+    </th>
+    <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+      Date
+    </th>
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+      Customer
+    </th>
+    <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+      Channel
+    </th>
+    <th scope="col" className="px-8 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Total
+    </th>
+    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+      Payment
+    </th>
+    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+      Fulfillment
+    </th>
+    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+      Delivery
+    </th>
+  </tr>
+</thead>
+
+{/* Table Rows */}
+<tbody className="bg-white divide-y divide-gray-200">
+  {filteredOrders.map((order) => (
+    <tr 
+      key={order.id}
+      className="hover:bg-green-200 cursor-pointer"
+    >
+      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            checked={selectedItems.includes(order.id)}
+            onChange={(e) => toggleItemSelection(order.id, e)}
+          />
+        </div>
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        {order.id}
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+        {order.date}
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+        {order.customer}
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+        {order.salesChannel}
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+        {formatNPR(order.total)}
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+        <div className="flex items-center">
+          {getStatusIcon(order.paymentStatus)}
+          <span className="ml-1 hidden md:inline">{order.paymentStatus}</span>
+        </div>
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden md:table-cell">
+        <div className="flex items-center">
+          {getStatusIcon(order.fulfillmentStatus)}
+          <span className="ml-1 hidden lg:inline">{order.fulfillmentStatus}</span>
+        </div>
+      </td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden lg:table-cell">
+        <div className="flex items-center">
+          {getDeliveryIcon(order.deliveryMethod)}
+          <span className="ml-1">{order.deliveryStatus}</span>
+        </div>
+      </td>
+    </tr>
+  ))}
+</tbody>
+</table>
+</div>
+)}
+</div>
 
       {/* Pagination */}
       <div className="flex flex-col md:flex-row items-center justify-between mt-4 gap-2">
@@ -1367,7 +1385,7 @@ if (selectedOrder) {
           </div>
         </div>
       )}
-      <ConfirmDialog />
+
     </div>
   );
 };
