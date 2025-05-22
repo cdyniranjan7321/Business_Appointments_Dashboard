@@ -1,35 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from "framer-motion";
 import axios from 'axios';
-import { 
-  FiSearch, 
-  FiFilter, 
-  FiPlus, 
-  FiPrinter, 
-  FiDownload, 
-  FiMoreVertical,
-  FiChevronLeft,
-  FiChevronRight,
-  FiEdit2,
-  FiCopy,
-  FiTrash2,
-  FiArrowLeft,
-  FiUser,
-  FiCreditCard,
-  FiTruck,
-  FiShoppingBag,
-  FiInfo,
-  FiMoreHorizontal,
-  FiEye,
+import { FiSearch, FiFilter, FiPlus, FiPrinter, FiDownload, FiChevronLeft, FiChevronRight, FiEdit2, FiCopy, 
+  FiTrash2, FiArrowLeft, FiUser, FiCreditCard, FiTruck, FiShoppingBag, FiInfo, FiMoreHorizontal, FiEye,
 } from 'react-icons/fi';
 
 import { 
-  FaRegCheckCircle, 
-  FaRegTimesCircle, 
-  FaRegClock,
-  FaTruck,
-  FaStore,
-  FaBoxOpen
+  FaRegCheckCircle, FaRegTimesCircle, FaRegClock, FaTruck, FaStore, FaBoxOpen
 } from 'react-icons/fa';
 
 import * as XLSX from 'xlsx';
@@ -879,24 +856,24 @@ const viewOrderDetails = (orderId) => {
   
   return (
     <div className="fixed inset-0 bg-gray-100 overflow-auto p-6">
-      {/* Header */}
-<div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
-  <h1 className="text-xl md:text-2xl font-bold text-gray-800">Orders Details</h1>
-  <div className="flex flex-wrap gap-2 w-full md:w-auto">
-    <div className="relative group">
-      <button 
-        className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
-        onClick={handlePrintAll}
-      >
+          {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 md:mb-6 gap-4">
+        <h1 className="text-xl md:text-2xl font-bold text-gray-800">Orders Details</h1>
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+           <div className="relative group">
+       <button 
+         className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
+         onClick={handlePrintAll}
+       >
         <FiPrinter className="mr-1 md:mr-2" /> <span className="hidden sm:inline">Print</span>
-      </button>
-      <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
-        Print {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
-      </span>
-    </div>
+       </button>
+         <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+           Print {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+         </span>
+      </div>
     
-    {/* New Actions Dropdown */}
-    <div className="relative group" ref={menuRef}>
+         {/* New Actions Dropdown */}
+      <div className="relative group" ref={menuRef}>
   <button 
     className="flex items-center px-3 py-1 md:px-4 md:py-2 bg-white border border-gray-300 rounded-md shadow-sm text-xs md:text-sm font-medium text-gray-700 hover:bg-gray-200"
     onClick={() => setOpenMenuId(openMenuId === 'actions' ? null : 'actions')}
@@ -904,6 +881,9 @@ const viewOrderDetails = (orderId) => {
   >
     <FiMoreHorizontal className="mr-1 md:mr-2" /> <span className="hidden sm:inline">More actions</span>
   </button>
+     <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+            Actions {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+     </span>
   
   {openMenuId === 'actions' && (
   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
@@ -958,14 +938,6 @@ const viewOrderDetails = (orderId) => {
     </div>
   </div>
 )}
-
-  {/* Tooltip for actions */}
-{/*
-    <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
-    Actions for Selected Orders
-  </span>
-*/}
-  
 </div>
     
     <div className="relative group">
@@ -1124,18 +1096,18 @@ const viewOrderDetails = (orderId) => {
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               {/* Table Header */}
-<thead className="bg-gray-50">
-  <tr>
-    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-          checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
-          onChange={selectAllItems}
-        />
-      </div>
-    </th>
+        <thead className="bg-gray-50">
+          <tr>
+           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="flex items-center">
+            <input
+             type="checkbox"
+             className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+             checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
+             onChange={selectAllItems}
+            />
+          </div>
+        </th>
     <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
       Order
     </th>
@@ -1385,7 +1357,6 @@ const viewOrderDetails = (orderId) => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
