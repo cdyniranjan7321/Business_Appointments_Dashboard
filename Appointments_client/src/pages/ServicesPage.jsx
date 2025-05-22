@@ -227,54 +227,6 @@ const Services = () => {
               </ul>
             )}
           </div>
-          
-          {/* Booking Preview Section */}
-          <div className="mt-8 bg-white rounded-lg shadow overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-800">Customer Booking Preview</h2>
-            </div>
-            <div className="p-6">
-              <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6">
-                <div className="flex">
-                  <div className="flex-shrink-0">
-                    <FiInfo className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm text-blue-700">
-                      This is how your services will appear to customers when they book online.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {services.filter(s => s.active).slice(0, 3).map(service => (
-                  <div key={service.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <h3 className="text-lg font-medium text-gray-800">{service.name}</h3>
-                    <p className="mt-1 text-sm text-gray-600 line-clamp-2">{service.description}</p>
-                    <div className="mt-3 flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-900">रु{service.price.toFixed(2)}</span>
-                      <button className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded">
-                        Book Now
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              {services.filter(s => s.active).length === 0 && services.length > 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No active services available for booking. Activate services to make them visible to customers.
-                </div>
-              )}
-
-              {services.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  No services available for preview. Add services to see how they'll appear to customers.
-                </div>
-              )}
-            </div>
-          </div>
         </div>
       </div>
 
