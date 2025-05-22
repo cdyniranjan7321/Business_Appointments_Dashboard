@@ -881,6 +881,9 @@ const viewOrderDetails = (orderId) => {
   >
     <FiMoreHorizontal className="mr-1 md:mr-2" /> <span className="hidden sm:inline">More actions</span>
   </button>
+     <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
+            Actions {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+     </span>
   
   {openMenuId === 'actions' && (
   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
@@ -1093,18 +1096,18 @@ const viewOrderDetails = (orderId) => {
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               {/* Table Header */}
-<thead className="bg-gray-50">
-  <tr>
-    <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-          checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
-          onChange={selectAllItems}
-        />
-      </div>
-    </th>
+        <thead className="bg-gray-50">
+          <tr>
+           <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div className="flex items-center">
+            <input
+             type="checkbox"
+             className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+             checked={selectedItems.length === filteredOrders.length && filteredOrders.length > 0}
+             onChange={selectAllItems}
+            />
+          </div>
+        </th>
     <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
       Order
     </th>
@@ -1354,7 +1357,6 @@ const viewOrderDetails = (orderId) => {
           </div>
         </div>
       )}
-
     </div>
   );
 };
