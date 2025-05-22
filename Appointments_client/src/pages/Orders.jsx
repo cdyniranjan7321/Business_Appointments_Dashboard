@@ -871,7 +871,7 @@ const viewOrderDetails = (orderId) => {
            Print {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
          </span>
       </div>
-    
+      
          {/* New Actions Dropdown */}
       <div className="relative group" ref={menuRef}>
   <button 
@@ -882,7 +882,7 @@ const viewOrderDetails = (orderId) => {
     <FiMoreHorizontal className="mr-1 md:mr-2" /> <span className="hidden sm:inline">More actions</span>
   </button>
      <span className="absolute z-10 w-auto p-2 m-2 min-w-max left-0 rounded-md shadow-md text-white bg-gray-900 text-xs font-bold transition-all duration-100 scale-0 origin-left group-hover:scale-100">
-            Actions {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
+          Actions {selectedItems.length > 0 ? 'Selected' : 'All'} Orders
      </span>
   
   {openMenuId === 'actions' && (
