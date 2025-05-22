@@ -1,22 +1,22 @@
-
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiTag, FiInfo, FiX } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiTag, FiInfo, FiX, FiImage } from 'react-icons/fi';
 import axios from 'axios';
 
 const Services = () => {
   // State for form inputs
   const [serviceForm, setServiceForm] = useState({
     name: '',
-    description: '',
     price: '',
     category: '',
-    active: true
+    active: true,
+    image: null
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [currentServiceId, setCurrentServiceId] = useState(null);
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [services, setServices] = useState([]);
+  const [imagePreview, setImagePreview] = useState(null);
 
   // Fetch services on component mount
   useEffect(() => {
@@ -38,6 +38,21 @@ const Services = () => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+        setServiceForm(prev => ({
+          ...prev,
+          image: reader.result
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleServiceSubmit = async (e) => {
@@ -70,11 +85,12 @@ const Services = () => {
   const handleEditClick = (service) => {
     setServiceForm({
       name: service.name,
-      description: service.description,
       price: service.price.toString(),
       category: service.category,
-      active: service.active
+      active: service.active,
+      image: service.image || null
     });
+    setImagePreview(service.image || null);
     setIsEditing(true);
     setCurrentServiceId(service.id);
     setShowServiceModal(true);
@@ -114,11 +130,12 @@ const Services = () => {
   const resetFormAndClose = () => {
     setServiceForm({
       name: '',
-      description: '',
       price: '',
       category: '',
-      active: true
+      active: true,
+      image: null
     });
+    setImagePreview(null);
     setIsEditing(false);
     setCurrentServiceId(null);
     setShowServiceModal(false);
@@ -172,7 +189,6 @@ const Services = () => {
                             {service.active ? 'Active' : 'Inactive'}
                           </span>
                         </div>
-                        <p className="mt-1 text-sm text-gray-600">{service.description}</p>
                         
                         <div className="mt-3 flex flex-wrap gap-4">
                           <div className="flex items-center text-sm text-gray-500">
@@ -190,7 +206,7 @@ const Services = () => {
                       
                       <div className="ml-4 flex-shrink-0 flex space-x-2">
                         <button
-                         onClick={() => handleEditClick(service)} // Changed from handleEditService
+                          onClick={() => handleEditClick(service)}
                           className="p-2 text-blue-600 hover:text-blue-800 rounded-full hover:bg-blue-50"
                           title="Edit"
                         >
@@ -222,6 +238,15 @@ const Services = () => {
                         </button>
                       </div>
                     </div>
+                    {service.image && (
+                      <div className="mt-4">
+                        <img 
+                          src={service.image} 
+                          alt={service.name} 
+                          className="h-32 w-32 object-cover rounded-md"
+                        />
+                      </div>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -260,17 +285,6 @@ const Services = () => {
               </div>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  name="description"
-                  value={serviceForm.description}
-                  onChange={handleServiceFormChange}
-                  rows="3"
-                  className="w-full px-3 py-2 border border-green-300 rounded-md"
-                />
-              </div>
-              
-              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Price*</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -299,6 +313,48 @@ const Services = () => {
                   className="w-full px-3 py-2 border border-green-300 rounded-md"
                 />
               </div>
+              
+              {/* Image Upload Section */}
+<div className="mb-4">
+  <label className="block text-sm font-medium text-gray-700 mb-1">Service Image</label>
+  <div className="mt-1 flex items-center">
+    <label
+      htmlFor="image-upload"
+      className="cursor-pointer bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+    >
+      <FiImage className="inline mr-2" />
+      {imagePreview ? 'Change Image' : 'Upload Image'}
+    </label>
+    <input
+      id="image-upload"
+      name="image"
+      type="file"
+      accept="image/*"
+      onChange={handleImageChange}
+      className="sr-only"
+    />
+  </div>
+  {imagePreview && (
+    <div className="mt-2 relative inline-block">
+      <img 
+        src={imagePreview} 
+        alt="Preview" 
+        className="h-32 w-32 object-cover rounded-md border border-gray-200"
+      />
+      <button
+        type="button"
+        onClick={() => {
+          setImagePreview(null);
+          setServiceForm(prev => ({ ...prev, image: null }));
+        }}
+        className="absolute top-1 right-1 bg-white bg-opacity-80 text-red-500 rounded-full p-1 hover:bg-opacity-100 hover:text-red-700 transition-all"
+        title="Remove image"
+      >
+        <FiX className="h-4 w-4" />
+      </button>
+    </div>
+  )}
+</div>
               
               <div className="mb-6 flex items-center">
                 <input
