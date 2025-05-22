@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiPlus, FiEdit2, FiTrash2, FiTag, FiInfo, FiX, FiImage } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiTag, FiX, FiImage } from 'react-icons/fi';
 import axios from 'axios';
 
 const Services = () => {
