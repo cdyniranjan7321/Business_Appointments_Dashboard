@@ -144,22 +144,31 @@ const Orders = () => {
   };
 
   // Delete order
-  const handleDeleteOrder = async (orderId) => {
-    try {
-      const response = await axios.delete(`http://localhost:6001/api/orders/${orderId}`);
-      
-      if (response.data.success) {
-        setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
-        setSelectedItems(prevItems => prevItems.filter(id => id !== orderId));
-        setError(null);
-      } else {
-        throw new Error(response.data.message || 'Failed to delete order');
-      }
-    } catch (err) {
-      console.error('Error deleting order:', err);
-      setError(`Failed to delete order: ${err.message}`);
+const handleDeleteOrder = async (orderId) => {
+  try {
+    // Find the full order to get the MongoDB _id
+    const orderToDelete = orders.find(o => o.id === orderId);
+    if (!orderToDelete) {
+      throw new Error('Order not found');
     }
-  };
+
+    // Use the MongoDB _id for deletion
+    const response = await axios.delete(
+      `http://localhost:6001/api/orders/${orderToDelete._id || orderId}`
+    );
+    
+    if (response.data.success) {
+      setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+      setSelectedItems(prevItems => prevItems.filter(id => id !== orderId));
+      setError(null);
+    } else {
+      throw new Error(response.data.message || 'Failed to delete order');
+    }
+  } catch (err) {
+    console.error('Error deleting order:', err);
+    setError(`Failed to delete order: ${err.message}`);
+  }
+};
 
   // Bulk delete handler
   const handleBulkDelete = async () => {
@@ -182,31 +191,34 @@ const Orders = () => {
   };
 
   // Duplicate order
-  const handleDuplicateOrder = async (order) => {
-    try {
-      // Create a clean copy without the original ID
-      const { _id, id, ...orderData } = order;
-      const response = await axios.post('http://localhost:6001/api/orders', {
-        ...orderData,
-        date: new Date().toISOString().split('T')[0],
-        paymentStatus: 'Pending',
-        fulfillmentStatus: 'Unfulfilled',
-        deliveryStatus: 'Processing',
-        labelStatus: 'Not Printed',
-        tags: [...(order.tags || []), 'Copied']
-      });
+const handleDuplicateOrder = async (order) => {
+  try {
+    // Create a clean copy without the original ID
+    const { _id, id, shortId, ...orderData } = order;
+    const response = await axios.post('http://localhost:6001/api/orders', {
+      ...orderData,
+      date: new Date().toISOString().split('T')[0],
+      paymentStatus: 'Pending',
+      fulfillmentStatus: 'Unfulfilled',
+      deliveryStatus: 'Processing',
+      labelStatus: 'Not Printed',
+      tags: [...(order.tags || []), 'Copied']
+    });
 
-      if (response.data.success) {
-        setOrders(prevOrders => [response.data.order, ...prevOrders]);
-        setError(null);
-      } else {
-        throw new Error(response.data.message || 'Failed to duplicate order');
-      }
-    } catch (err) {
-      console.error('Error duplicating order:', err);
-      setError(`Failed to duplicate order: ${err.message}`);
+    if (response.data.success) {
+      setOrders(prevOrders => [{
+        ...response.data.order,
+        id: response.data.order.shortId || response.data.order.id
+      }, ...prevOrders]);
+      setError(null);
+    } else {
+      throw new Error(response.data.message || 'Failed to duplicate order');
     }
-  };
+  } catch (err) {
+    console.error('Error duplicating order:', err);
+    setError(`Failed to duplicate order: ${err.message}`);
+  }
+};
 
   // Start editing order
   const handleEditOrder = async (order) => {
@@ -479,82 +491,86 @@ const Orders = () => {
   };
 
   // Create or update order
-  const handleCreateOrder = async () => {
-    try {
-      // Validate at least one item has a name
-      const validItems = newOrder.items.filter(item => item.name.trim() !== '');
-      if (validItems.length === 0) {
-        setError('Please add at least one item');
-        return;
-      }
-
-      // Prepare order data
-      const orderData = {
-        customer: newOrder.customer || 'Walk-in Customer',
-        salesChannel: newOrder.salesChannel,
-        items: validItems,
-        paymentStatus: newOrder.paymentStatus,
-        deliveryMethod: newOrder.deliveryMethod,
-        total: validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-      };
-
-      let response;
-      if (editingOrder) {
-        // Update existing order
-        response = await axios.put(
-          `http://localhost:6001/api/orders/${editingOrder.id}`, 
-          orderData
-        );
-      } else {
-        // Create new order
-        response = await axios.post(
-          'http://localhost:6001/api/orders', 
-          orderData
-        );
-      }
-
-      if (response.data.success) {
-        const updatedOrder = response.data.order;
-        
-        if (editingOrder) {
-          setOrders(prevOrders => 
-            prevOrders.map(order => 
-              order.id === editingOrder.id ? updatedOrder : order
-            )
-          );
-        } else {
-          setOrders(prevOrders => [updatedOrder, ...prevOrders]);
-        }
-
-        // Reset form
-        setShowCreateOrder(false);
-        setNewOrder({
-          customer: '',
-          salesChannel: 'Online Store',
-          items: [{ name: '', quantity: 1, price: 0 }],
-          paymentStatus: 'Pending',
-          deliveryMethod: 'Standard Shipping'
-        });
-        setEditingOrder(null);
-        setError(null);
-      } else {
-        throw new Error(response.data.message || 'Failed to save order');
-      }
-    } catch (err) {
-      console.error('Order submission error:', err);
-      let errorMessage = 'Failed to save order. Please try again.';
-      if (err.response) {
-        if (err.response.data.errors) {
-          errorMessage = err.response.data.errors.map(e => e.msg).join(', ');
-        } else if (err.response.data.error) {
-          errorMessage = err.response.data.error;
-        }
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-      setError(errorMessage);
+const handleCreateOrder = async () => {
+  try {
+    // Validate at least one item has a name
+    const validItems = newOrder.items.filter(item => item.name.trim() !== '');
+    if (validItems.length === 0) {
+      setError('Please add at least one item');
+      return;
     }
-  };
+
+    // Prepare order data
+    const orderData = {
+      customer: newOrder.customer || 'Walk-in Customer',
+      salesChannel: newOrder.salesChannel,
+      items: validItems,
+      paymentStatus: newOrder.paymentStatus,
+      deliveryMethod: newOrder.deliveryMethod,
+      total: validItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    };
+
+    let response;
+    if (editingOrder) {
+      // Update existing order
+      response = await axios.put(
+        `http://localhost:6001/api/orders/${editingOrder.id}`, 
+        orderData
+      );
+    } else {
+      // Create new order
+      response = await axios.post(
+        'http://localhost:6001/api/orders', 
+        orderData
+      );
+    }
+
+    if (response.data.success) {
+      const updatedOrder = response.data.order;
+      
+      if (editingOrder) {
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            order.id === editingOrder.id ? updatedOrder : order
+          )
+        );
+      } else {
+        // For new orders, use the shortId for display
+        setOrders(prevOrders => [{
+          ...updatedOrder,
+          id: updatedOrder.shortId || updatedOrder.id // Prefer shortId if available
+        }, ...prevOrders]);
+      }
+
+      // Reset form
+      setShowCreateOrder(false);
+      setNewOrder({
+        customer: '',
+        salesChannel: 'Online Store',
+        items: [{ name: '', quantity: 1, price: 0 }],
+        paymentStatus: 'Pending',
+        deliveryMethod: 'Standard Shipping'
+      });
+      setEditingOrder(null);
+      setError(null);
+    } else {
+      throw new Error(response.data.message || 'Failed to save order');
+    }
+  } catch (err) {
+    console.error('Order submission error:', err);
+    let errorMessage = 'Failed to save order. Please try again.';
+    if (err.response) {
+      if (err.response.data.errors) {
+        errorMessage = err.response.data.errors.map(e => e.msg).join(', ');
+      } else if (err.response.data.error) {
+        errorMessage = err.response.data.error;
+      }
+    } else if (err.message) {
+      errorMessage = err.message;
+    }
+    setError(errorMessage);
+  }
+};
 
   // Add new item to manual order
   const addNewItem = () => {
@@ -649,7 +665,7 @@ const viewOrderDetails = (orderId) => {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <h1 className="text-3xl font-bold text-gray-800">Order #{selectedOrder.id}</h1>
+              <h1 className="text-3xl font-bold text-gray-800">Order: {selectedOrder.shortId || selectedOrder.id.substring(0, 6)}</h1>  {/* Or if you want to show the full ID in the details view (which might be better for a detailed view), you could do: {selectedOrder.shortId || selectedOrder.id} */}
               <p className="text-gray-600 mt-1">Placed on {selectedOrder.date}</p>
             </motion.div>
             <motion.div 
@@ -1153,7 +1169,7 @@ const viewOrderDetails = (orderId) => {
         </div>
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-        {order.id}
+        {order.shortId || order.id.substring(0, 6)} {/* Show shortId if available, otherwise first 6 chars */}
       </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
         {order.date}

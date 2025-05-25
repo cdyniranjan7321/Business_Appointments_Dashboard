@@ -518,7 +518,7 @@ app.post('/api/orders', [
   check('items.*.quantity', 'Item quantity must be at least 1').isInt({ min: 1 }),
   check('items.*.price', 'Item price must be positive').isFloat({ min: 0 })
 ], async (req, res) => {
-   const errors = validationResult(req);
+  const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ 
       success: false,
@@ -530,9 +530,13 @@ app.post('/api/orders', [
     // Calculate total
     const total = req.body.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+    // Generate short ID (6 characters)
+    const shortId = Math.random().toString(36).substring(2, 8).toUpperCase();
+
     // Create new order document
     const newOrder = {
       ...req.body,
+      shortId, // Add the short ID
       total,
       date: new Date().toISOString().split('T')[0],
       paymentStatus: req.body.paymentStatus || 'Pending',
@@ -550,20 +554,20 @@ app.post('/api/orders', [
 
     // Return success response with the created order
     const createdOrder = await ordersCollection.findOne(
-      { _id: result.insertedId },
-   //   { projection: { _id: 0, id: '$_id' } } // Rename _id to id for frontend
+      { _id: result.insertedId }
     );
-    // Convert _id to id and remove _id field
-    const { _id, ...orderWithoutId } = createdOrder;
+    
+    // Format the response with both MongoDB _id and our shortId
     const responseOrder = {
-      ...orderWithoutId,
-      id: _id.toString()
+      ...createdOrder,
+      id: createdOrder._id.toString(),
+      shortId: createdOrder.shortId
     };
 
     res.status(201).json({
       success: true,
       message: 'Order created successfully',
-      order: responseOrder  // Ensure this matches frontend expectation
+      order: responseOrder
     });
 
   } catch (err) {
@@ -628,10 +632,15 @@ app.put('/api/orders/:id', [
 // DELETE /api/orders/:id - Delete order
 app.delete('/api/orders/:id', async (req, res) => {
   try {
-    const result = await ordersCollection.deleteOne(
-      { _id: new ObjectId(req.params.id) }
-    );
+    // Try to find by shortId first, then fall back to _id
+    let query;
+    if (ObjectId.isValid(req.params.id)) {
+      query = { _id: new ObjectId(req.params.id) };
+    } else {
+      query = { shortId: req.params.id };
+    }
 
+    const result = await ordersCollection.deleteOne(query);
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: 'Order not found' });
     }
