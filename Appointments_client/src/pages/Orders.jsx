@@ -665,7 +665,8 @@ const viewOrderDetails = (orderId) => {
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <h1 className="text-3xl font-bold text-gray-800">Order: {selectedOrder.shortId || selectedOrder.id.substring(0, 6)}</h1>  {/* Or if you want to show the full ID in the details view (which might be better for a detailed view), you could do: {selectedOrder.shortId || selectedOrder.id} */}
+              <h1 className="text-3xl font-bold text-gray-800">Order: {selectedOrder.shortId || selectedOrder.id.substring(0, 6)}</h1> 
+              {/* Or if you want to show the full ID in the details view (which might be better for a detailed view), you could do: {selectedOrder.shortId || selectedOrder.id} */}
               <p className="text-gray-600 mt-1">Placed on {selectedOrder.date}</p>
             </motion.div>
             <motion.div 
