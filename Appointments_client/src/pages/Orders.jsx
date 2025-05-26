@@ -490,7 +490,7 @@ const handleDuplicateOrder = async (order) => {
     XLSX.writeFile(workbook, fileName);
   };
 
-  // Create or update order
+ // Create or update order
 const handleCreateOrder = async () => {
   try {
     // Validate at least one item has a name
@@ -512,62 +512,67 @@ const handleCreateOrder = async () => {
 
     let response;
     if (editingOrder) {
-      // Update existing order
+      // Update existing order - use shortId if available, otherwise use _id
+      const orderId = editingOrder.shortId || editingOrder.id;
       response = await axios.put(
-        `http://localhost:6001/api/orders/${editingOrder.id}`, 
+        `http://localhost:6001/api/orders/${orderId}`, 
         orderData
       );
+      
+      if (response.data.success) {
+        const updatedOrder = response.data.order;
+        setOrders(prevOrders => 
+          prevOrders.map(order => 
+            (order.id === editingOrder.id || order.shortId === editingOrder.shortId) 
+              ? { ...updatedOrder, id: updatedOrder.shortId || updatedOrder.id }
+              : order
+          )
+        );
+      }
     } else {
       // Create new order
       response = await axios.post(
         'http://localhost:6001/api/orders', 
         orderData
       );
-    }
-
-    if (response.data.success) {
-      const updatedOrder = response.data.order;
       
-      if (editingOrder) {
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.id === editingOrder.id ? updatedOrder : order
-          )
-        );
-      } else {
-        // For new orders, use the shortId for display
+      if (response.data.success) {
+        const newOrder = response.data.order;
         setOrders(prevOrders => [{
-          ...updatedOrder,
-          id: updatedOrder.shortId || updatedOrder.id // Prefer shortId if available
+          ...newOrder,
+          id: newOrder.shortId || newOrder.id
         }, ...prevOrders]);
       }
-
-      // Reset form
-      setShowCreateOrder(false);
-      setNewOrder({
-        customer: '',
-        salesChannel: 'Online Store',
-        items: [{ name: '', quantity: 1, price: 0 }],
-        paymentStatus: 'Pending',
-        deliveryMethod: 'Standard Shipping'
-      });
-      setEditingOrder(null);
-      setError(null);
-    } else {
-      throw new Error(response.data.message || 'Failed to save order');
     }
+
+    // Reset form
+    setShowCreateOrder(false);
+    setNewOrder({
+      customer: '',
+      salesChannel: 'Online Store',
+      items: [{ name: '', quantity: 1, price: 0 }],
+      paymentStatus: 'Pending',
+      deliveryMethod: 'Standard Shipping'
+    });
+    setEditingOrder(null);
+    setError(null);
+
   } catch (err) {
     console.error('Order submission error:', err);
     let errorMessage = 'Failed to save order. Please try again.';
+    
     if (err.response) {
       if (err.response.data.errors) {
         errorMessage = err.response.data.errors.map(e => e.msg).join(', ');
       } else if (err.response.data.error) {
         errorMessage = err.response.data.error;
+      } else if (err.response.data.message) {
+        errorMessage = err.response.data.message;
       }
     } else if (err.message) {
       errorMessage = err.message;
     }
+    
     setError(errorMessage);
   }
 };
