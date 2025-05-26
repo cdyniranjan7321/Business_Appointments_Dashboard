@@ -598,32 +598,43 @@ app.put('/api/orders/:id', [
       updates.total = req.body.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     }
 
-    // Convert string ID to ObjectId
+    // Try to find by shortId first, then fall back to _id
+    let query;
+    if (ObjectId.isValid(req.params.id)) {
+      query = { _id: new ObjectId(req.params.id) };
+    } else {
+      query = { shortId: req.params.id };
+    }
+
     const result = await ordersCollection.updateOne(
-      { _id: new ObjectId(req.params.id) },
+      query,
       { $set: updates }
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ 
+        success: false,
+        error: 'Order not found' 
+      });
     }
 
     // Return updated order
-    const updatedOrder = await ordersCollection.findOne(
-      { _id: new ObjectId(req.params.id) }
-    );
+    const updatedOrder = await ordersCollection.findOne(query);
 
     res.json({
       success: true,
+      message: 'Order updated successfully',
       order: {
         ...updatedOrder,
-        id: updatedOrder._id.toString()
+        id: updatedOrder._id.toString(),
+        shortId: updatedOrder.shortId
       }
     });
 
   } catch (err) {
     console.error('Error updating order:', err);
     res.status(500).json({ 
+      success: false,
       error: 'Internal server error. Please try again later.' 
     });
   }
