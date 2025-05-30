@@ -144,8 +144,8 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
       <div className="bg-white p-6 rounded-lg shadow-xl w-96">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">{initialBooking ? 'Edit' : 'Add'} Booking</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
-            <XMarkIcon className="h-5 w-5" />
+          <button onClick={onClose} className="text-gray-500 hover:text-red-500">
+            <XMarkIcon className="h-6 w-6" />
           </button>
         </div>
         <form onSubmit={handleSubmit}>
@@ -236,13 +236,13 @@ const BookingItem = ({ booking, staffList, onEdit, onDelete }) => {
         <div className="flex space-x-1">
           <button 
             onClick={() => onEdit(booking)}
-            className="p-1 rounded-full hover:bg-black/10"
+            className="p-1 rounded-full hover:bg-blue-400"
           >
             <PencilSquareIcon className="h-4 w-4" />
           </button>
           <button 
             onClick={() => onDelete(booking.id)}
-            className="p-1 rounded-full hover:bg-black/10"
+            className="p-1 rounded-full hover:bg-red-500"
           >
             <TrashIcon className="h-4 w-4" />
           </button>
@@ -423,7 +423,7 @@ const Calendar = () => {
             key={index}
             className={`bg-white min-h-12 p-1 border border-gray-200 ${
               cell.type === 'empty' ? 'bg-gray-50' : ''
-            } ${cell.type === 'day' && cell.date === selectedDate.date && cell.month === selectedDate.month && cell.year === selectedDate.year ? 'ring-2 ring-green-500' : ''}`}
+            } ${cell.type === 'day' && cell.date === selectedDate.date && cell.month === selectedDate.month && cell.year === selectedDate.year ? 'ring-2 ring-green-400' : ''}`}
             onClick={() => cell.type === 'day' && handleDateClick(cell)}
           >
             {cell.type === 'day' && (
