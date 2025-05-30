@@ -35,10 +35,44 @@ const staff = [
   { id: 3, name: 'Wendy Xu', color: 'bg-purple-500' },
 ];
 
+const today = new NepaliDate();
 const initialBookings = [
-  { id: 1, staffId: 1, customer: 'Aaron Poe', service: 'Hair Cut', start: '10:30 AM', end: '11:00 AM', color: 'bg-blue-600', date: new NepaliDate().getDate() },
-  { id: 4, staffId: 2, customer: 'Alyssa Henry', service: 'Long Hair Cut', start: '9:30 AM', end: '10:30 AM', color: 'bg-green-600', date: new NepaliDate().getDate() },
-  { id: 8, staffId: 3, customer: 'Michelle Chan', service: 'Hair Cut', start: '10:00 AM', end: '11:00 AM', color: 'bg-purple-600', date: new NepaliDate().getDate() },
+  { 
+    id: 1, 
+    staffId: 1, 
+    customer: 'Aaron Poe', 
+    service: 'Hair Cut', 
+    start: '10:30 AM', 
+    end: '11:00 AM', 
+    color: 'bg-blue-600', 
+    date: today.getDate(),
+    month: today.getMonth(),
+    year: today.getYear()
+  },
+  { 
+    id: 4, 
+    staffId: 2, 
+    customer: 'Alyssa Henry', 
+    service: 'Long Hair Cut', 
+    start: '9:30 AM', 
+    end: '10:30 AM', 
+    color: 'bg-green-600', 
+    date: today.getDate(),
+    month: today.getMonth(),
+    year: today.getYear()
+  },
+  { 
+    id: 8, 
+    staffId: 3, 
+    customer: 'Michelle Chan', 
+    service: 'Hair Cut', 
+    start: '10:00 AM', 
+    end: '11:00 AM', 
+    color: 'bg-purple-600', 
+    date: today.getDate(),
+    month: today.getMonth(),
+    year: today.getYear()
+  },
 ];
 
 // --- Helper Functions ---
@@ -56,12 +90,28 @@ const getDaysInNepaliMonth = (year, month) => {
 };
 
 // --- Add Booking Modal ---
-const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDate }) => {
-  const [customer, setCustomer] = useState('');
-  const [service, setService] = useState('');
-  const [staffMember, setStaffMember] = useState(staffList[0]?.id);
-  const [startTime, setStartTime] = useState('09:00 AM');
-  const [endTime, setEndTime] = useState('09:30 PM');
+const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDate, initialBooking }) => {
+  const [customer, setCustomer] = useState(initialBooking?.customer || '');
+  const [service, setService] = useState(initialBooking?.service || '');
+  const [staffMember, setStaffMember] = useState(initialBooking?.staffId || staffList[0]?.id);
+  const [startTime, setStartTime] = useState(initialBooking?.start || '09:00 AM');
+  const [endTime, setEndTime] = useState(initialBooking?.end || '09:30 AM');
+
+  useEffect(() => {
+    if (initialBooking) {
+      setCustomer(initialBooking.customer);
+      setService(initialBooking.service);
+      setStaffMember(initialBooking.staffId);
+      setStartTime(initialBooking.start);
+      setEndTime(initialBooking.end);
+    } else {
+      setCustomer('');
+      setService('');
+      setStaffMember(staffList[0]?.id);
+      setStartTime('09:00 AM');
+      setEndTime('09:30 AM');
+    }
+  }, [initialBooking, staffList]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -70,22 +120,21 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
     const selectedStaff = staffList.find(s => s.id === parseInt(staffMember));
     if (!selectedStaff) return;
     
-    onAddBooking({
-      id: Date.now(),
+    const newBooking = {
+      id: initialBooking?.id || Date.now(),
       staffId: parseInt(staffMember),
       customer,
       service,
       start: startTime,
       end: endTime,
       color: selectedStaff.color.replace('500', '600'),
-      date: selectedDate || new NepaliDate().getDate(),
-    });
+      date: selectedDate.date,
+      month: selectedDate.month,
+      year: selectedDate.year,
+    };
+    
+    onAddBooking(newBooking);
     onClose();
-    setCustomer('');
-    setService('');
-    setStaffMember(staffList[0]?.id);
-    setStartTime('09:00 AM');
-    setEndTime('09:30 PM');
   };
 
   if (!isOpen) return null;
@@ -94,7 +143,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-xl w-96">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold">Add Booking</h2>
+          <h2 className="text-lg font-semibold">{initialBooking ? 'Edit' : 'Add'} Booking</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <XMarkIcon className="h-5 w-5" />
           </button>
@@ -152,7 +201,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-sm"
-                placeholder="9:30 PM"
+                placeholder="9:30 AM"
                 required
               />
             </div>
@@ -162,7 +211,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
               Cancel
             </button>
             <button type="submit" className="px-3 py-1.5 text-sm bg-green-500 hover:bg-green-700 text-white rounded-md">
-              Add Booking
+              {initialBooking ? 'Update' : 'Add'} Booking
             </button>
           </div>
         </form>
@@ -209,9 +258,12 @@ const Calendar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new NepaliDate());
   const [monthGrid, setMonthGrid] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new NepaliDate().getDate());
+  const [selectedDate, setSelectedDate] = useState({
+    date: today.getDate(),
+    month: today.getMonth(),
+    year: today.getYear()
+  });
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const todayNepali = new NepaliDate();
 
   const generateMonthGrid = useCallback((date) => {
     const year = date.getYear();
@@ -230,18 +282,22 @@ const Calendar = () => {
 
     for (let i = 1; i <= daysInMonth; i++) {
       const currentDayNepali = new NepaliDate(year, month, i);
-      const hasBookings = bookings.some(b => b.date === i && 
-        currentDayNepali.getMonth() === viewDate.getMonth() && 
-        currentDayNepali.getYear() === viewDate.getYear());
+      const hasBookings = bookings.some(b => 
+        b.date === i && 
+        b.month === month && 
+        b.year === year
+      );
       
       grid.push({
         type: 'day',
         date: i,
+        month,
+        year,
         nepali: currentDayNepali,
         isToday:
-          currentDayNepali.getYear() === todayNepali.getYear() &&
-          currentDayNepali.getMonth() === todayNepali.getMonth() &&
-          currentDayNepali.getDate() === todayNepali.getDate(),
+          currentDayNepali.getYear() === today.getYear() &&
+          currentDayNepali.getMonth() === today.getMonth() &&
+          currentDayNepali.getDate() === today.getDate(),
         hasBookings
       });
     }
@@ -251,7 +307,7 @@ const Calendar = () => {
     }
 
     return grid;
-  }, [bookings, viewDate, todayNepali]);
+  }, [bookings]);
 
   useEffect(() => {
     setMonthGrid(generateMonthGrid(viewDate));
@@ -260,10 +316,10 @@ const Calendar = () => {
   const handleAddBooking = (newBooking) => {
     if (selectedBooking) {
       setBookings(bookings.map(b => b.id === selectedBooking.id ? newBooking : b));
-      setSelectedBooking(null);
     } else {
       setBookings([...bookings, newBooking]);
     }
+    setSelectedBooking(null);
   };
 
   const handleDeleteBooking = (id) => {
@@ -291,18 +347,27 @@ const Calendar = () => {
   };
 
   const goToToday = () => {
-    setViewDate(new NepaliDate());
-    setSelectedDate(todayNepali.getDate());
+    const today = new NepaliDate();
+    setViewDate(today);
+    setSelectedDate({
+      date: today.getDate(),
+      month: today.getMonth(),
+      year: today.getYear()
+    });
   };
 
-  const handleDateClick = (date) => {
-    setSelectedDate(date);
+  const handleDateClick = (day) => {
+    setSelectedDate({
+      date: day.date,
+      month: day.month,
+      year: day.year
+    });
   };
 
   const selectedDateBookings = bookings.filter(b => 
-    b.date === selectedDate && 
-    viewDate.getMonth() === todayNepali.getMonth() && 
-    viewDate.getYear() === todayNepali.getYear()
+    b.date === selectedDate.date && 
+    b.month === selectedDate.month && 
+    b.year === selectedDate.year
   );
 
   return (
@@ -358,8 +423,8 @@ const Calendar = () => {
             key={index}
             className={`bg-white min-h-12 p-1 border border-gray-200 ${
               cell.type === 'empty' ? 'bg-gray-50' : ''
-            } ${cell.date === selectedDate ? 'ring-2 ring-green-500' : ''}`}
-            onClick={() => cell.type === 'day' && handleDateClick(cell.date)}
+            } ${cell.type === 'day' && cell.date === selectedDate.date && cell.month === selectedDate.month && cell.year === selectedDate.year ? 'ring-2 ring-green-500' : ''}`}
+            onClick={() => cell.type === 'day' && handleDateClick(cell)}
           >
             {cell.type === 'day' && (
               <div className="flex flex-col h-full">
@@ -385,7 +450,7 @@ const Calendar = () => {
       <div className="mt-6">
         <div className="flex justify-between items-center mb-3">
           <h2 className="font-medium">
-            Bookings for {selectedDate} {nepaliMonthNames[viewDate.getMonth()]}
+            Bookings for {selectedDate.date} {nepaliMonthNames[selectedDate.month]} {selectedDate.year}
           </h2>
           <div className="text-sm text-gray-500">
             {selectedDateBookings.length} appointment{selectedDateBookings.length !== 1 ? 's' : ''}
