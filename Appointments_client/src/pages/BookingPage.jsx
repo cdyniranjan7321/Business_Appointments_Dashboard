@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { CiBookmarkPlus } from "react-icons/ci";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -6,6 +7,10 @@ import {
   XMarkIcon,
   PencilSquareIcon,
   TrashIcon,
+  CheckIcon,
+  ClockIcon,
+  XCircleIcon,
+  CalendarIcon,
 } from '@heroicons/react/20/solid';
 import NepaliDate from 'nepali-date-converter';
 
@@ -72,6 +77,37 @@ const initialBookings = [
     date: today.getDate(),
     month: today.getMonth(),
     year: today.getYear()
+  },
+];
+
+// Online booking requests data
+const initialOnlineRequests = [
+  {
+    id: 101,
+    customer: 'John Doe',
+    service: 'Hair Coloring',
+    staff: 'Rob Olson',
+    dateTime: '2023-06-15 02:30 PM',
+    status: 'Pending',
+    source: 'Online'
+  },
+  {
+    id: 102,
+    customer: 'Jane Smith',
+    service: 'Manicure',
+    staff: 'Wendy Xu',
+    dateTime: '2023-06-16 11:00 AM',
+    status: 'Approved',
+    source: 'Online'
+  },
+  {
+    id: 103,
+    customer: 'Mike Johnson',
+    service: 'Beard Trim',
+    staff: 'Alaina Tyrer',
+    dateTime: '2023-06-14 04:15 PM',
+    status: 'Rejected',
+    source: 'Manual'
   },
 ];
 
@@ -252,9 +288,85 @@ const BookingItem = ({ booking, staffList, onEdit, onDelete }) => {
   );
 };
 
+// --- Online Booking Requests Table ---
+const OnlineBookingRequests = ({ requests, onStatusChange }) => {
+  const handleStatusChange = (id, newStatus) => {
+    onStatusChange(id, newStatus);
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'Approved':
+        return <CheckIcon className="h-4 w-4 text-green-500" />;
+      case 'Rejected':
+        return <XCircleIcon className="h-4 w-4 text-red-500" />;
+      default:
+        return <ClockIcon className="h-4 w-4 text-yellow-500" />;
+    }
+  };
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+          </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {requests.map((request) => (
+            <tr key={request.id}>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.id}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.customer}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.service}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.staff}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.dateTime}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <div className="flex items-center">
+                  {getStatusIcon(request.status)}
+                  <span className="ml-1">{request.status}</span>
+                </div>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.source}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleStatusChange(request.id, 'Approved')}
+                    className="text-green-500 hover:text-green-700"
+                  >
+                    Approve
+                  </button>
+                  <button 
+                    onClick={() => handleStatusChange(request.id, 'Rejected')}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Reject
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 // --- Calendar Component ---
-const Calendar = () => {
-  const [bookings, setBookings] = useState(initialBookings);
+const CalendarView = ({ 
+  bookings, 
+  onAddBooking, 
+  onEditBooking, 
+  onDeleteBooking,
+  staffList 
+}) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new NepaliDate());
   const [monthGrid, setMonthGrid] = useState([]);
@@ -312,24 +424,6 @@ const Calendar = () => {
   useEffect(() => {
     setMonthGrid(generateMonthGrid(viewDate));
   }, [viewDate, generateMonthGrid]);
-
-  const handleAddBooking = (newBooking) => {
-    if (selectedBooking) {
-      setBookings(bookings.map(b => b.id === selectedBooking.id ? newBooking : b));
-    } else {
-      setBookings([...bookings, newBooking]);
-    }
-    setSelectedBooking(null);
-  };
-
-  const handleDeleteBooking = (id) => {
-    setBookings(bookings.filter(b => b.id !== id));
-  };
-
-  const handleEditBooking = (booking) => {
-    setSelectedBooking(booking);
-    setIsModalOpen(true);
-  };
 
   const navigateMonth = (direction) => {
     setViewDate((prev) => {
@@ -463,9 +557,12 @@ const Calendar = () => {
               <BookingItem
                 key={booking.id}
                 booking={booking}
-                staffList={staff}
-                onEdit={handleEditBooking}
-                onDelete={handleDeleteBooking}
+                staffList={staffList}
+                onEdit={(booking) => {
+                  setSelectedBooking(booking);
+                  setIsModalOpen(true);
+                }}
+                onDelete={onDeleteBooking}
               />
             ))}
           </div>
@@ -479,8 +576,11 @@ const Calendar = () => {
       <AddBookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddBooking={handleAddBooking}
-        staffList={staff}
+        onAddBooking={(newBooking) => {
+          onAddBooking(newBooking);
+          setIsModalOpen(false);
+        }}
+        staffList={staffList}
         selectedDate={selectedDate}
         initialBooking={selectedBooking}
       />
@@ -488,4 +588,70 @@ const Calendar = () => {
   );
 };
 
-export default Calendar;
+// --- Main Component ---
+const BookingSystem = () => {
+  const [activeTab, setActiveTab] = useState('calendar');
+  const [bookings, setBookings] = useState(initialBookings);
+  const [onlineRequests, setOnlineRequests] = useState(initialOnlineRequests);
+
+  const handleAddBooking = (newBooking) => {
+    if (newBooking.id && bookings.some(b => b.id === newBooking.id)) {
+      setBookings(bookings.map(b => b.id === newBooking.id ? newBooking : b));
+    } else {
+      setBookings([...bookings, newBooking]);
+    }
+  };
+
+  const handleDeleteBooking = (id) => {
+    setBookings(bookings.filter(b => b.id !== id));
+  };
+
+  const handleRequestStatusChange = (id, newStatus) => {
+    setOnlineRequests(onlineRequests.map(request => 
+      request.id === id ? { ...request, status: newStatus } : request
+    ));
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          className={`py-2 px-4 font-medium text-sm ${activeTab === 'calendar' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('calendar')}
+        >
+          <CalendarIcon className="h-4 w-4 mr-2" />
+          Calendar
+        </button>
+        <button
+          className={`py-2 px-4 font-medium text-sm ${activeTab === 'requests' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('requests')}
+        >
+          <CiBookmarkPlus className="h-4 w-4 mr-2" />
+          Online Booking Requests
+        </button>
+      </div>
+
+      {activeTab === 'calendar' ? (
+        <CalendarView
+          bookings={bookings}
+          onAddBooking={handleAddBooking}
+          onEditBooking={(booking) => {
+            // This is handled within CalendarView
+          }}
+          onDeleteBooking={handleDeleteBooking}
+          staffList={staff}
+        />
+      ) : (
+        <div className="bg-white p-4 rounded-lg shadow-lg">
+          <h1 className="text-xl font-semibold mb-4">Online Booking Requests</h1>
+          <OnlineBookingRequests 
+            requests={onlineRequests} 
+            onStatusChange={handleRequestStatusChange} 
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BookingSystem;
