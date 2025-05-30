@@ -95,7 +95,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
   const [service, setService] = useState(initialBooking?.service || '');
   const [staffMember, setStaffMember] = useState(initialBooking?.staffId || staffList[0]?.id);
   const [startTime, setStartTime] = useState(initialBooking?.start || '09:00 AM');
-  const [endTime, setEndTime] = useState(initialBooking?.end || '09:30 AM');
+  const [endTime, setEndTime] = useState(initialBooking?.end || '10:00 PM');
 
   useEffect(() => {
     if (initialBooking) {
@@ -109,7 +109,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
       setService('');
       setStaffMember(staffList[0]?.id);
       setStartTime('09:00 AM');
-      setEndTime('09:30 AM');
+      setEndTime('10:00 PM');
     }
   }, [initialBooking, staffList]);
 
@@ -201,7 +201,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-sm"
-                placeholder="9:30 AM"
+                placeholder="10:00 PM"
                 required
               />
             </div>
