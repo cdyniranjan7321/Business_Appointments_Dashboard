@@ -41,6 +41,9 @@ let staffCollection;
 // Add products collection reference
 let productsCollection;
 
+// Add bookings collection reference
+let bookingsCollection;
+
 // ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
@@ -55,6 +58,7 @@ async function run() {
     discountsCollection = database.collection("discounts");
     staffCollection = database.collection("staff");
     productsCollection = database.collection("products");
+    bookingsCollection = database.collection("bookings");
    
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -1707,6 +1711,291 @@ app.post('/api/products/export', async (req, res) => {
     });
   }
 });
+
+/**
+ * @api {get} /api/bookings Get all bookings
+ * @apiName GetBookings
+ * @apiGroup Bookings
+ * 
+ * @apiParam {Number} [year] Filter by year
+ * @apiParam {Number} [month] Filter by month (0-11)
+ * @apiParam {Number} [date] Filter by date
+ */
+app.get('/api/bookings', async (req, res) => {
+  try {
+    const { year, month, date } = req.query;
+    
+    // Build query
+    const query = {};
+    if (year) query.year = parseInt(year);
+    if (month) query.month = parseInt(month);
+    if (date) query.date = parseInt(date);
+    
+    const bookings = await bookingsCollection.find(query).toArray();
+    
+    // Format for frontend
+    const formattedBookings = bookings.map(booking => ({
+      ...booking,
+      id: booking._id.toString()
+    }));
+    
+    res.json({
+      success: true,
+      bookings: formattedBookings
+    });
+    
+  } catch (err) {
+    console.error('Error fetching bookings:', err);
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
+    });
+  }
+});
+
+/**
+ * @api {post} /api/bookings Create a new booking
+ * @apiName CreateBooking
+ * @apiGroup Bookings
+ * 
+ * @apiParam {String} customer Customer name (required)
+ * @apiParam {String} service Service name (required)
+ * @apiParam {String} start Start time (required, format: "HH:MM AM/PM")
+ * @apiParam {String} end End time (required, format: "HH:MM AM/PM")
+ * @apiParam {Number} date Date (1-31) (required)
+ * @apiParam {Number} month Month (0-11) (required)
+ * @apiParam {Number} year Year (required)
+ */
+app.post('/api/bookings', [
+  check('customer', 'Customer name is required').not().isEmpty(),
+  check('service', 'Service name is required').not().isEmpty(),
+  check('start', 'Start time is required').not().isEmpty(),
+  check('end', 'End time is required').not().isEmpty(),
+  check('date', 'Date is required and must be between 1-31').isInt({ min: 1, max: 31 }),
+  check('month', 'Month is required and must be between 0-11').isInt({ min: 0, max: 11 }),
+  check('year', 'Year is required').isInt()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Determine time of day for color coding
+    const timeOfDay = getTimeOfDay(req.body.start);
+    const color = timeColors[timeOfDay] || 'bg-gray-600';
+    
+    // Create new booking
+    const newBooking = {
+      customer: req.body.customer,
+      service: req.body.service,
+      start: req.body.start,
+      end: req.body.end,
+      date: parseInt(req.body.date),
+      month: parseInt(req.body.month),
+      year: parseInt(req.body.year),
+      color,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    // Insert into database
+    const result = await bookingsCollection.insertOne(newBooking);
+    
+    // Return created booking
+    const createdBooking = await bookingsCollection.findOne(
+      { _id: result.insertedId }
+    );
+    
+    res.status(201).json({
+      success: true,
+      booking: {
+        ...createdBooking,
+        id: createdBooking._id.toString()
+      }
+    });
+    
+  } catch (err) {
+    console.error('Booking creation error:', err);
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
+    });
+  }
+});
+
+/**
+ * @api {put} /api/bookings/:id Update a booking
+ * @apiName UpdateBooking
+ * @apiGroup Bookings
+ * 
+ * @apiParam {String} id Booking ID (required)
+ * @apiParam {String} [customer] Customer name
+ * @apiParam {String} [service] Service name
+ * @apiParam {String} [start] Start time
+ * @apiParam {String} [end] End time
+ * @apiParam {Number} [date] Date
+ * @apiParam {Number} [month] Month
+ * @apiParam {Number} [year] Year
+ */
+app.put('/api/bookings/:id', [
+  check('customer', 'Customer name is required').optional().not().isEmpty(),
+  check('service', 'Service name is required').optional().not().isEmpty(),
+  check('start', 'Start time is required').optional().not().isEmpty(),
+  check('end', 'End time is required').optional().not().isEmpty(),
+  check('date', 'Date must be between 1-31').optional().isInt({ min: 1, max: 31 }),
+  check('month', 'Month must be between 0-11').optional().isInt({ min: 0, max: 11 }),
+  check('year', 'Year is required').optional().isInt()
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
+  try {
+    // Check if booking exists
+    const existingBooking = await bookingsCollection.findOne({
+      _id: new ObjectId(req.params.id)
+    });
+    
+    if (!existingBooking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Prepare updates
+    const updates = {
+      updatedAt: new Date()
+    };
+
+    // Add fields to update if provided
+    if (req.body.customer) updates.customer = req.body.customer;
+    if (req.body.service) updates.service = req.body.service;
+    if (req.body.start) {
+      updates.start = req.body.start;
+      // Update color if start time changes
+      const timeOfDay = getTimeOfDay(req.body.start);
+      updates.color = timeColors[timeOfDay] || 'bg-gray-600';
+    }
+    if (req.body.end) updates.end = req.body.end;
+    if (req.body.date) updates.date = parseInt(req.body.date);
+    if (req.body.month) updates.month = parseInt(req.body.month);
+    if (req.body.year) updates.year = parseInt(req.body.year);
+
+    // Update in database
+    await bookingsCollection.updateOne(
+      { _id: new ObjectId(req.params.id) },
+      { $set: updates }
+    );
+
+    // Return updated booking
+    const updatedBooking = await bookingsCollection.findOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+    
+    res.json({
+      success: true,
+      booking: {
+        ...updatedBooking,
+        id: updatedBooking._id.toString()
+      }
+    });
+    
+  } catch (err) {
+    console.error('Booking update error:', err);
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
+    });
+  }
+});
+
+/**
+ * @api {delete} /api/bookings/:id Delete a booking
+ * @apiName DeleteBooking
+ * @apiGroup Bookings
+ * 
+ * @apiParam {String} id Booking ID (required)
+ */
+app.delete('/api/bookings/:id', async (req, res) => {
+  try {
+    // Check if booking exists
+    const existingBooking = await bookingsCollection.findOne({
+      _id: new ObjectId(req.params.id)
+    });
+    
+    if (!existingBooking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    // Delete booking
+    await bookingsCollection.deleteOne(
+      { _id: new ObjectId(req.params.id) }
+    );
+
+    res.json({
+      success: true,
+      message: 'Booking deleted successfully'
+    });
+    
+  } catch (err) {
+    console.error('Booking deletion error:', err);
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
+    });
+  }
+});
+
+/**
+ * @api {get} /api/bookings/date/:year/:month/:date Get bookings for a specific date
+ * @apiName GetBookingsByDate
+ * @apiGroup Bookings
+ * 
+ * @apiParam {Number} year Year (required)
+ * @apiParam {Number} month Month (0-11) (required)
+ * @apiParam {Number} date Date (1-31) (required)
+ */
+app.get('/api/bookings/date/:year/:month/:date', async (req, res) => {
+  try {
+    const { year, month, date } = req.params;
+    
+    const bookings = await bookingsCollection.find({
+      year: parseInt(year),
+      month: parseInt(month),
+      date: parseInt(date)
+    }).toArray();
+    
+    // Format for frontend
+    const formattedBookings = bookings.map(booking => ({
+      ...booking,
+      id: booking._id.toString()
+    }));
+    
+    res.json({
+      success: true,
+      bookings: formattedBookings
+    });
+    
+  } catch (err) {
+    console.error('Error fetching bookings by date:', err);
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
+    });
+  }
+});
+
+// Time-based colors
+const timeColors = {
+  morning: 'bg-blue-600',
+  day: 'bg-green-600',
+  evening: 'bg-purple-600'
+};
+
+// Helper function to determine time of day
+const getTimeOfDay = (timeStr) => {
+  const time = timeStr.toLowerCase();
+  const hour = parseInt(time.split(':')[0]) + (time.includes('pm') && !time.includes('12:') ? 12 : 0);
+  
+  if (hour < 12) return 'morning';
+  if (hour < 17) return 'day';
+  return 'evening';
+};
 
 // Basic route
 app.get('/', (req, res) => {
