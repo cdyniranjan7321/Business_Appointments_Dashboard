@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import PropTypes from 'prop-types';
 import { CiBookmarkPlus } from "react-icons/ci";
 import {
   ChevronLeftIcon,
@@ -33,43 +34,14 @@ const nepaliMonthNames = [
 const DAYS_IN_WEEK = 7;
 const WEEKS_IN_MONTH_VIEW = 6;
 
-// --- Initial Data ---
+// Time-based colors
+const timeColors = {
+  morning: 'bg-blue-600',
+  day: 'bg-green-600',
+  evening: 'bg-purple-600'
+};
+
 const today = new NepaliDate();
-const initialBookings = [
-  { 
-    id: 1, 
-    customer: 'Aaron Poe', 
-    service: 'Hair Cut', 
-    start: '10:30 AM', 
-    end: '11:00 AM', 
-    color: 'bg-blue-600', 
-    date: today.getDate(),
-    month: today.getMonth(),
-    year: today.getYear()
-  },
-  { 
-    id: 4, 
-    customer: 'Alyssa Henry', 
-    service: 'Long Hair Cut', 
-    start: '9:30 AM', 
-    end: '10:30 AM', 
-    color: 'bg-green-600', 
-    date: today.getDate(),
-    month: today.getMonth(),
-    year: today.getYear()
-  },
-  { 
-    id: 8, 
-    customer: 'Michelle Chan', 
-    service: 'Hair Cut', 
-    start: '10:00 AM', 
-    end: '11:00 AM', 
-    color: 'bg-purple-600', 
-    date: today.getDate(),
-    month: today.getMonth(),
-    year: today.getYear()
-  },
-];
 
 // Online booking requests data
 const initialOnlineRequests = [
@@ -113,12 +85,21 @@ const getDaysInNepaliMonth = (year, month) => {
   return count;
 };
 
+const getTimeOfDay = (timeStr) => {
+  const time = timeStr.toLowerCase();
+  const hour = parseInt(time.split(':')[0]) + (time.includes('pm') && !time.includes('12:') ? 12 : 0);
+  
+  if (hour < 12) return 'morning';
+  if (hour < 17) return 'day';
+  return 'evening';
+};
+
 // --- Add Booking Modal ---
 const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialBooking }) => {
   const [customer, setCustomer] = useState(initialBooking?.customer || '');
   const [service, setService] = useState(initialBooking?.service || '');
   const [startTime, setStartTime] = useState(initialBooking?.start || '09:00 AM');
-  const [endTime, setEndTime] = useState(initialBooking?.end || '10:00 PM');
+  const [endTime, setEndTime] = useState(initialBooking?.end || '10:00 AM');
 
   useEffect(() => {
     if (initialBooking) {
@@ -130,27 +111,35 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialB
       setCustomer('');
       setService('');
       setStartTime('09:00 AM');
-      setEndTime('10:00 PM');
+      setEndTime('10:00 AM');
     }
   }, [initialBooking]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
+    const timeOfDay = getTimeOfDay(startTime);
+    const color = timeColors[timeOfDay];
+    
     const newBooking = {
-      id: initialBooking?.id || Date.now(),
+      id: initialBooking?.id || undefined,
       customer,
       service,
       start: startTime,
       end: endTime,
-      color: 'bg-blue-600',
+      color,
       date: selectedDate.date,
       month: selectedDate.month,
       year: selectedDate.year,
     };
     
-    onAddBooking(newBooking);
-    onClose();
+    try {
+      await onAddBooking(newBooking);
+      onClose();
+    } catch (error) {
+      console.error('Error saving booking:', error);
+      // You might want to show an error message to the user here
+    }
   };
 
   if (!isOpen) return null;
@@ -204,7 +193,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialB
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-sm"
-                placeholder="10:00 PM"
+                placeholder="10:00 AM"
                 required
               />
             </div>
@@ -223,8 +212,32 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialB
   );
 };
 
+AddBookingModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  onAddBooking: PropTypes.func.isRequired,
+  selectedDate: PropTypes.shape({
+    date: PropTypes.number.isRequired,
+    month: PropTypes.number.isRequired,
+    year: PropTypes.number.isRequired,
+  }).isRequired,
+  initialBooking: PropTypes.shape({
+    id: PropTypes.number,
+    customer: PropTypes.string,
+    service: PropTypes.string,
+    start: PropTypes.string,
+    end: PropTypes.string,
+    date: PropTypes.number,
+    month: PropTypes.number,
+    year: PropTypes.number,
+  }),
+};
+
 // --- Booking Item Component ---
 const BookingItem = ({ booking, onEdit, onDelete }) => {
+  const timeOfDay = getTimeOfDay(booking.start);
+  const timeLabel = timeOfDay.charAt(0).toUpperCase() + timeOfDay.slice(1);
+  
   return (
     <div className={`${booking.color} text-white p-2 rounded mb-2 text-sm`}>
       <div className="flex justify-between items-start">
@@ -232,6 +245,7 @@ const BookingItem = ({ booking, onEdit, onDelete }) => {
           <div className="font-medium">{booking.customer}</div>
           <div>{booking.service}</div>
           <div>{booking.start} - {booking.end}</div>
+          <div className="text-xs mt-1">{timeLabel}</div>
         </div>
         <div className="flex space-x-1">
           <button 
@@ -250,6 +264,22 @@ const BookingItem = ({ booking, onEdit, onDelete }) => {
       </div>
     </div>
   );
+};
+
+BookingItem.propTypes = {
+  booking: PropTypes.shape({
+    id: PropTypes.string.isRequired,
+    customer: PropTypes.string.isRequired,
+    service: PropTypes.string.isRequired,
+    start: PropTypes.string.isRequired,
+    end: PropTypes.string.isRequired,
+    color: PropTypes.string.isRequired,
+    date: PropTypes.number.isRequired,
+    month: PropTypes.number.isRequired,
+    year: PropTypes.number.isRequired,
+  }).isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
 };
 
 // --- Online Booking Requests Table ---
@@ -321,12 +351,25 @@ const OnlineBookingRequests = ({ requests, onStatusChange }) => {
   );
 };
 
+OnlineBookingRequests.propTypes = {
+  requests: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      customer: PropTypes.string.isRequired,
+      service: PropTypes.string.isRequired,
+      dateTime: PropTypes.string.isRequired,
+      status: PropTypes.string.isRequired,
+      source: PropTypes.string.isRequired,
+    })
+  ).isRequired,
+  onStatusChange: PropTypes.func.isRequired,
+};
+
 // --- Calendar Component ---
 const CalendarView = ({ 
   bookings, 
   onAddBooking, 
-  onEditBooking, 
-  onDeleteBooking,
+  onDeleteBooking
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new NepaliDate());
@@ -337,6 +380,7 @@ const CalendarView = ({
     year: today.getYear()
   });
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const generateMonthGrid = useCallback((date) => {
     const year = date.getYear();
@@ -512,7 +556,9 @@ const CalendarView = ({
           </div>
         </div>
         
-        {selectedDateBookings.length > 0 ? (
+        {isLoading ? (
+          <div className="text-center py-4 text-gray-500 text-sm">Loading...</div>
+        ) : selectedDateBookings.length > 0 ? (
           <div className="space-y-2">
             {selectedDateBookings.map(booking => (
               <BookingItem
@@ -536,8 +582,8 @@ const CalendarView = ({
       <AddBookingModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onAddBooking={(newBooking) => {
-          onAddBooking(newBooking);
+        onAddBooking={async (newBooking) => {
+          await onAddBooking(newBooking);
           setIsModalOpen(false);
         }}
         selectedDate={selectedDate}
@@ -547,22 +593,99 @@ const CalendarView = ({
   );
 };
 
+CalendarView.propTypes = {
+  bookings: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      customer: PropTypes.string.isRequired,
+      service: PropTypes.string.isRequired,
+      start: PropTypes.string.isRequired,
+      end: PropTypes.string.isRequired,
+      color: PropTypes.string.isRequired,
+      date: PropTypes.number.isRequired,
+      month: PropTypes.number.isRequired,
+      year: PropTypes.number.isRequired,
+    })
+  ).isRequired,
+  onAddBooking: PropTypes.func.isRequired,
+  onDeleteBooking: PropTypes.func.isRequired,
+};
+
 // --- Main Component ---
 const BookingSystem = () => {
   const [activeTab, setActiveTab] = useState('calendar');
-  const [bookings, setBookings] = useState(initialBookings);
+  const [bookings, setBookings] = useState([]);
   const [onlineRequests, setOnlineRequests] = useState(initialOnlineRequests);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleAddBooking = (newBooking) => {
-    if (newBooking.id && bookings.some(b => b.id === newBooking.id)) {
-      setBookings(bookings.map(b => b.id === newBooking.id ? newBooking : b));
-    } else {
-      setBookings([...bookings, newBooking]);
+  // Fetch bookings from API
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await fetch('http://localhost:6001/api/bookings');
+        const data = await response.json();
+        if (data.success) {
+          setBookings(data.bookings);
+        }
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchBookings();
+  }, []);
+
+  const handleAddBooking = async (newBooking) => {
+    try {
+      const method = newBooking.id ? 'PUT' : 'POST';
+      const url = newBooking.id ? `http://localhost:6001/api/bookings/${newBooking.id}` : 'http://localhost:6001/api/bookings';
+      
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newBooking),
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        if (newBooking.id) {
+          // Update existing booking
+          setBookings(bookings.map(b => b.id === newBooking.id ? data.booking : b));
+        } else {
+          // Add new booking
+          setBookings([...bookings, data.booking]);
+        }
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error saving booking:', err);
+      return false;
     }
   };
 
-  const handleDeleteBooking = (id) => {
-    setBookings(bookings.filter(b => b.id !== id));
+  const handleDeleteBooking = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:6001/api/bookings/${id}`, {
+        method: 'DELETE',
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setBookings(bookings.filter(b => b.id !== id));
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Error deleting booking:', err);
+      return false;
+    }
   };
 
   const handleRequestStatusChange = (id, newStatus) => {
@@ -571,18 +694,26 @@ const BookingSystem = () => {
     ));
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex border-b border-gray-200 mb-6">
         <button
-          className={`py-2 px-4 font-medium text-sm ${activeTab === 'calendar' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`py-2 px-4 font-medium text-sm flex items-center ${activeTab === 'calendar' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           onClick={() => setActiveTab('calendar')}
         >
           <CalendarIcon className="h-4 w-4 mr-2" />
           Calendar
         </button>
         <button
-          className={`py-2 px-4 font-medium text-sm ${activeTab === 'requests' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          className={`py-2 px-4 font-medium text-sm flex items-center ${activeTab === 'requests' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           onClick={() => setActiveTab('requests')}
         >
           <CiBookmarkPlus className="h-4 w-4 mr-2" />
@@ -594,9 +725,6 @@ const BookingSystem = () => {
         <CalendarView
           bookings={bookings}
           onAddBooking={handleAddBooking}
-          onEditBooking={(booking) => {
-            // This is handled within CalendarView
-          }}
           onDeleteBooking={handleDeleteBooking}
         />
       ) : (
