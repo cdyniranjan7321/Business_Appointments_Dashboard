@@ -34,17 +34,10 @@ const DAYS_IN_WEEK = 7;
 const WEEKS_IN_MONTH_VIEW = 6;
 
 // --- Initial Data ---
-const staff = [
-  { id: 1, name: 'Rob Olson', color: 'bg-blue-500' },
-  { id: 2, name: 'Alaina Tyrer', color: 'bg-green-500' },
-  { id: 3, name: 'Wendy Xu', color: 'bg-purple-500' },
-];
-
 const today = new NepaliDate();
 const initialBookings = [
   { 
     id: 1, 
-    staffId: 1, 
     customer: 'Aaron Poe', 
     service: 'Hair Cut', 
     start: '10:30 AM', 
@@ -56,7 +49,6 @@ const initialBookings = [
   },
   { 
     id: 4, 
-    staffId: 2, 
     customer: 'Alyssa Henry', 
     service: 'Long Hair Cut', 
     start: '9:30 AM', 
@@ -68,7 +60,6 @@ const initialBookings = [
   },
   { 
     id: 8, 
-    staffId: 3, 
     customer: 'Michelle Chan', 
     service: 'Hair Cut', 
     start: '10:00 AM', 
@@ -86,7 +77,6 @@ const initialOnlineRequests = [
     id: 101,
     customer: 'John Doe',
     service: 'Hair Coloring',
-    staff: 'Rob Olson',
     dateTime: '2023-06-15 02:30 PM',
     status: 'Pending',
     source: 'Online'
@@ -95,7 +85,6 @@ const initialOnlineRequests = [
     id: 102,
     customer: 'Jane Smith',
     service: 'Manicure',
-    staff: 'Wendy Xu',
     dateTime: '2023-06-16 11:00 AM',
     status: 'Approved',
     source: 'Online'
@@ -104,7 +93,6 @@ const initialOnlineRequests = [
     id: 103,
     customer: 'Mike Johnson',
     service: 'Beard Trim',
-    staff: 'Alaina Tyrer',
     dateTime: '2023-06-14 04:15 PM',
     status: 'Rejected',
     source: 'Manual'
@@ -126,10 +114,9 @@ const getDaysInNepaliMonth = (year, month) => {
 };
 
 // --- Add Booking Modal ---
-const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDate, initialBooking }) => {
+const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialBooking }) => {
   const [customer, setCustomer] = useState(initialBooking?.customer || '');
   const [service, setService] = useState(initialBooking?.service || '');
-  const [staffMember, setStaffMember] = useState(initialBooking?.staffId || staffList[0]?.id);
   const [startTime, setStartTime] = useState(initialBooking?.start || '09:00 AM');
   const [endTime, setEndTime] = useState(initialBooking?.end || '10:00 PM');
 
@@ -137,33 +124,26 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
     if (initialBooking) {
       setCustomer(initialBooking.customer);
       setService(initialBooking.service);
-      setStaffMember(initialBooking.staffId);
       setStartTime(initialBooking.start);
       setEndTime(initialBooking.end);
     } else {
       setCustomer('');
       setService('');
-      setStaffMember(staffList[0]?.id);
       setStartTime('09:00 AM');
       setEndTime('10:00 PM');
     }
-  }, [initialBooking, staffList]);
+  }, [initialBooking]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!staffMember) return;
-    
-    const selectedStaff = staffList.find(s => s.id === parseInt(staffMember));
-    if (!selectedStaff) return;
     
     const newBooking = {
       id: initialBooking?.id || Date.now(),
-      staffId: parseInt(staffMember),
       customer,
       service,
       start: startTime,
       end: endTime,
-      color: selectedStaff.color.replace('500', '600'),
+      color: 'bg-blue-600',
       date: selectedDate.date,
       month: selectedDate.month,
       year: selectedDate.year,
@@ -205,19 +185,6 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
               required
             />
           </div>
-          <div className="mb-3">
-            <label className="block text-sm font-medium text-gray-700">Staff Member</label>
-            <select
-              value={staffMember}
-              onChange={(e) => setStaffMember(e.target.value)}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-sm"
-              required
-            >
-              {staffList.map(s => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </select>
-          </div>
           <div className="grid grid-cols-2 gap-3 mb-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Start Time</label>
@@ -257,9 +224,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, staffList, selectedDat
 };
 
 // --- Booking Item Component ---
-const BookingItem = ({ booking, staffList, onEdit, onDelete }) => {
-  const staffMember = staffList.find(s => s.id === booking.staffId);
-  
+const BookingItem = ({ booking, onEdit, onDelete }) => {
   return (
     <div className={`${booking.color} text-white p-2 rounded mb-2 text-sm`}>
       <div className="flex justify-between items-start">
@@ -267,7 +232,6 @@ const BookingItem = ({ booking, staffList, onEdit, onDelete }) => {
           <div className="font-medium">{booking.customer}</div>
           <div>{booking.service}</div>
           <div>{booking.start} - {booking.end}</div>
-          {staffMember && <div className="text-xs mt-1">{staffMember.name}</div>}
         </div>
         <div className="flex space-x-1">
           <button 
@@ -313,7 +277,6 @@ const OnlineBookingRequests = ({ requests, onStatusChange }) => {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Booking ID</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Service</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
@@ -326,7 +289,6 @@ const OnlineBookingRequests = ({ requests, onStatusChange }) => {
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.id}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{request.customer}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.service}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.staff}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{request.dateTime}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <div className="flex items-center">
@@ -365,7 +327,6 @@ const CalendarView = ({
   onAddBooking, 
   onEditBooking, 
   onDeleteBooking,
-  staffList 
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewDate, setViewDate] = useState(new NepaliDate());
@@ -557,7 +518,6 @@ const CalendarView = ({
               <BookingItem
                 key={booking.id}
                 booking={booking}
-                staffList={staffList}
                 onEdit={(booking) => {
                   setSelectedBooking(booking);
                   setIsModalOpen(true);
@@ -580,7 +540,6 @@ const CalendarView = ({
           onAddBooking(newBooking);
           setIsModalOpen(false);
         }}
-        staffList={staffList}
         selectedDate={selectedDate}
         initialBooking={selectedBooking}
       />
@@ -639,7 +598,6 @@ const BookingSystem = () => {
             // This is handled within CalendarView
           }}
           onDeleteBooking={handleDeleteBooking}
-          staffList={staff}
         />
       ) : (
         <div className="bg-white p-4 rounded-lg shadow-lg">

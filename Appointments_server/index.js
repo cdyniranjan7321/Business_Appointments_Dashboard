@@ -41,13 +41,12 @@ let staffCollection;
 // Add products collection reference
 let productsCollection;
 
-
 // ========== DATABASE CONNECTION ========== //
 async function run() {
   try {
     // Connect the client to the server(Connect to MongoDB cluster)
     await client.connect();
-    
+   
     // Get references to database and collection
     const database = client.db("Business_Dashboard_DB"); // Replace with your database name
     usersCollection = database.collection("users");      // User collection
@@ -56,8 +55,7 @@ async function run() {
     discountsCollection = database.collection("discounts");
     staffCollection = database.collection("staff");
     productsCollection = database.collection("products");
-
-    
+   
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
@@ -92,8 +90,8 @@ app.post('/api/auth/signup', [
     // Check if user already exists
     const existingUser = await usersCollection.findOne({ [field]: value });
     if (existingUser) {
-      return res.status(400).json({ 
-        errors: [{ msg: 'User already exists with this email or phone Please Sign in!' }] 
+      return res.status(400).json({
+        errors: [{ msg: 'User already exists with this email or phone Please Sign in!' }]
       });
     }
 
@@ -113,7 +111,7 @@ app.post('/api/auth/signup', [
     const result = await usersCollection.insertOne(newUser);
 
     // Return success response
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'User registered successfully. Please verify your email.',
       userId: result.insertedId        // Return MngoDB-generated ID
     });
@@ -132,12 +130,12 @@ app.get('/api/auth/user/:id', async (req, res) => {
       { _id: new ObjectId(req.params.id) },             // Convert string ID to ObjectId
       { projection: { password: 0 } }                  // Exclude password from results
     );
-    
+   
     // Handle user not found
     if (!user) {
       return res.status(404).json({ msg: 'User not found' });
     }
-    
+   
     // Return user data
     res.json(user);
   } catch (err) {
@@ -164,11 +162,11 @@ app.put('/api/auth/user/:id', [
   // Destructure request body
   const { email, phone, password } = req.body;
   const updateFields = {};      // Object to hold fields to update
-  
+ 
   // Add fields to update if provided
   if (email) updateFields.email = email.toLowerCase().trim();
   if (phone) updateFields.phone = phone.trim();
-  
+ 
   try {
     // If updating password, hash it first
     if (password) {
@@ -178,7 +176,7 @@ app.put('/api/auth/user/:id', [
 
     // Check for duplicate email/phone (excluding current user)
     if (email) {
-      const existingUser = await usersCollection.findOne({ 
+      const existingUser = await usersCollection.findOne({
         email: email.toLowerCase().trim(),
         _id: { $ne: new ObjectId(req.params.id) }   //$ne = not equal
       });
@@ -189,7 +187,7 @@ app.put('/api/auth/user/:id', [
 
      // Check for duplicate phone (excluding current user)
     if (phone) {
-      const existingUser = await usersCollection.findOne({ 
+      const existingUser = await usersCollection.findOne({
         phone: phone.trim(),
         _id: { $ne: new ObjectId(req.params.id) }
       });
@@ -227,10 +225,10 @@ app.put('/api/auth/user/:id', [
 app.delete('/api/auth/user/:id', async (req, res) => {
   try {
     // Delete user by ID
-    const result = await usersCollection.deleteOne({ 
-      _id: new ObjectId(req.params.id) 
+    const result = await usersCollection.deleteOne({
+      _id: new ObjectId(req.params.id)
     });
-    
+   
     // Handle user not found
     if (result.deletedCount === 0) {
       return res.status(404).json({ msg: 'User not found' });
@@ -254,7 +252,7 @@ app.post('/api/auth/login', [
   check('password').isLength({ min: 6 })
 ], async (req, res) => {
   console.log('\n📥 Login Request:', req.body);
-  
+ 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -279,10 +277,10 @@ app.post('/api/auth/login', [
     }
 
     console.log('✅ Login successful for:', user._id);
-    res.json({ 
+    res.json({
       success: true,
       userId: user._id,
-      isVerified: user.verified 
+      isVerified: user.verified
     });
 
   } catch (error) {
@@ -318,8 +316,8 @@ app.post('/api/business/signup', [
     });
 
     if (existingBusiness) {
-      return res.status(400).json({ 
-        error: 'Business with this PAN or contact number already exists' 
+      return res.status(400).json({
+        error: 'Business with this PAN or contact number already exists'
       });
     }
 
@@ -342,8 +340,8 @@ app.post('/api/business/signup', [
 
   } catch (err) {
     console.error('Business registration error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -385,8 +383,8 @@ app.post('/api/services', [
 
   } catch (err) {
     console.error('Service creation error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -395,7 +393,7 @@ app.post('/api/services', [
 app.get('/api/services', async (req, res) => {
   try {
     const services = await servicesCollection.find({}).toArray();
-    
+   
     // Convert _id to id for frontend consistency
     const formattedServices = services.map(service => ({
       ...service,
@@ -408,8 +406,8 @@ app.get('/api/services', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching services:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -452,12 +450,12 @@ app.put('/api/services/:id', [
         id: updatedService._id
       }
     });
-    
+   
 
   } catch (err) {
     console.error('Error updating service:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -478,11 +476,11 @@ app.delete('/api/services/:id', async (req, res) => {
       message: 'Service deleted successfully'
     });
 
-    
+   
   } catch (err) {
     console.error('Error deleting service:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -491,7 +489,7 @@ app.delete('/api/services/:id', async (req, res) => {
 app.get('/api/orders', async (req, res) => {
   try {
     const orders = await ordersCollection.find({}).toArray();
-    
+   
     // Convert _id to id for frontend consistency
     const formattedOrders = orders.map(order => ({
       ...order,
@@ -504,8 +502,8 @@ app.get('/api/orders', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching orders:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -520,9 +518,9 @@ app.post('/api/orders', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       success: false,
-      errors: errors.array() 
+      errors: errors.array()
     });
   }
 
@@ -556,7 +554,7 @@ app.post('/api/orders', [
     const createdOrder = await ordersCollection.findOne(
       { _id: result.insertedId }
     );
-    
+   
     // Format the response with both MongoDB _id and our shortId
     const responseOrder = {
       ...createdOrder,
@@ -572,8 +570,8 @@ app.post('/api/orders', [
 
   } catch (err) {
     console.error('Order creation error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -612,9 +610,9 @@ app.put('/api/orders/:id', [
     );
 
     if (result.matchedCount === 0) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        error: 'Order not found' 
+        error: 'Order not found'
       });
     }
 
@@ -633,9 +631,9 @@ app.put('/api/orders/:id', [
 
   } catch (err) {
     console.error('Error updating order:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Internal server error. Please try again later.' 
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -663,8 +661,8 @@ app.delete('/api/orders/:id', async (req, res) => {
 
   } catch (err) {
     console.error('Error deleting order:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -677,7 +675,7 @@ app.delete('/api/orders/:id', async (req, res) => {
 app.get('/api/discounts', async (req, res) => {
   try {
     const discounts = await discountsCollection.find({}).toArray();
-    
+   
     // Convert _id to id and format dates for frontend
     const formattedDiscounts = discounts.map(discount => ({
       ...discount,
@@ -692,8 +690,8 @@ app.get('/api/discounts', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching discounts:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -709,7 +707,7 @@ function formatDateForFrontend(date) {
  * @api {post} /api/discounts Create a new discount
  * @apiName CreateDiscount
  * @apiGroup Discounts
- * 
+ *
  * @apiParam {String} code Discount code (required)
  * @apiParam {String="percentage","fixed"} type Discount type (required)
  * @apiParam {Number} value Discount value (required)
@@ -736,13 +734,13 @@ app.post('/api/discounts', [
 
   try {
     // Check if discount code already exists
-    const existingDiscount = await discountsCollection.findOne({ 
-      code: req.body.code.toUpperCase() 
+    const existingDiscount = await discountsCollection.findOne({
+      code: req.body.code.toUpperCase()
     });
-    
+   
     if (existingDiscount) {
-      return res.status(400).json({ 
-        error: 'Discount code already exists' 
+      return res.status(400).json({
+        error: 'Discount code already exists'
       });
     }
 
@@ -782,8 +780,8 @@ app.post('/api/discounts', [
 
   } catch (err) {
     console.error('Discount creation error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -792,7 +790,7 @@ app.post('/api/discounts', [
  * @api {put} /api/discounts/:id Update a discount
  * @apiName UpdateDiscount
  * @apiGroup Discounts
- * 
+ *
  * @apiParam {String} id Discount ID (required)
  * @apiParam {String} [code] Discount code
  * @apiParam {String="percentage","fixed"} [type] Discount type
@@ -820,26 +818,26 @@ app.put('/api/discounts/:id', [
 
   try {
     // Check if discount exists
-    const existingDiscount = await discountsCollection.findOne({ 
-      _id: new ObjectId(req.params.id) 
+    const existingDiscount = await discountsCollection.findOne({
+      _id: new ObjectId(req.params.id)
     });
-    
+   
     if (!existingDiscount) {
-      return res.status(404).json({ 
-        error: 'Discount not found' 
+      return res.status(404).json({
+        error: 'Discount not found'
       });
     }
 
     // Check if new code already exists (if being updated)
     if (req.body.code && req.body.code !== existingDiscount.code) {
-      const codeExists = await discountsCollection.findOne({ 
+      const codeExists = await discountsCollection.findOne({
         code: req.body.code.toUpperCase(),
         _id: { $ne: new ObjectId(req.params.id) }
       });
-      
+     
       if (codeExists) {
-        return res.status(400).json({ 
-          error: 'Discount code already exists' 
+        return res.status(400).json({
+          error: 'Discount code already exists'
         });
       }
     }
@@ -885,8 +883,8 @@ app.put('/api/discounts/:id', [
 
   } catch (err) {
     console.error('Discount update error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -895,19 +893,19 @@ app.put('/api/discounts/:id', [
  * @api {delete} /api/discounts/:id Delete a discount
  * @apiName DeleteDiscount
  * @apiGroup Discounts
- * 
+ *
  * @apiParam {String} id Discount ID (required)
  */
 app.delete('/api/discounts/:id', async (req, res) => {
   try {
     // Check if discount exists
-    const existingDiscount = await discountsCollection.findOne({ 
-      _id: new ObjectId(req.params.id) 
+    const existingDiscount = await discountsCollection.findOne({
+      _id: new ObjectId(req.params.id)
     });
-    
+   
     if (!existingDiscount) {
-      return res.status(404).json({ 
-        error: 'Discount not found' 
+      return res.status(404).json({
+        error: 'Discount not found'
       });
     }
 
@@ -923,8 +921,8 @@ app.delete('/api/discounts/:id', async (req, res) => {
 
   } catch (err) {
     console.error('Discount deletion error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -933,19 +931,19 @@ app.delete('/api/discounts/:id', async (req, res) => {
  * @api {put} /api/discounts/:id/toggle Toggle discount status
  * @apiName ToggleDiscount
  * @apiGroup Discounts
- * 
+ *
  * @apiParam {String} id Discount ID (required)
  */
 app.put('/api/discounts/:id/toggle', async (req, res) => {
   try {
     // Check if discount exists
-    const existingDiscount = await discountsCollection.findOne({ 
-      _id: new ObjectId(req.params.id) 
+    const existingDiscount = await discountsCollection.findOne({
+      _id: new ObjectId(req.params.id)
     });
-    
+   
     if (!existingDiscount) {
-      return res.status(404).json({ 
-        error: 'Discount not found' 
+      return res.status(404).json({
+        error: 'Discount not found'
       });
     }
 
@@ -955,11 +953,11 @@ app.put('/api/discounts/:id/toggle', async (req, res) => {
     // Update in database
     const result = await discountsCollection.updateOne(
       { _id: new ObjectId(req.params.id) },
-      { 
-        $set: { 
+      {
+        $set: {
           active: newStatus,
           updatedAt: new Date()
-        } 
+        }
       }
     );
 
@@ -971,8 +969,8 @@ app.put('/api/discounts/:id/toggle', async (req, res) => {
 
   } catch (err) {
     console.error('Discount toggle error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -993,7 +991,7 @@ app.post('/api/staff', [
 
   try {
     // Check if staff already exists
-    const existingStaff = await staffCollection.findOne({ 
+    const existingStaff = await staffCollection.findOne({
       $or: [
         { email: req.body.email },
         { phone: req.body.phone }
@@ -1166,14 +1164,14 @@ app.post('/api/staff/attendance', [
   try {
     const today = new Date().toISOString().split('T')[0];
     const time = new Date().toTimeString().substring(0, 5);
-    
+   
     if (req.body.action === 'clockIn') {
       // Check if already clocked in today
       const existingRecord = await staffCollection.findOne({
         staffId: req.body.staffId,
         date: today
       });
-      
+     
       if (existingRecord) {
         return res.status(400).json({ error: 'Already clocked in today' });
       }
@@ -1199,7 +1197,7 @@ app.post('/api/staff/attendance', [
     } else {
       // Clock out
       const result = await staffCollection.updateOne(
-        { 
+        {
           staffId: req.body.staffId,
           date: today,
           clockOut: null
@@ -1230,7 +1228,7 @@ function getAttendanceStatus(clockInTime) {
  * @api {get} /api/products Get products with filtering and sorting
  * @apiName GetProducts
  * @apiGroup Products
- * 
+ *
  * @apiParam {String} [status] Filter by status (active/draft/archived)
  * @apiParam {String} [search] Search query
  * @apiParam {String} [sort] Sort field (name/status/inventory)
@@ -1239,15 +1237,15 @@ function getAttendanceStatus(clockInTime) {
 app.get('/api/products', async (req, res) => {
   try {
     const { status, search, sort, direction } = req.query;
-    
+   
     // Build query
     const query = {};
-    
+   
     // Status filter
     if (status && ['active', 'draft', 'archived'].includes(status)) {
       query.status = status;
     }
-    
+   
     // Search filter
     if (search) {
       query.$or = [
@@ -1257,7 +1255,7 @@ app.get('/api/products', async (req, res) => {
         { type: { $regex: search, $options: 'i' } }
       ];
     }
-    
+   
     // Build sort object
     const sortOptions = {};
     if (sort && ['name', 'status', 'inventory'].includes(sort)) {
@@ -1265,31 +1263,31 @@ app.get('/api/products', async (req, res) => {
     } else {
       sortOptions.name = 1; // Default sort by name ascending
     }
-    
+   
     const products = await productsCollection.find(query)
       .sort(sortOptions)
       .toArray();
-    
+   
     // Format for frontend
     const formattedProducts = products.map(product => ({
       ...product,
       id: product._id.toString(),
-      size: product.size || (product.variants && product.variants.length > 0 
-        ? product.variants[0].values.join(', ') 
+      size: product.size || (product.variants && product.variants.length > 0
+        ? product.variants[0].values.join(', ')
         : ''),
       quantity: product.quantity || product.inventory || 0,
       variants: product.variants || []
     }));
-    
+   
     res.json({
       success: true,
       products: formattedProducts
     });
-    
+   
   } catch (err) {
     console.error('Error fetching products:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1304,11 +1302,11 @@ app.get('/api/products/:id', async (req, res) => {
     const product = await productsCollection.findOne(
       { _id: new ObjectId(req.params.id) }
     );
-    
+   
     if (!product) {
       return res.status(404).json({ error: 'Product not found' });
     }
-    
+   
     res.json({
       success: true,
       product: {
@@ -1316,11 +1314,11 @@ app.get('/api/products/:id', async (req, res) => {
         id: product._id.toString()
       }
     });
-    
+   
   } catch (err) {
     console.error('Error fetching product:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1329,7 +1327,7 @@ app.get('/api/products/:id', async (req, res) => {
  * @api {post} /api/products Create new product
  * @apiName CreateProduct
  * @apiGroup Products
- * 
+ *
  * @apiParam {String} name Product name (required)
  * @apiParam {String} [description] Product description
  * @apiParam {String} [status=active] Product status (active/draft/archived)
@@ -1360,9 +1358,9 @@ app.post('/api/products', [
 ], async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    return res.status(400).json({ 
+    return res.status(400).json({
       success: false,
-      errors: errors.array() 
+      errors: errors.array()
     });
   }
 
@@ -1384,8 +1382,8 @@ app.post('/api/products', [
       type: req.body.type || '',
       vendor: req.body.vendor || '',
       collections: req.body.collections || '',
-      tags: req.body.tags 
-        ? (Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map(tag => tag.trim())) 
+      tags: req.body.tags
+        ? (Array.isArray(req.body.tags) ? req.body.tags : req.body.tags.split(',').map(tag => tag.trim()))
         : [],
       variants: req.body.variants || [],
       image: req.body.image || null,
@@ -1410,9 +1408,9 @@ app.post('/api/products', [
 
   } catch (err) {
     console.error('Product creation error:', err);
-    res.status(500).json({ 
+    res.status(500).json({
       success: false,
-      error: 'Internal server error. Please try again later.' 
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1440,7 +1438,7 @@ app.put('/api/products/:id', [
     const existingProduct = await productsCollection.findOne(
       { _id: new ObjectId(req.params.id) }
     );
-    
+   
     if (!existingProduct) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -1494,8 +1492,8 @@ app.put('/api/products/:id', [
       product: {
         ...updatedProduct,
         id: updatedProduct._id.toString(),
-        size: updatedProduct.size || (updatedProduct.variants && updatedProduct.variants.length > 0 
-          ? updatedProduct.variants[0].values.join(', ') 
+        size: updatedProduct.size || (updatedProduct.variants && updatedProduct.variants.length > 0
+          ? updatedProduct.variants[0].values.join(', ')
           : ''),
         quantity: updatedProduct.quantity || updatedProduct.inventory || 0
       }
@@ -1503,8 +1501,8 @@ app.put('/api/products/:id', [
 
   } catch (err) {
     console.error('Product update error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1520,7 +1518,7 @@ app.delete('/api/products/:id', async (req, res) => {
     const existingProduct = await productsCollection.findOne(
       { _id: new ObjectId(req.params.id) }
     );
-    
+   
     if (!existingProduct) {
       return res.status(404).json({ error: 'Product not found' });
     }
@@ -1537,8 +1535,8 @@ app.delete('/api/products/:id', async (req, res) => {
 
   } catch (err) {
     console.error('Product deletion error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1547,7 +1545,7 @@ app.delete('/api/products/:id', async (req, res) => {
  * @api {post} /api/products/bulk-delete Bulk delete products
  * @apiName BulkDeleteProducts
  * @apiGroup Products
- * 
+ *
  * @apiParam {Array} productIds Array of product IDs to delete
  */
 app.post('/api/products/bulk-delete', [
@@ -1574,8 +1572,8 @@ app.post('/api/products/bulk-delete', [
 
   } catch (err) {
     console.error('Bulk delete error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1584,7 +1582,7 @@ app.post('/api/products/bulk-delete', [
  * @api {post} /api/products/bulk-duplicate Bulk duplicate products
  * @apiName BulkDuplicateProducts
  * @apiGroup Products
- * 
+ *
  * @apiParam {Array} productIds Array of product IDs to duplicate
  */
 app.post('/api/products/bulk-duplicate', [
@@ -1628,8 +1626,8 @@ app.post('/api/products/bulk-duplicate', [
 
   } catch (err) {
     console.error('Bulk duplicate error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
@@ -1638,13 +1636,13 @@ app.post('/api/products/bulk-duplicate', [
  * @api {post} /api/products/export Export products to PDF
  * @apiName ExportProducts
  * @apiGroup Products
- * 
+ *
  * @apiParam {Array} [productIds] Array of product IDs to export (empty for all)
  */
 app.post('/api/products/export', async (req, res) => {
   try {
     let products;
-    
+   
     if (req.body.productIds && req.body.productIds.length > 0) {
       // Export selected products
       const productIds = req.body.productIds.map(id => new ObjectId(id));
@@ -1662,10 +1660,10 @@ app.post('/api/products/export', async (req, res) => {
 
     // Create PDF
     const doc = new jsPDF();
-    
+   
     // Add title
     doc.text('Products Export', 14, 15);
-    
+   
     // Prepare data for the table
     const tableData = products.map(product => [
       product.name || 'N/A',
@@ -1694,18 +1692,18 @@ app.post('/api/products/export', async (req, res) => {
 
     // Generate PDF buffer
     const pdfBuffer = Buffer.from(doc.output('arraybuffer'));
-    
+   
     // Set response headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=products_export.pdf');
-    
+   
     // Send PDF
     res.send(pdfBuffer);
 
   } catch (err) {
     console.error('Export error:', err);
-    res.status(500).json({ 
-      error: 'Internal server error. Please try again later.' 
+    res.status(500).json({
+      error: 'Internal server error. Please try again later.'
     });
   }
 });
