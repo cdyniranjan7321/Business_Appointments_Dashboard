@@ -309,7 +309,7 @@ const handleDetails = () => {
   // Sample initial product data
   const [products, setProducts] = useState([]);
 
- const [loading, setLoading] = useState(true);
+ const [setLoading] = useState(true);
 
 useEffect(() => {
   const fetchProducts = async () => {
@@ -378,19 +378,43 @@ const handleVariantDetailChange = (variantIndex, valueIndex, field, value) => {
 // Handler for variant image upload
 const handleVariantImageUpload = (variantIndex, valueIndex, e) => {
   const file = e.target.files[0];
-  if (file) {
+  if (!file) return;
+
+  // Check if the file is an image
+  if (!file.type.match('image.*')) {
+    alert('Please select an image file');
+    return;
+  }
+
+  const reader = new FileReader();
+  
+  reader.onload = (uploadEvent) => {
+    const imageData = uploadEvent.target.result;
+    
     setNewProduct(prev => {
       const updatedVariants = [...prev.variants];
+      
+      // Initialize images array if it doesn't exist
       if (!updatedVariants[variantIndex].images) {
         updatedVariants[variantIndex].images = [];
       }
-      updatedVariants[variantIndex].images[valueIndex] = file;
+      
+      // Update the specific variant image
+      updatedVariants[variantIndex].images[valueIndex] = imageData;
+      
       return {
         ...prev,
         variants: updatedVariants
       };
     });
-  }
+  };
+  
+  reader.onerror = () => {
+    console.error('Error reading file');
+    alert('Error uploading image. Please try again.');
+  };
+  
+  reader.readAsDataURL(file);
 };
 
 // Modified handleAddVariant
@@ -958,17 +982,29 @@ const handleAddVariant = () => {
                 <div className="w-40">
                   <div className="flex items-center">
                     <div className="mr-3">
-                      {variant.images?.[valueIndex] ? (
-                        <img 
-                          src={URL.createObjectURL(variant.images[valueIndex])} 
-                          alt={value}
-                          className="h-10 w-10 object-cover rounded"
-                        />
-                      ) : (
-                        <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
-                          <FiImage className="text-gray-400" />
-                        </div>
-                      )}
+                      <input
+    type="file"
+    id={`variant-image-${index}-${valueIndex}`}
+    accept="image/*"
+    onChange={(e) => handleVariantImageUpload(index, valueIndex, e)}
+    className="hidden"
+  />
+  <label 
+    htmlFor={`variant-image-${index}-${valueIndex}`}
+    className="cursor-pointer"
+  >
+    {variant.images?.[valueIndex] ? (
+      <img 
+        src={variant.images[valueIndex]} 
+        alt={value}
+        className="h-10 w-10 object-cover rounded"
+      />
+    ) : (
+      <div className="h-10 w-10 bg-gray-200 rounded flex items-center justify-center">
+        <FiImage className="text-gray-400" />
+      </div>
+    )}
+  </label>
                     </div>
                     <div>
                       <span className="block">{value}</span>
