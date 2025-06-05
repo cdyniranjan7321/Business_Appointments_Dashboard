@@ -308,8 +308,7 @@ const handleDetails = () => {
 
   // Sample initial product data
   const [products, setProducts] = useState([]);
-
- const [setLoading] = useState(true);
+  const [setLoading] = useState(true);
 
 useEffect(() => {
   const fetchProducts = async () => {
