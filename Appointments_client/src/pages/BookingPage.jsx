@@ -16,7 +16,8 @@ import {
 import NepaliDate from 'nepali-date-converter';
 
 // --- Constants ---
-const nepaliDayNames = ['आइतबार', 'सोमबार', 'मंगलबार', 'बुधबार', 'बिहीबार', 'शुक्रबार', 'शनिबार'];
+const nepaliDayNames = ['आइतबार ', 'सोमबार', 'मंगलबार', 'बुधबार', 'बिहीबार', 'शुक्रबार', 'शनिबार'];
+const englishDayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const nepaliMonthNames = [
   'बैशाख',
   'जेठ',
@@ -99,7 +100,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialB
   const [customer, setCustomer] = useState(initialBooking?.customer || '');
   const [service, setService] = useState(initialBooking?.service || '');
   const [startTime, setStartTime] = useState(initialBooking?.start || '09:00 AM');
-  const [endTime, setEndTime] = useState(initialBooking?.end || '10:00 AM');
+  const [endTime, setEndTime] = useState(initialBooking?.end || '10:00 PM');
 
   useEffect(() => {
     if (initialBooking) {
@@ -111,7 +112,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialB
       setCustomer('');
       setService('');
       setStartTime('09:00 AM');
-      setEndTime('10:00 AM');
+      setEndTime('10:00 PM');
     }
   }, [initialBooking]);
 
@@ -193,7 +194,7 @@ const AddBookingModal = ({ isOpen, onClose, onAddBooking, selectedDate, initialB
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 className="mt-1 block w-full p-2 border border-gray-300 rounded-md text-sm"
-                placeholder="10:00 AM"
+                placeholder="10:00 PM"
                 required
               />
             </div>
@@ -380,7 +381,7 @@ const CalendarView = ({
     year: today.getYear()
   });
   const [selectedBooking, setSelectedBooking] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
 
   const generateMonthGrid = useCallback((date) => {
     const year = date.getYear();
@@ -510,9 +511,12 @@ const CalendarView = ({
 
       {/* Day Names Header */}
       <div className="grid grid-cols-7 gap-px text-center text-xs font-medium text-gray-500 mb-1">
-        {nepaliDayNames.map((day) => (
-          <div key={day}>{day}</div>
-        ))}
+        {nepaliDayNames.map((day, index) => (
+    <div key={day}>
+      <div>{day}</div>
+      <div className="text-[10px] text-gray-400">{englishDayNames[index]}</div>
+    </div>
+  ))}
       </div>
 
       {/* Calendar Grid */}
