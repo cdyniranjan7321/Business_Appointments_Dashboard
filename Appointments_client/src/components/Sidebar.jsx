@@ -394,7 +394,7 @@ const Sidebar = ({ isOpen }) => {
                 </label>
               ))}
             </div>
-            <div className="mt-4">
+            <div className="mt-1">
               <h3 className="text-lg font-bold text-black">Default Items (Non-Selectable)</h3>
               {defaultItems.map((item, index) => (
                 <div key={index} className="flex items-center p-2 text-black">
