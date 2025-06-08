@@ -5,15 +5,17 @@ import { TbApps, TbDownload } from "react-icons/tb";
 import { LuMessagesSquare } from "react-icons/lu";
 import { SiCreatereactapp } from "react-icons/si";
 import { RiShoppingBag4Fill } from "react-icons/ri";
+import { SiGoogleanalytics } from "react-icons/si";
 import { useState, useEffect } from "react";
+import { MdProductionQuantityLimits } from "react-icons/md";
+import { MdOutlineDiscount } from "react-icons/md";
+import { IoPeople } from "react-icons/io5";
 import PropTypes from "prop-types";
+import { FcServices } from "react-icons/fc";
 import { 
   FaCalendarAlt, 
-  FaChartPie, 
   FaCog, 
   FaHome, 
-  FaMoneyBill, 
-  FaTags, 
   FaEdit,
   FaNewspaper,
   FaNotesMedical,
@@ -23,8 +25,7 @@ import { FiHelpCircle } from "react-icons/fi";
 import { HiOutlineSpeakerphone } from "react-icons/hi";
 import { FaAd } from "react-icons/fa";
 import { PiFolderSimpleUserDuotone } from "react-icons/pi";
-import { MdOutlineClear, MdOutlineDashboardCustomize } from "react-icons/md";
-import { FcPlanner } from "react-icons/fc";
+import { MdOutlineClear } from "react-icons/md";
 
 // Default sidebar items (always visible)
 const defaultItems = [
@@ -35,16 +36,16 @@ const defaultItems = [
 
 // Optional items (can be added via the edit popup)
 const optionalItems = [
-  { id: 4, icon: <FaCalendarAlt />, text: "Appointments" },
-  { id: 5, icon: <FaTags />, text: "Products", path:"/products" },
-  { id: 6, icon: <FaChartPie />, text: "Reports" },
-  { id: 7, icon: <FaMoneyBill />, text: "Payments" },
-  { id: 8, icon: <HiOutlineSpeakerphone />, text: "Marketing Suite" },
+  { id: 4, icon: <FaCalendarAlt />, text: "Appointments", path:"/booking" },
+  { id: 5, icon: <MdProductionQuantityLimits />, text: "Products", path:"/products" },
+  { id: 6, icon: <MdOutlineDiscount />, text: "Discounts", path:"/discount" },
+  { id: 7, icon: <FcServices />, text: "Services", path:"/services" },
+  { id: 8, icon: <HiOutlineSpeakerphone />, text: "Marketing Suite", path:"/marketing" },
   { id: 9, icon: <FaAd />, text: "Social & Ads" },
-  { id: 10, icon: <PiFolderSimpleUserDuotone />, text: "Manage" },
-  { id: 11, icon: <MdOutlineDashboardCustomize />, text: "Custom Features" },
-  { id: 12, icon: <FcPlanner />, text: "Plan & Price" },
-  { id: 13, icon: <RiShoppingBag4Fill />, text: "Orders", path:"/orders" },
+  { id: 10, icon: <PiFolderSimpleUserDuotone />, text: "Customers", path:"/customer" },
+  { id: 11, icon: <IoPeople />, text: "Staff", path:"/staff" },
+  { id: 12, icon: <RiShoppingBag4Fill />, text: "Orders", path:"/orders" },
+  { id: 13, icon: <SiGoogleanalytics />, text: "Analytics", path:"/analytics" },
 ];
 
 // App items for the Apps section
