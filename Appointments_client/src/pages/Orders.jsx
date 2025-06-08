@@ -1163,28 +1163,17 @@ const viewOrderDetails = (orderId) => {
     <tr 
       key={order.id}
       className="hover:bg-green-200 cursor-pointer"
-      onClick={(e) => {
-    // Don't trigger if clicking on checkbox or action menu
-    if (!e.target.closest('.order-checkbox') && !e.target.closest('.action-menu')) {
-      viewOrderDetails(order.id);
-    }
-  }}
     >
-      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
-        onClick={(e) => e.stopPropagation()} // Prevent row click when clicking checkbox
->
-  <div className="flex items-center">
-    <input
-      type="checkbox"
-      className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
-      checked={selectedItems.includes(order.id)}
-      onChange={(e) => {
-        e.stopPropagation();
-        toggleItemSelection(order.id, e);
-      }}
-    />
-  </div>
-</td>
+      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            className="order-checkbox h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+            checked={selectedItems.includes(order.id)}
+            onChange={(e) => toggleItemSelection(order.id, e)}
+          />
+        </div>
+      </td>
       <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
         {order.shortId || order.id.substring(0, 6)} {/* Show shortId if available, otherwise first 6 chars */}
       </td>
