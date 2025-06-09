@@ -1163,8 +1163,12 @@ const viewOrderDetails = (orderId) => {
     <tr 
       key={order.id}
       className="hover:bg-green-200 cursor-pointer"
+      onClick={() => viewOrderDetails(order.id)} // Add this onClikk handler
     >
-      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+      <td 
+        className="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900"
+        onClick={(e) => e.stopPropagation()} // Prevent row click when clicking checkbox
+        >
         <div className="flex items-center">
           <input
             type="checkbox"
