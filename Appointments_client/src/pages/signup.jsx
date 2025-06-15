@@ -37,12 +37,7 @@ export default function SignupPage() {
 
     try {
       // MAke POST request to signup endpoint
-      // Replace localhost with your production backend URL
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://business-appointments-dashboard-f6e.vercel.app/' 
-  : 'http://localhost:6001';
-
-const response = await fetch(`${API_URL}/api/auth/signup`, {
+      const response = await fetch('http://localhost:6001/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
