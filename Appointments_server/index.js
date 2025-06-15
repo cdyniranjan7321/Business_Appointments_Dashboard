@@ -8,27 +8,8 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-//app.use(cors()); // enable CORS for all routes
+app.use(cors()); // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
-
-const allowedOrigins = [
-  'https://niranjanchaudhary.com.np', // Your production frontend
-  'http://localhost:3000' // For local development
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
 
 // Increase payload size limit
 app.use(express.json({ limit: '50mb' }));
