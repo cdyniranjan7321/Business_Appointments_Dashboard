@@ -11,20 +11,23 @@ const { check, validationResult } = require('express-validator');
 //app.use(cors()); // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
 
-// Replace in index.js
 const allowedOrigins = [
-  'https://niranjanchaudhary.com.np',
+  'https://niranjanchaudhary.com.np', // Your production frontend
   'http://localhost:3000' // For local development
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
     }
-  }
+    return callback(null, true);
+  },
+  credentials: true
 }));
 
 // Increase payload size limit
