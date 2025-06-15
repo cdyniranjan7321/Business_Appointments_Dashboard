@@ -71,6 +71,7 @@ const Sidebar = ({ isOpen }) => {
   });
   const [downloadedApps, setDownloadedApps] = useState([]);
   const [downloadProgress, setDownloadProgress] = useState(null);
+  const [isDownloading, setIsDownloading] = useState(false);
   
   const navigate = useNavigate();
 
@@ -118,6 +119,8 @@ const Sidebar = ({ isOpen }) => {
 
   // Toggle optional items in the sidebar
   const handleItemToggle = (id) => {
+    if (isDownloading) return; // Disable during download
+    
     const item = optionalItems.find((item) => item.id === id);
     if (item) {
       const isItemInSidebar = sidebarItems.some((item) => item.id === id);
@@ -137,16 +140,28 @@ const Sidebar = ({ isOpen }) => {
 
   // Toggle app pin status
   const togglePin = (app) => {
+    if (isDownloading) return; // Disable during download
+    
     setPinnedApps(prev => ({
       ...prev,
       [app]: !prev[app]
     }));
+
+    // When unpinning, remove from downloaded apps too
+    if (pinnedApps[app]) {
+      setDownloadedApps(prev => prev.filter(id => id !==app));
+    }
   };
 
   // Download an app with progress simulation
   const handleDownload = (appId) => {
+    if (isDownloading) return; // Prevent multiple downloads at once
+    
     if (!downloadedApps.includes(appId)) {
       const app = appItems.find(item => item.id === appId);
+      
+      // Set downloading state
+      setIsDownloading(true);
       
       // Show download started notification
       setDownloadProgress({
@@ -161,9 +176,12 @@ const Sidebar = ({ isOpen }) => {
           const newProgress = prev.progress + Math.floor(Math.random() * 10) + 5;
           if (newProgress >= 100) {
             clearInterval(interval);
+            // Add to downloadedApps AND pin it automatically
             setDownloadedApps(prev => [...prev, appId]);
+            setPinnedApps(prev => ({ ...prev, [appId]: true })); // Auto-pin
             setTimeout(() => {
               setDownloadProgress(null);
+              setIsDownloading(false); // Re-enable buttons after download completes
             }, 1000);
             return {
               ...prev,
@@ -183,11 +201,11 @@ const Sidebar = ({ isOpen }) => {
 
   // Filter apps
   const pinnedAppItems = appItems.filter(item => pinnedApps[item.id]);
-  const downloadedAppItems = appItems.filter(item => downloadedApps.includes(item.id) && !pinnedApps[item.id]);
-  const availableAppItems = appItems.filter(item => !downloadedApps.includes(item.id) && !pinnedApps[item.id]);
+  const availableAppItems = appItems.filter(item => !downloadedApps.includes(item.id));
 
   // Handle app click navigation
   const handleAppClick = (path) => {
+    if (isDownloading) return; // Disable during download
     if (path) {
       navigate(path);
     }
@@ -195,11 +213,13 @@ const Sidebar = ({ isOpen }) => {
 
   // Handle Apps section click
   const handleAppsClick = () => {
+    if (isDownloading) return; // Disable during download
     setShowAddAppsSubtitle(!showAddAppsSubtitle);
   };
 
   // Handle Add Apps click
   const handleAddAppsClick = () => {
+    if (isDownloading) return; // Disable during download
     setShowAppsPopup(true);
   };
 
@@ -210,8 +230,8 @@ const Sidebar = ({ isOpen }) => {
         <h1 className={`text-2xl font-bold ${!isOpen && "hidden"}`}>Tools</h1>
         <div className="flex items-center gap-4">
           <FaEdit
-            className="cursor-pointer text-xl"
-            onClick={() => setShowPopup(true)}
+            className={`cursor-pointer text-xl ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+            onClick={() => !isDownloading && setShowPopup(true)}
             title="Edit Sidebar"
           />
         </div>
@@ -225,6 +245,7 @@ const Sidebar = ({ isOpen }) => {
           icon={defaultItems[0].icon} 
           text={defaultItems[0].text}
           path={defaultItems[0].path}
+          isDisabled={isDownloading}
         />
 
         {sidebarItems
@@ -236,11 +257,24 @@ const Sidebar = ({ isOpen }) => {
               icon={item.icon} 
               text={item.text}
               path={item.path}
+              isDisabled={isDownloading}
             />
         ))}
 
-        <SidebarItem key={defaultItems[1].id} isOpen={isOpen} icon={defaultItems[1].icon} text={defaultItems[1].text} />
-        <SidebarItem key={defaultItems[2].id} isOpen={isOpen} icon={defaultItems[2].icon} text={defaultItems[2].text} />
+        <SidebarItem 
+          key={defaultItems[1].id} 
+          isOpen={isOpen} 
+          icon={defaultItems[1].icon} 
+          text={defaultItems[1].text} 
+          isDisabled={isDownloading}
+        />
+        <SidebarItem 
+          key={defaultItems[2].id} 
+          isOpen={isOpen} 
+          icon={defaultItems[2].icon} 
+          text={defaultItems[2].text} 
+          isDisabled={isDownloading}
+        />
       </nav>
 
       {/* Apps Section at the bottom */}
@@ -248,8 +282,8 @@ const Sidebar = ({ isOpen }) => {
         {/* Apps Header */}
         <div className="group">
           <div 
-            className="flex items-center p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300"
-            onClick={handleAppsClick}
+            className={`flex items-center p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+            onClick={!isDownloading ? handleAppsClick : undefined}
           >
             <TbApps className="w-5 h-5 text-white group-hover:text-[#6FB434]" />
             {isOpen && (
@@ -262,8 +296,8 @@ const Sidebar = ({ isOpen }) => {
           {/* Add Apps Subtitle */}
           {showAddAppsSubtitle && isOpen && (
             <div 
-              className="flex items-center p-2 ml-6 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-4 transition-all duration-300 group"
-              onClick={handleAddAppsClick}
+              className={`flex items-center p-2 ml-6 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-4 transition-all duration-300 group ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+              onClick={!isDownloading ? handleAddAppsClick : undefined}
             >
               <FaPlus className="w-4 h-4 text-white/70 group-hover:text-[#6FB434]" />
               <span className="text-xs font-medium text-white/70 group-hover:text-[#6FB434] ml-2">
@@ -282,8 +316,8 @@ const Sidebar = ({ isOpen }) => {
             {pinnedAppItems.map((item) => (
               <div 
                 key={item.id} 
-                className="flex items-center justify-between p-2 rounded-l-3xl bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group cursor-pointer"
-                onClick={() => handleAppClick(item.path)}
+                className={`flex items-center justify-between p-2 rounded-l-3xl bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group ${isDownloading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                onClick={!isDownloading ? () => handleAppClick(item.path) : undefined}
               >
                 <div className="flex items-center gap-2">
                   {React.cloneElement(item.icon, {
@@ -303,52 +337,11 @@ const Sidebar = ({ isOpen }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    togglePin(item.id);
+                    if (!isDownloading) togglePin(item.id);
                   }}
-                  className="text-yellow-300 hover:text-[#6FB434]"
+                  className={`text-yellow-300 hover:text-[#6FB434] ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
                   title="Unpin"
-                >
-                  <FaThumbtack className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Downloaded (but not pinned) Apps Section */}
-        {downloadedAppItems.length > 0 && (
-          <div className={`mt-2 ${!isOpen && "hidden"}`}>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white/70 mb-2">
-              Downloaded Apps
-            </h3>
-            {downloadedAppItems.map((item) => (
-              <div 
-                key={item.id} 
-                className="flex items-center justify-between p-2 rounded-l-3xl bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group cursor-pointer"
-                onClick={() => handleAppClick(item.path)}
-              >
-                <div className="flex items-center gap-2">
-                  {React.cloneElement(item.icon, {
-                    className: `w-5 h-5 text-white group-hover:text-[#6FB434]`,
-                  })}
-                  {isOpen && (
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium text-white group-hover:text-[#6FB434] group-hover:font-bold">
-                        {item.text}
-                      </span>
-                      <span className="text-xs text-white/70 group-hover:text-[#6FB434]/70">
-                        {item.description}
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePin(item.id);
-                  }}
-                  className="text-gray-300 hover:text-[#6FB434]"
-                  title="Pin to sidebar"
+                  disabled={isDownloading}
                 >
                   <FaThumbtack className="w-4 h-4" />
                 </button>
@@ -358,21 +351,22 @@ const Sidebar = ({ isOpen }) => {
         )}
       </div>
 
-
       {/* Edit Sidebar Popup */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 mt-12 z-50">
           <div className="bg-[#f0f8ff] p-6 rounded-lg shadow-lg w-[90%] md:w-150 max-w-lg mx-auto relative h-[75vh] overflow-auto flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <button
-                onClick={() => setShowPopup(true)}
-                className="px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white"
+                onClick={() => !isDownloading && setShowPopup(true)}
+                className={`px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={isDownloading}
               >
                 <MdOutlineClear />
               </button>
               <button
-                onClick={() => setShowPopup(false)}
-                className="mt-2 px-4 py-2 bg-[#6FB434] text-white rounded-lg hover:bg-green-700"
+                onClick={() => !isDownloading && setShowPopup(false)}
+                className={`mt-2 px-4 py-2 bg-[#6FB434] text-white rounded-lg hover:bg-green-700 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={isDownloading}
               >
                 Save
               </button>
@@ -388,13 +382,14 @@ const Sidebar = ({ isOpen }) => {
                   <input
                     type="checkbox"
                     checked={sidebarItems.some((i) => i.id === item.id)}
-                    onChange={() => handleItemToggle(item.id)}
+                    onChange={() => !isDownloading && handleItemToggle(item.id)}
                     className="ml-2"
+                    disabled={isDownloading}
                   />
                 </label>
               ))}
             </div>
-            <div className="mt-1">
+            <div className="mt-4">
               <h3 className="text-lg font-bold text-black">Default Items (Non-Selectable)</h3>
               {defaultItems.map((item, index) => (
                 <div key={index} className="flex items-center p-2 text-black">
@@ -415,10 +410,13 @@ const Sidebar = ({ isOpen }) => {
               <h2 className="text-xl font-bold text-gray-800">Picked for you </h2>
               <button
                 onClick={() => {
-                  setShowAppsPopup(false);
-                setDownloadProgress(null);
+                  if (!isDownloading) {
+                    setShowAppsPopup(false);
+                    setDownloadProgress(null);
+                  }
                 }}
-                className="text-gray-500 hover:text-red-600"
+                className={`text-gray-500 hover:text-red-600 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={isDownloading}
               >
                 <MdOutlineClear className="w-6 h-6" />
               </button>
@@ -427,11 +425,11 @@ const Sidebar = ({ isOpen }) => {
               {availableAppItems.map((item) => (
                 <div 
                   key={item.id} 
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 cursor-pointer"
-                  onClick={() => {
+                  className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 ${isDownloading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                  onClick={!isDownloading ? () => {
                     handleAppClick(item.path);
                     setShowAppsPopup(false);
-                  }}
+                  } : undefined}
                 >
                   <div className="flex items-center gap-3">
                     {React.cloneElement(item.icon, {
@@ -445,29 +443,29 @@ const Sidebar = ({ isOpen }) => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDownload(item.id);
+                      if (!isDownloading) handleDownload(item.id);
                     }}
-                    className="text-gray-400 hover:text-[#6FB434] p-1"
-                    title="Download app"
+                    className={`text-gray-400 hover:text-[#6FB434] p-1 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                    title={isDownloading ? "Download in progress..." : "Download app"}
+                    disabled={isDownloading}
                   >
                     <TbDownload className="w-5 h-5" />
                   </button>
                 </div>
               ))}
-
             </div>
           </div>
         </div>
       )}
-
 
       {/* Welcome Notification */}
       {showNotification && (
         <div className="fixed bottom-4 right-4 bg-yellow-200 p-4 rounded-lg shadow-lg flex items-center gap-4 z-50">
           <span className="text-gray-800">Please <strong>Edit</strong> the sidebar to customize your experience.</span>
           <button 
-            onClick={() => setShowNotification(false)} 
-            className="text-red-600 hover:text-gray-700 transition-colors duration-300"
+            onClick={() => !isDownloading && setShowNotification(false)} 
+            className={`text-red-600 hover:text-gray-700 transition-colors duration-300 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+            disabled={isDownloading}
           >
             <MdOutlineClear />
           </button>
@@ -481,8 +479,9 @@ const Sidebar = ({ isOpen }) => {
             <span className="font-medium text-gray-800">{downloadProgress.text}</span>
             {downloadProgress.progress === 100 && (
               <button 
-                onClick={() => setDownloadProgress(null)} 
-                className="text-gray-500 hover:text-gray-700"
+                onClick={() => !isDownloading && setDownloadProgress(null)} 
+                className={`text-gray-500 hover:text-gray-700 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                disabled={isDownloading}
               >
                 <MdOutlineClear />
               </button>
@@ -505,10 +504,11 @@ const Sidebar = ({ isOpen }) => {
 };
 
 // SidebarItem Component
-const SidebarItem = ({ isOpen, icon, text, isSelectable = true, onClick, path }) => {
+const SidebarItem = ({ isOpen, icon, text, isSelectable = true, onClick, path, isDisabled = false }) => {
   const navigate = useNavigate();
   
   const handleClick = () => {
+    if (isDisabled) return;
     if (onClick) {
       onClick();
     }
@@ -521,8 +521,8 @@ const SidebarItem = ({ isOpen, icon, text, isSelectable = true, onClick, path })
     <div
       className={`flex items-center gap-2 p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group ${
         !isSelectable && "opacity-50 cursor-not-allowed"
-      }`}
-      onClick={handleClick}
+      } ${isDisabled ? "opacity-50 cursor-not-allowed" : ""}`}
+      onClick={!isDisabled ? handleClick : undefined}
     >
       {React.cloneElement(icon, {
         className: `w-5 h-5 text-white group-hover:text-[#6FB434] ${icon.props.className || ""}`,
@@ -554,6 +554,7 @@ SidebarItem.propTypes = {
   isSelectable: PropTypes.bool,
   onClick: PropTypes.func,
   path: PropTypes.string,
+  isDisabled: PropTypes.bool,
 };
 
 export default Sidebar;

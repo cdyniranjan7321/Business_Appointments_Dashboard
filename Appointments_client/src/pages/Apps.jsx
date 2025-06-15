@@ -1,8 +1,7 @@
-
 import { useState, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion"; // Import Framer Motion for animations
-import Sidebar from "../components/Sidebar"; // Import your Sidebar component
-import Navbar from "../components/Navbar"; // Import your Navbar component
+import { motion, AnimatePresence } from "framer-motion";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 import template1 from "../assets/template1.png";
 import template2 from "../assets/template2.png";
 import template3 from "../assets/template 3.jpg";
@@ -14,35 +13,30 @@ import canopy from "../assets/canopy.webp";
 import loft from "../assets/loft.webp";
 
 const Apps = () => {
-  const [isOpen, setIsOpen] = useState(true); // State to manage sidebar open/close
-  const [searchInput, setSearchInput] = useState(""); // State to manage search input
-  const [filteredTemplates, setFilteredTemplates] = useState([]); // State to manage filtered templates
-  const templateRefs = useRef([]); // Refs to manage template sections
+  const [isOpen, setIsOpen] = useState(true);
+  const [searchInput, setSearchInput] = useState("");
+  const [filteredTemplates, setFilteredTemplates] = useState([]);
+  const templateRefs = useRef([]);
 
-  // Function to toggle the sidebar
   const toggleSidebar = () => {
     setIsOpen((prev) => !prev);
   };
 
-  // Function to handle search input change
   const handleSearchInputChange = (e) => {
     const input = e.target.value;
     setSearchInput(input);
 
-    // Filter templates based on search input
     const filtered = templates.filter((template) =>
       template.name.toLowerCase().includes(input.toLowerCase())
     );
     setFilteredTemplates(filtered);
   };
 
-  // Function to handle template selection from the search list
   const handleTemplateSelect = (templateName) => {
-    setSearchInput(templateName); // Set the search input to the selected template name
-    setFilteredTemplates([]);  // Clear the filtered templates lists.
+    setSearchInput(templateName);
+    setFilteredTemplates([]);
   };
 
-  // Function to handle search button click
   const handleSearchButtonClick = () => {
     if (searchInput) {
       const selectedTemplate = templates.find(
@@ -59,8 +53,20 @@ const Apps = () => {
     }
   };
 
+  // Modified function to handle template click based on template name
+  const handleTemplateClick = (templateName) => {
+    if (templateName === "Template 2") {
+      window.location.href = "https://complete-website-mern.vercel.app/";
+      // Alternatively, if you want to open in a new tab:
+      // window.open("https://complete-website-mern.vercel.app/", "_blank");
+    } else {
+      // For other templates, you can either do nothing or implement a different action.
+      // For now, it will just log to the console for demonstration.
+      console.log(`${templateName} was clicked!`);
+      alert(`${templateName} was clicked!`); // You can remove this alert in production
+    }
+  };
 
-  // Template data
   const templates = [
     { name: "Template 1", image: template1, description: "A clean and modern template for business websites." },
     { name: "Template 2", image: template2, description: "A creative and modern template for barber business websites." },
@@ -72,7 +78,6 @@ const Apps = () => {
     { name: "loft", image: loft, description: "A versatile template for e-commerce and online stores." },
   ];
 
-  // Animation variants for the filtered templates list
   const popupVariants = {
     hidden: { opacity: 0, y: -10 },
     visible: { opacity: 1, y: 0 },
@@ -84,7 +89,7 @@ const Apps = () => {
       <div
         className={`fixed h-screen ${
           isOpen ? "w-64" : "w-16"
-        } transition-all duration-300 z-10`}  // Add z-10 to ensure sidebar is above main content
+        } transition-all duration-300 z-10`}
       >
         <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
       </div>
@@ -156,7 +161,7 @@ const Apps = () => {
             <div className="flex-2 mt-2">
               <div className= "bg-white rounded-lg shadow-md overflow-hidden relative transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
                 <img
-                  src={Hover} // Replace with your hero image
+                  src={Hover}
                   alt="Hero Section"
                   className="w-full h-64 object-cover"
                 />
@@ -188,7 +193,9 @@ const Apps = () => {
               <div
                 key={index}
                 ref={(el) => (templateRefs.current[index] = el)}
-                className="bg-white rounded-lg shadow-md overflow-hidden mt-10 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+                className="bg-white rounded-lg shadow-md overflow-hidden mt-10 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer"
+                // Pass the template name to the click handler
+                onClick={() => handleTemplateClick(template.name)}
               >
                 <img
                   src={template.image}
@@ -200,14 +207,17 @@ const Apps = () => {
                   <p className="text-gray-600 mt-2">{template.description}</p>
                   <button
                     className="mt-4 bg-green-400 text-white px-4 py-2 rounded hover:bg-blue-400"
-                    onClick={() => alert(`${template.name} selected!`)}
+                    // Also pass the template name to the button's click handler
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent the parent div's onClick from firing
+                      handleTemplateClick(template.name);
+                    }}
                   >
                     Use This Template
                   </button>
                 </div>
               </div>
             ))}
-
           </div>
         </div>
       </div>
