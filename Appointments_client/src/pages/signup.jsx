@@ -56,7 +56,7 @@ export default function SignupPage() {
       // Store user ID for the next step if needed(Store user ID localStorage for next signup step)
       localStorage.setItem('tempUserId', data.userId);
       
-      navigate("/signup2"); // Redirect to the next signup page on success
+      navigate("/dashboard"); // Redirect to the next signup page on success
     } catch (err) {
       // Catch and display any errors
       setError(err.message);
