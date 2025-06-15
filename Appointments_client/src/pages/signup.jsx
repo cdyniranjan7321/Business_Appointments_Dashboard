@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import logo from '../assets/logo.png';
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);  // State for toggling password visibility (ture=visible, false= hidden)
@@ -181,9 +181,9 @@ export default function SignupPage() {
          {/* Link to login page for existing users */}
         <p className="mt-4 text-xs sm:text-sm text-gray-600 text-center">
           Already have a account?{" "}
-          <a href="/login" className="text-blue-500 no-underline">
+          <Link to ="/login" className="text-blue-500 no-underline">
             Sign in
-          </a>
+          </Link>
           .
         </p>
       </div>

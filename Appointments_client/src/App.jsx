@@ -33,7 +33,7 @@ function App() {
                   Create an account first to use your own Dashboard.
                 </p>
                 <Link
-                  to="/dashboard"
+                  to="/signup"
                   className="mt-6 inline-block bg-green-400 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors duration-300"
                 >
                   Go to Signup page

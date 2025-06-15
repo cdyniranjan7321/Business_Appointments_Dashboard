@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 import logo from '../assets/logo.png';
 
 export default function LogIn() {
@@ -153,9 +153,9 @@ export default function LogIn() {
         {/* Sign Up Link for new users  */}
         <p className="mt-4 text-sm text-gray-600">
           Don’t have an account?{" "}
-          <a href="/signup" className="text-blue-500 hover:text-blue-700">
+          <Link to ="/signup" className="text-blue-500 hover:text-blue-700">
             Sign up
-          </a>
+          </Link>
         </p>
       </div>
     </div>
