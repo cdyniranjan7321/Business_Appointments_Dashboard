@@ -37,14 +37,24 @@ export default function SignupPage() {
 
     try {
       // MAke POST request to signup endpoint
-      const response = await fetch('http://localhost:6001/api/auth/signup', {
+      {/*
+        const response = await fetch('http://localhost:6001/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),   // convert data to JSON
-      });
-
+      });   
+        */}
+        // Use environment variable if available, otherwise fallback to production URL
+const backendUrl = process.env.REACT_APP_API_URL || 'https://your-backend-api.niranjanchaudhary.com.np';
+const response = await fetch(`${backendUrl}/api/auth/signup`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify(formData),
+});
        // Parse response JSON
       const data = await response.json();
 
