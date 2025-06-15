@@ -37,8 +37,7 @@ export default function SignupPage() {
 
     try {
       // MAke POST request to signup endpoint
-      const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.niranjanchaudhary.com.np';
-      const response = await fetch(`${API_BASE_URL}/api/auth/signup`, {
+      const response = await fetch('http://localhost:6001/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
