@@ -37,7 +37,7 @@ export default function SignupPage() {
 
     try {
       // MAke POST request to signup endpoint
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/signup`, {
+      const response = await fetch('http://localhost:6001/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

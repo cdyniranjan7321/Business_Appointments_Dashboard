@@ -8,26 +8,8 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-//app.use(cors()); // enable CORS for all routes
+app.use(cors()); // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
-
-const allowedOrigins = [
-  "http://localhost:5173", // your frontend local development URL
-  "https://www.niranjanchaudhary.com.np", // your frontend custom domain
-  "https://business-appointments-dashboard.vercel.app" // vercel domain if still used
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS policy: Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-}));
-
 
 // Increase payload size limit
 app.use(express.json({ limit: '50mb' }));
@@ -95,7 +77,7 @@ async function run() {
 run().catch(console.dir);
 
 // POST /api/auth/signup - User Registration Endpoint
-app.post('/api/users/signup', [
+app.post('/api/auth/signup', [
   check('emailOrPhone', 'Please include a valid email or phone').isLength({ min: 5 }),
   check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
 ], async (req, res) => {
@@ -149,7 +131,7 @@ app.post('/api/users/signup', [
 });
 
 // GET /api/auth/user/:id - Get User by ID
-app.get('/api/users/user/:id', async (req, res) => {
+app.get('/api/auth/user/:id', async (req, res) => {
   try {
     // Find user by ID, excluding password field
     const user = await usersCollection.findOne(
@@ -175,7 +157,7 @@ app.get('/api/users/user/:id', async (req, res) => {
 });
 
 // PUT /api/auth/user/:id - Update User
-app.put('/api/users/user/:id', [
+app.put('/api/auth/user/:id', [
   // Optional email validation
   check('email', 'Please include a valid email').optional().isEmail(),
   check('phone', 'Please include a valid phone number').optional().isMobilePhone()
@@ -248,7 +230,7 @@ app.put('/api/users/user/:id', [
 });
 
 // DELETE /api/auth/user/:id - Delete User
-app.delete('/api/users/user/:id', async (req, res) => {
+app.delete('/api/auth/user/:id', async (req, res) => {
   try {
     // Delete user by ID
     const result = await usersCollection.deleteOne({
