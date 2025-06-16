@@ -35,31 +35,28 @@ export default function SignupPage() {
 
     setIsLoading(true);   // Set loading state to true during PI call
 
-    try {
-      // MAke POST request to signup endpoint
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),   // convert data to JSON
-      });
+try {
+  const response = await fetch('https://business-appointments-dashboard.vercel.app/api/auth/signup', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json' // Explicitly request JSON
+    },
+    body: JSON.stringify(formData),
+  });
 
-       // Parse response JSON
-      const data = await response.json();
+  const text = await response.text(); // First get as text
+  try {
+    const data = JSON.parse(text); // Then try to parse
+    if (!response.ok) throw new Error(data.message || 'Signup failed');
+    // Handle success...
+  } catch (e) {
+    console.error('Failed to parse JSON:', text);
+    throw new Error('Server returned invalid JSON');
+  }
+} catch (err) {
+  setError(err.message);
 
-       // check if response was not OK (status code not 2xx)
-      if (!response.ok) {
-        throw new Error(data.errors?.[0]?.msg || 'Signup failed');   // Throw error with server message or default message
-      }
-
-      // Store user ID for the next step if needed(Store user ID localStorage for next signup step)
-      localStorage.setItem('tempUserId', data.userId);
-      
-      navigate("/dashboard"); // Redirect to the next signup page on success
-    } catch (err) {
-      // Catch and display any errors
-      setError(err.message);
     } finally {
       // Reset loading state regardless of success/failure
       setIsLoading(false);
