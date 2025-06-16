@@ -95,7 +95,7 @@ async function run() {
 run().catch(console.dir);
 
 // POST /api/auth/signup - User Registration Endpoint
-app.post('/api/auth/signup', [
+app.post('/api/users/signup', [
   check('emailOrPhone', 'Please include a valid email or phone').isLength({ min: 5 }),
   check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
 ], async (req, res) => {
@@ -149,7 +149,7 @@ app.post('/api/auth/signup', [
 });
 
 // GET /api/auth/user/:id - Get User by ID
-app.get('/api/auth/user/:id', async (req, res) => {
+app.get('/api/users/user/:id', async (req, res) => {
   try {
     // Find user by ID, excluding password field
     const user = await usersCollection.findOne(
@@ -175,7 +175,7 @@ app.get('/api/auth/user/:id', async (req, res) => {
 });
 
 // PUT /api/auth/user/:id - Update User
-app.put('/api/auth/user/:id', [
+app.put('/api/users/user/:id', [
   // Optional email validation
   check('email', 'Please include a valid email').optional().isEmail(),
   check('phone', 'Please include a valid phone number').optional().isMobilePhone()
@@ -248,7 +248,7 @@ app.put('/api/auth/user/:id', [
 });
 
 // DELETE /api/auth/user/:id - Delete User
-app.delete('/api/auth/user/:id', async (req, res) => {
+app.delete('/api/users/user/:id', async (req, res) => {
   try {
     // Delete user by ID
     const result = await usersCollection.deleteOne({
