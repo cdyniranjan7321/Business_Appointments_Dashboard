@@ -8,8 +8,13 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-app.use(cors()); // enable CORS for all routes
+//app.use(cors()); // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
+
+app.use(cors({
+  origin: ["https://business-appointments-dashboard.vercel.app"],
+  credentials: true
+}));
 
 // Increase payload size limit
 app.use(express.json({ limit: '50mb' }));
