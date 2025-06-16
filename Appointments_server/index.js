@@ -8,28 +8,8 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-//app.use(cors()); // enable CORS for all routes
+app.use(cors()); // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
-
-// Replace current CORS config with:
-const allowedOrigins = [
-  'https://business-appointments-dashboard-f6e1-q40n90sjy.vercel.app', // Your frontend
-  'https://www.niranjanchaudhary.com.np', // Your custom domain
-  'http://localhost:5173' // For local development
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `CORS policy: ${origin} not allowed`;
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true
-}));
 
 // Increase payload size limit
 app.use(express.json({ limit: '50mb' }));
