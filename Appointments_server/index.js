@@ -11,10 +11,23 @@ const { check, validationResult } = require('express-validator');
 //app.use(cors()); // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
 
+const allowedOrigins = [
+  "http://localhost:5173", // your frontend local development URL
+  "https://www.niranjanchaudhary.com.np", // your frontend custom domain
+  "https://business-appointments-dashboard.vercel.app" // vercel domain if still used
+];
+
 app.use(cors({
-  origin: ["https://business-appointments-dashboard.vercel.app"],
-  credentials: true
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS policy: Not allowed by CORS"));
+    }
+  },
+  credentials: true,
 }));
+
 
 // Increase payload size limit
 app.use(express.json({ limit: '50mb' }));
