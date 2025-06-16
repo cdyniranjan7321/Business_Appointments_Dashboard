@@ -13,7 +13,7 @@ const { check, validationResult } = require('express-validator');
 
 // Replace current CORS config with:
 const allowedOrigins = [
-  'https://business-appointments-dashboard-f6e1-q40n90sjy.vercel.app/', // Your frontend
+  'https://business-appointments-dashboard-f6e1-q40n90sjy.vercel.app', // Your frontend
   'https://www.niranjanchaudhary.com.np', // Your custom domain
   'http://localhost:5173' // For local development
 ];
@@ -2020,15 +2020,6 @@ const getTimeOfDay = (timeStr) => {
   if (hour < 17) return 'day';
   return 'evening';
 };
-
-// Add this after all your routes
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    error: 'Internal Server Error',
-    message: err.message 
-  });
-});
 
 // Basic route
 app.get('/', (req, res) => {
