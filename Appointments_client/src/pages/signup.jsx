@@ -37,7 +37,7 @@ export default function SignupPage() {
 
     try {
       // MAke POST request to signup endpoint
-      const response = await fetch('http://localhost:6001/api/auth/signup', {
+      const response = await fetch('https://business-appointments-dashboard-klvo.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
