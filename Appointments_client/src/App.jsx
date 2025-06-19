@@ -16,6 +16,8 @@ import ServicesPage from'./pages/ServicesPage';
 import BookingPage from './pages/BookingPage';
 import Analytics from './pages/Analytics';
 import ProductDetailsPage from './pages/ProductDetailsPage';
+import Settings from './pages/Settings';
+import Help from './pages/Help';
 
 
 function App() {
@@ -58,6 +60,9 @@ function App() {
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/analytics" element= {<Analytics/>}/>
         <Route path="/customers/:customerId" element={<CustomerPage/>}/>
+        <Route path="/settings" element={<Settings /> }/>
+        <Route path="/help" element={<Help /> } />
+        {/* Add more routes as needed */}
      
        
       </Routes>

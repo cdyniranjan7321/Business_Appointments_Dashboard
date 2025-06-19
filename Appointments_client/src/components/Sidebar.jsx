@@ -29,9 +29,9 @@ import { MdOutlineClear } from "react-icons/md";
 
 // Default sidebar items (always visible)
 const defaultItems = [
-  { id: 1, icon: <FaHome />, text: "Home", description: "Dashboard overview" },
-  { id: 2, icon: <FaCog />, text: "Settings" },
-  { id: 3, icon: <FiHelpCircle />, text: "Help" },
+  { id: 1, icon: <FaHome />, text: "Home", description: "Dashboard overview", path: "/dashboard" },
+  { id: 2, icon: <FaCog />, text: "Settings", path: "/settings" },
+  { id: 3, icon: <FiHelpCircle />, text: "Help", path: "/help"},
 ];
 
 // Optional items (can be added via the edit popup)
@@ -266,13 +266,15 @@ const Sidebar = ({ isOpen }) => {
           isOpen={isOpen} 
           icon={defaultItems[1].icon} 
           text={defaultItems[1].text} 
+          path={defaultItems[1].path}
           isDisabled={isDownloading}
         />
         <SidebarItem 
           key={defaultItems[2].id} 
           isOpen={isOpen} 
           icon={defaultItems[2].icon} 
-          text={defaultItems[2].text} 
+          text={defaultItems[2].text}
+          path={defaultItems[2].path} 
           isDisabled={isDownloading}
         />
       </nav>
