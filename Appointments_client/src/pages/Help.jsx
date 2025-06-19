@@ -61,8 +61,8 @@ export default function Help() {
           <div className="max-w-4xl mx-auto">
             <h2 className="text-2xl font-bold mb-6">Help Center</h2>
             
-            {/* Search Bar */}
-            <div className="mb-8">
+            {/* Search Bar 
+            <div className="mb-8 relative z-">
               <div className="relative">
                 <input
                   type="text"
@@ -78,6 +78,8 @@ export default function Help() {
                 </button>
               </div>
             </div>
+            
+            */}
 
             {/* FAQ Section */}
             <div className="space-y-4 mb-8">
