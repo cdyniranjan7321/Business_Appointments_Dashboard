@@ -8,7 +8,18 @@ const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
 
 // Middleware
-app.use(cors()); // enable CORS for all routes
+// Configure CORS
+const corsOptions = {
+  origin: [
+    'https://www.niranjanchaudhary.com.np', // Your custom domain
+    'https://business-appointments-dashboard-f6e1.vercel.app', // Your Vercel default domain
+    // Add any other domains that need to access your backend
+  ],
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true, // If you're sending cookies/tokens
+  optionsSuccessStatus: 204
+};
+app.use(cors(corsOptions)) // enable CORS for all routes
 //app.use(express.json());  //Parse JSON bodies in requests
 
 // Increase payload size limit
