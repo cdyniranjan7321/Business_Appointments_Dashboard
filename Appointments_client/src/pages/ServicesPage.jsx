@@ -25,7 +25,7 @@ const Services = () => {
 
   const fetchServices = async () => {
     try {
-      const response = await axios.get('http://localhost:6001/api/services');
+      const response = await axios.get('https://business-appointments-dashboard-klvo.onrender.com/api/services');
       setServices(response.data.services);
     } catch (error) {
       console.error('Error fetching services:', error);
@@ -65,8 +65,8 @@ const Services = () => {
       };
 
       const url = isEditing 
-        ? `http://localhost:6001/api/services/${currentServiceId}`
-        : 'http://localhost:6001/api/services';
+        ? `https://business-appointments-dashboard-klvo.onrender.com/api/services/${currentServiceId}`
+        : 'https://business-appointments-dashboard-klvo.onrender.com/api/services';
       
       const method = isEditing ? 'put' : 'post';
       
@@ -99,7 +99,7 @@ const Services = () => {
   const handleDeleteService = async (id) => {
     if (window.confirm('Are you sure you want to delete this service?')) {
       try {
-        const response = await axios.delete(`http://localhost:6001/api/services/${id}`);
+        const response = await axios.delete(`https://business-appointments-dashboard-klvo.onrender.com/api/services/${id}`);
         if (response.data.success) {
           fetchServices();
         }
@@ -114,7 +114,7 @@ const Services = () => {
     try {
       const service = services.find(s => s.id === id);
       const response = await axios.put(
-        `http://localhost:6001/api/services/${id}`,
+        `https://business-appointments-dashboard-klvo.onrender.com/api/services/${id}`,
         { active: !service.active }
       );
       

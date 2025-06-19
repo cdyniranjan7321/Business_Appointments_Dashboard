@@ -626,7 +626,7 @@ const BookingSystem = () => {
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        const response = await fetch('http://localhost:6001/api/bookings');
+        const response = await fetch('https://business-appointments-dashboard-klvo.onrender.com/api/bookings');
         const data = await response.json();
         if (data.success) {
           setBookings(data.bookings);
@@ -644,7 +644,7 @@ const BookingSystem = () => {
   const handleAddBooking = async (newBooking) => {
     try {
       const method = newBooking.id ? 'PUT' : 'POST';
-      const url = newBooking.id ? `http://localhost:6001/api/bookings/${newBooking.id}` : 'http://localhost:6001/api/bookings';
+      const url = newBooking.id ? `https://business-appointments-dashboard-klvo.onrender.com/api/bookings/${newBooking.id}` : 'https://business-appointments-dashboard-klvo.onrender.com/api/bookings';
       
       const response = await fetch(url, {
         method,
@@ -675,7 +675,7 @@ const BookingSystem = () => {
 
   const handleDeleteBooking = async (id) => {
     try {
-      const response = await fetch(`http://localhost:6001/api/bookings/${id}`, {
+      const response = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/bookings/${id}`, {
         method: 'DELETE',
       });
       

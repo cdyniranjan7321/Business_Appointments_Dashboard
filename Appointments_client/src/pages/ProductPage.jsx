@@ -149,7 +149,7 @@ const getSortedProducts = (items) => {
   }
 
   try {
-    const response = await fetch('http://localhost:6001/api/products/bulk-delete', {
+    const response = await fetch('https://business-appointments-dashboard-klvo.onrender.com/api/products/bulk-delete', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ const getSortedProducts = (items) => {
     
     if (data.success) {
       // Refresh products list
-      const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+      const refreshResponse = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/products?status=${activeTab}`);
       const refreshData = await refreshResponse.json();
       if (refreshData.success) {
         setProducts(refreshData.products);
@@ -184,7 +184,7 @@ const getSortedProducts = (items) => {
   }
 
   try {
-    const response = await fetch('http://localhost:6001/api/products/bulk-duplicate', {
+    const response = await fetch('https://business-appointments-dashboard-klvo.onrender.com/api/products/bulk-duplicate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -198,7 +198,7 @@ const getSortedProducts = (items) => {
     
     if (data.success) {
       // Refresh products list
-      const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+      const refreshResponse = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/products?status=${activeTab}`);
       const refreshData = await refreshResponse.json();
       if (refreshData.success) {
         setProducts(refreshData.products);
@@ -313,7 +313,7 @@ const handleDetails = () => {
 useEffect(() => {
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`http://localhost:6001/api/products?status=${activeTab}&search=${searchQuery}&sort=${sortConfig.key}&direction=${sortConfig.direction}`);
+      const response = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/products?status=${activeTab}&search=${searchQuery}&sort=${sortConfig.key}&direction=${sortConfig.direction}`);
       const data = await response.json();
       if (data.success) {
         setProducts(data.products);
@@ -513,8 +513,8 @@ const handleAddVariant = () => {
 
     const method = editingProduct ? 'PUT' : 'POST';
     const url = editingProduct 
-      ? `http://localhost:6001/api/products/${editingProduct}`
-      : 'http://localhost:6001/api/products';
+      ? `https://business-appointments-dashboard-klvo.onrender.com/api/products/${editingProduct}`
+      : 'https://business-appointments-dashboard-klvo.onrender.com/api/products';
 
     const response = await fetch(url, {
       method,
@@ -532,7 +532,7 @@ const handleAddVariant = () => {
     }
 
     // Refresh the product list
-    const refreshResponse = await fetch(`http://localhost:6001/api/products?status=${activeTab}`);
+    const refreshResponse = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/products?status=${activeTab}`);
     const refreshData = await refreshResponse.json();
     
     if (refreshData.success) {

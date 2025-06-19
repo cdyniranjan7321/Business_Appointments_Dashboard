@@ -47,7 +47,7 @@ const Orders = () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get('http://localhost:6001/api/orders');
+        const response = await axios.get('https://business-appointments-dashboard-klvo.onrender.com/api/orders');
         setOrders(response.data.orders);
       } catch (err) {
         console.error('Error fetching orders:', err);
@@ -154,7 +154,7 @@ const handleDeleteOrder = async (orderId) => {
 
     // Use the MongoDB _id for deletion
     const response = await axios.delete(
-      `http://localhost:6001/api/orders/${orderToDelete._id || orderId}`
+      `https://business-appointments-dashboard-klvo.onrender.com/api/orders/${orderToDelete._id || orderId}`
     );
     
     if (response.data.success) {
@@ -177,7 +177,7 @@ const handleDeleteOrder = async (orderId) => {
     try {
       if (window.confirm(`Are you sure you want to delete ${selectedItems.length} selected orders?`)) {
         const deletePromises = selectedItems.map(id => 
-          axios.delete(`http://localhost:6001/api/orders/${id}`)
+          axios.delete(`https://business-appointments-dashboard-klvo.onrender.com/api/orders/${id}`)
         );
         
         await Promise.all(deletePromises);
@@ -195,7 +195,7 @@ const handleDuplicateOrder = async (order) => {
   try {
     // Create a clean copy without the original ID
     const { _id, id, shortId, ...orderData } = order;
-    const response = await axios.post('http://localhost:6001/api/orders', {
+    const response = await axios.post('https://business-appointments-dashboard-klvo.onrender.com/api/orders', {
       ...orderData,
       date: new Date().toISOString().split('T')[0],
       paymentStatus: 'Pending',
@@ -515,7 +515,7 @@ const handleCreateOrder = async () => {
       // Update existing order - use shortId if available, otherwise use _id
       const orderId = editingOrder.shortId || editingOrder.id;
       response = await axios.put(
-        `http://localhost:6001/api/orders/${orderId}`, 
+        `https://business-appointments-dashboard-klvo.onrender.com/api/orders/${orderId}`, 
         orderData
       );
       
@@ -532,7 +532,7 @@ const handleCreateOrder = async () => {
     } else {
       // Create new order
       response = await axios.post(
-        'http://localhost:6001/api/orders', 
+        'https://business-appointments-dashboard-klvo.onrender.com/api/orders', 
         orderData
       );
       

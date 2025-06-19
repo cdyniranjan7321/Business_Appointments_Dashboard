@@ -12,7 +12,7 @@ const ProductDetailsPage = () => {
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:6001/api/products/${productId}`);
+        const response = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/products/${productId}`);
         const data = await response.json();
         
         if (data.success) {

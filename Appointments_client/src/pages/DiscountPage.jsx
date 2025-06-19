@@ -10,7 +10,7 @@ const DiscountsPage = () => {
   useEffect(() => {
     const fetchDiscounts = async () => {
       try {
-        const response = await fetch('http://localhost:6001/api/discounts');
+        const response = await fetch('https://business-appointments-dashboard-klvo.onrender.com/api/discounts');
         if (!response.ok) {
           throw new Error('Failed to fetch discounts');
         }
@@ -53,7 +53,7 @@ const DiscountsPage = () => {
   const handleCreateDiscount = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:6001/api/discounts', {
+      const response = await fetch('https://business-appointments-dashboard-klvo.onrender.com/api/discounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ const DiscountsPage = () => {
 
   const toggleDiscountStatus = async (id) => {
     try {
-      const response = await fetch(`http://localhost:6001/api/discounts/${id}/toggle`, {
+      const response = await fetch(`https://business-appointments-dashboard-klvo.onrender.com/api/discounts/${id}/toggle`, {
         method: 'PUT',
       });
       
