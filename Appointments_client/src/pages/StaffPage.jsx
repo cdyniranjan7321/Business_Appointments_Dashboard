@@ -38,7 +38,7 @@ const Staff = () => {
   const fetchStaff = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:6001/api/staff');
+      const res = await axios.get('https://business-appointments-dashboard-klvo.onrender.com/api/staff');
       setStaffMembers(res.data.staff);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to fetch staff');
@@ -54,7 +54,7 @@ const Staff = () => {
 useEffect(() => {
   const fetchAttendance = async () => {
     try {
-      const res = await axios.get('http://localhost:6001/api/staff/attendance');
+      const res = await axios.get('https://business-appointments-dashboard-klvo.onrender.com/api/staff/attendance');
       setAttendance(res.data.attendance);
     } catch (err) {
       console.error('Failed to fetch attendance:', err);
@@ -95,7 +95,7 @@ useEffect(() => {
       ));
       toast.success('Staff updated successfully');
     } else {
-      const res = await axios.post('http://localhost:6001/api/staff', staffForm);
+      const res = await axios.post('https://business-appointments-dashboard-klvo.onrender.com/api/staff', staffForm);
       setStaffMembers([...staffMembers, res.data.staff]);
       toast.success('Staff added successfully');
     }
@@ -126,7 +126,7 @@ useEffect(() => {
   e.preventDefault();
   try {
     setLoading(true);
-    const res = await axios.post('http://localhost:6001/api/staff/login', loginForm);
+    const res = await axios.post('https://business-appointments-dashboard-klvo.onrender.com/api/staff/login', loginForm);
     toast.success(`Welcome back, ${res.data.staff.name}!`);
     
     setStaffMembers(staffMembers.map(s => 
@@ -159,7 +159,7 @@ useEffect(() => {
 
   const handleClockIn = async (staffId) => {
   try {
-    await axios.post('http://localhost:6001/api/staff/attendance', { 
+    await axios.post('https://business-appointments-dashboard-klvo.onrender.com/api/staff/attendance', { 
       staffId, 
       action: 'clockIn' 
     });
@@ -200,7 +200,7 @@ useEffect(() => {
 
 const handleClockOut = async (staffId) => {
   try {
-    await axios.post('http://localhost:6001/api/staff/attendance', { 
+    await axios.post('https://business-appointments-dashboard-klvo.onrender.com/api/staff/attendance', { 
       staffId, 
       action: 'clockOut' 
     });
@@ -229,7 +229,7 @@ const handleClockOut = async (staffId) => {
   const handleDeleteStaff = async (id) => {
   if (window.confirm('Are you sure you want to delete this staff member?')) {
     try {
-      await axios.delete(`http://localhost:6001/api/staff/${id}`);
+      await axios.delete(`https://business-appointments-dashboard-klvo.onrender.com/api/staff/${id}`);
       setStaffMembers(staffMembers.filter(staff => staff.id !== id));
       setAttendance(attendance.filter(record => record.staffId !== id));
       toast.success('Staff member deleted');
@@ -247,7 +247,7 @@ const handleClockOut = async (staffId) => {
     if (resetType) {
       const newPassword = prompt("Enter new password for this staff member:");
       if (newPassword) {
-        await axios.put(`http://localhost:6001/api/staff/${id}`, { password: newPassword });
+        await axios.put(`https://business-appointments-dashboard-klvo.onrender.com/api/staff/${id}`, { password: newPassword });
         setStaffMembers(staffMembers.map(s => 
           s.id === id ? { ...s, password: newPassword } : s
         ));
@@ -256,7 +256,7 @@ const handleClockOut = async (staffId) => {
     } else {
       const newPin = prompt("Enter new 4-digit PIN for this staff member:");
       if (newPin && /^\d{4}$/.test(newPin)) {
-        await axios.put(`http://localhost:6001/api/staff/${id}`, { pin: newPin });
+        await axios.put(`https://business-appointments-dashboard-klvo.onrender.com/api/staff/${id}`, { pin: newPin });
         setStaffMembers(staffMembers.map(s => 
           s.id === id ? { ...s, pin: newPin } : s
         ));
