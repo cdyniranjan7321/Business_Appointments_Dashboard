@@ -6,7 +6,6 @@ require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const bcrypt = require('bcryptjs');
 const { check, validationResult } = require('express-validator');
-const jwt = require('jsonwebtoken');
 
 // Middleware
 // Configure CORS
@@ -88,94 +87,59 @@ async function run() {
 // Start database connection and log any errors
 run().catch(console.dir);
 
-// ======================================
-// JWT AUTHENTICATION MIDDLEWARE
-// ======================================
-const verifyToken = (req, res, next) => {
-    const authHeader = req.headers['authorization'];
-    if (!authHeader) {
-        return res.status(401).json({ message: 'No authorization token provided' });
-    }
-
-    const token = authHeader.split(' ')[1]; // Assuming format "Bearer TOKEN"
-
-    if (!token) {
-        return res.status(401).json({ message: 'Token not found' });
-    }
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-        if (err) {
-            console.error('JWT verification error:', err.message); // Log the specific JWT error
-            return res.status(403).json({ message: 'Invalid or expired token', error: err.message });
-        }
-        req.userId = decoded.userId; // Attach the userId from the token payload to the request
-        next();
-    });
-};
-
 // POST /api/auth/signup - User Registration Endpoint
 app.post('/api/auth/signup', [
-       check('emailOrPhone')
-            .notEmpty().withMessage('Email or Phone is required')
-            .isString().withMessage('Email or Phone must be a string')
-            .custom((value) => {
-                // Basic check for email or phone format
-                const isEmail = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value);
-                const isPhone = /^\+?[1-9]\d{1,14}$/.test(value);
-                if (!isEmail && !isPhone) {
-                    throw new Error('Enter a valid email address or phone number');
-                }
-                return true;
-            }),
-        check('password')
-            .isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
-    ],
-    async (req, res) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
-        }
+  check('emailOrPhone', 'Please include a valid email or phone').isLength({ min: 5 }),
+  check('password', 'Please enter a password with 6 or more characters').isLength({ min: 6 })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-        const { emailOrPhone, password } = req.body;
+   // Destructure request body
+  const { emailOrPhone, password } = req.body;
 
-        try {
-            // Check if user already exists
-            const existingUser = await usersCollection.findOne({ emailOrPhone });
-            if (existingUser) {
-                return res.status(409).json({ message: 'User already exists with this email or phone.' });
-            }
+  try {
+    // Determine if input is email or phone
+    const isEmail = emailOrPhone.includes('@');
+    const field = isEmail ? 'email' : 'phone';
+    const value = emailOrPhone.toLowerCase().trim();
 
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Create new user
-            const newUser = {
-                emailOrPhone,
-                password: hashedPassword,
-                isVerified: false, // Default to false
-                createdAt: new Date(),
-                // You can add more default fields here, e.g., default businessName
-                businessName: 'My Business Dashboard' // Default value
-            };
-
-            const result = await usersCollection.insertOne(newUser);
-            const userId = result.insertedId;
-
-            // Generate JWT
-            const token = jwt.sign({ userId: userId.toHexString(), emailOrPhone: emailOrPhone }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-            res.status(201).json({
-                message: 'User registered successfully!',
-                userId: userId.toHexString(), // Convert ObjectId to string
-                isVerified: newUser.isVerified,
-                token, // Send the token
-            });
-        } catch (error) {
-            console.error('Signup error:', error);
-            res.status(500).json({ message: 'Server error during signup.', error: error.message });
-        }
+    // Check if user already exists
+    const existingUser = await usersCollection.findOne({ [field]: value });
+    if (existingUser) {
+      return res.status(400).json({
+        errors: [{ msg: 'User already exists with this email or phone Please Sign in!' }]
+      });
     }
-);
+
+    // Hash password with bcrypt
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create new user document
+    const newUser = {
+      [field]: value,               // Email or Phone feild
+      password: hashedPassword,     // Hashed password
+      createdAt: new Date(),        // Current timestamp
+      verified: false               // Default verification status
+    };
+
+    // Insert new user into database
+    const result = await usersCollection.insertOne(newUser);
+
+    // Return success response
+    res.status(201).json({
+      message: 'User registered successfully. Please verify your email.',
+      userId: result.insertedId        // Return MngoDB-generated ID
+    });
+
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
 
 // GET /api/auth/user/:id - Get User by ID
 app.get('/api/auth/user/:id', async (req, res) => {
@@ -302,80 +266,46 @@ app.delete('/api/auth/user/:id', async (req, res) => {
 });
 
   // Login endpoint
-app.post(
-    '/api/auth/login',
-    async (req, res) => {
-        const { emailOrPhone, password } = req.body;
+app.post('/api/auth/login', [
+  check('emailOrPhone').isLength({ min: 5 }),
+  check('password').isLength({ min: 6 })
+], async (req, res) => {
+  console.log('\n📥 Login Request:', req.body);
+ 
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
 
-        try {
-            // Find user by email or phone
-            const user = await usersCollection.findOne({ emailOrPhone });
-            if (!user) {
-                return res.status(401).json({ message: 'Invalid credentials.' });
-            }
+  try {
+    const { emailOrPhone, password } = req.body;
+    const isEmail = emailOrPhone.includes('@');
+    const field = isEmail ? 'email' : 'phone';
+    const value = emailOrPhone.toLowerCase().trim();
 
-            // Compare passwords
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(401).json({ message: 'Invalid credentials.' });
-            }
-
-            // Generate JWT
-            const token = jwt.sign({ userId: user._id.toHexString(), emailOrPhone: user.emailOrPhone }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-            res.status(200).json({
-                message: 'Logged in successfully!',
-                userId: user._id.toHexString(), // Convert ObjectId to string
-                isVerified: user.isVerified,
-                token, // Send the token
-                businessName: user.businessName // Send businessName if available
-            });
-        } catch (error) {
-            console.error('Login error:', error);
-            res.status(500).json({ message: 'Server error during login.', error: error.message });
-        }
-    }
-);
-
-// ======================================
-// PROTECTED USER DATA ROUTES
-// ======================================
-
-// GET user data (e.g., for dashboard personalization)
-app.get('/api/users/:userId', verifyToken, async (req, res) => {
-    const requestedUserId = req.params.userId;
-    const authenticatedUserId = req.userId; // This comes from the JWT payload
-
-    // Ensure the authenticated user is requesting their own data
-    if (requestedUserId !== authenticatedUserId) {
-        return res.status(403).json({ message: 'Access denied: You can only view your own user data.' });
+    // Find user
+    const user = await usersCollection.findOne({ [field]: value });
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid Email or Phone' });
     }
 
-    try {
-        const user = await usersCollection.findOne({ _id: new ObjectId(authenticatedUserId) }, { projection: { password: 0 } }); // Exclude password
-        if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
-        }
-        res.status(200).json({ user });
-    } catch (error) {
-        console.error('Error fetching user data:', error);
-        res.status(500).json({ message: 'Server error.', error: error.message });
+    // Verify password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid Password' });
     }
-});
 
-// Example of another protected route (e.g., to fetch user-specific appointments)
-app.get('/api/appointments', verifyToken, async (req, res) => {
-    const userId = req.userId; // Get userId from the authenticated token
+    console.log('✅ Login successful for:', user._id);
+    res.json({
+      success: true,
+      userId: user._id,
+      isVerified: user.verified
+    });
 
-    try {
-        // Example: Fetch appointments belonging to this userId
-        // You'll need a 'userId' field in your bookingsCollection documents
-        const appointments = await bookingsCollection.find({ userId: new ObjectId(userId) }).toArray();
-        res.status(200).json({ appointments });
-    } catch (error) {
-        console.error('Error fetching appointments:', error);
-        res.status(500).json({ message: 'Server error.', error: error.message });
-    }
+  } catch (error) {
+    console.error('🔥 Login Error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 // Business Registration Endpoint
