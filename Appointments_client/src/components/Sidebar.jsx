@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { TbApps, TbDownload } from "react-icons/tb";
@@ -73,6 +72,9 @@ const Sidebar = ({ isOpen }) => {
   const [downloadProgress, setDownloadProgress] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
   
+  // New state for temporary selections in the edit popup
+  const [tempSidebarSelections, setTempSidebarSelections] = useState([]);
+
   const navigate = useNavigate();
 
   // Load saved items from localStorage
@@ -94,8 +96,8 @@ const Sidebar = ({ isOpen }) => {
 
   // Save items to localStorage when they change
   useEffect(() => {
-    const optionalItems = sidebarItems.filter((item) => item.id > 3);
-    localStorage.setItem("sidebarItems", JSON.stringify(optionalItems));
+    const currentOptionalItems = sidebarItems.filter((item) => item.id > 3);
+    localStorage.setItem("sidebarItems", JSON.stringify(currentOptionalItems));
     localStorage.setItem("pinnedApps", JSON.stringify(pinnedApps));
     localStorage.setItem("downloadedApps", JSON.stringify(downloadedApps));
   }, [sidebarItems, pinnedApps, downloadedApps]);
@@ -117,26 +119,11 @@ const Sidebar = ({ isOpen }) => {
     }
   }, []);
 
-  // Toggle optional items in the sidebar
-  const handleItemToggle = (id) => {
-    if (isDownloading) return; // Disable during download
-    
-    const item = optionalItems.find((item) => item.id === id);
-    if (item) {
-      const isItemInSidebar = sidebarItems.some((item) => item.id === id);
-      if (isItemInSidebar) {
-        setSidebarItems((prevItems) => prevItems.filter((item) => item.id !== id));
-      } else {
-        setSidebarItems((prevItems) => [
-          prevItems[0],
-          ...prevItems.slice(1, -2),
-          item,
-          prevItems[prevItems.length - 2],
-          prevItems[prevItems.length - 1],
-        ]);
-      }
-    }
-  };
+  // Toggle optional items in the temporary state for the popup
+  // This function is now OBSOLETE as the onChange for checkbox handles it directly
+  // const handleItemToggle = (id) => {
+  //   // This logic moves directly into the checkbox onChange handler
+  // };
 
   // Toggle app pin status
   const togglePin = (app) => {
@@ -231,7 +218,13 @@ const Sidebar = ({ isOpen }) => {
         <div className="flex items-center gap-4">
           <FaEdit
             className={`cursor-pointer text-xl ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
-            onClick={() => !isDownloading && setShowPopup(true)}
+            onClick={() => {
+              if (!isDownloading) {
+                // Initialize temp selections when popup opens
+                setTempSidebarSelections(sidebarItems.filter(item => item.id > 3).map(item => item.id));
+                setShowPopup(true);
+              }
+            }}
             title="Edit Sidebar"
           />
         </div>
@@ -359,14 +352,25 @@ const Sidebar = ({ isOpen }) => {
           <div className="bg-[#f0f8ff] p-6 rounded-lg shadow-lg w-[90%] md:w-150 max-w-lg mx-auto relative h-[75vh] overflow-auto flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <button
-                onClick={() => !isDownloading && setShowPopup(true)}
+                onClick={() => !isDownloading && setShowPopup(false)} // Cross button: just close, discard temp changes
                 className={`px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={isDownloading}
               >
                 <MdOutlineClear />
               </button>
               <button
-                onClick={() => !isDownloading && setShowPopup(false)}
+                onClick={() => { // Save button: apply temp changes and close
+                  if (!isDownloading) {
+                    const newOptionalItems = optionalItems.filter(item => tempSidebarSelections.includes(item.id));
+                    setSidebarItems([
+                      defaultItems[0],
+                      ...newOptionalItems,
+                      defaultItems[1],
+                      defaultItems[2],
+                    ]);
+                    setShowPopup(false);
+                  }
+                }}
                 className={`mt-2 px-4 py-2 bg-[#6FB434] text-white rounded-lg hover:bg-green-700 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={isDownloading}
               >
@@ -383,8 +387,18 @@ const Sidebar = ({ isOpen }) => {
                   </div>
                   <input
                     type="checkbox"
-                    checked={sidebarItems.some((i) => i.id === item.id)}
-                    onChange={() => !isDownloading && handleItemToggle(item.id)}
+                    checked={tempSidebarSelections.includes(item.id)} // Check against temporary selections
+                    onChange={() => {
+                      if (!isDownloading) {
+                        setTempSidebarSelections(prevSelections => {
+                          if (prevSelections.includes(item.id)) {
+                            return prevSelections.filter(id => id !== item.id);
+                          } else {
+                            return [...prevSelections, item.id];
+                          }
+                        });
+                      }
+                    }}
                     className="ml-2"
                     disabled={isDownloading}
                   />
@@ -505,7 +519,7 @@ const Sidebar = ({ isOpen }) => {
   );
 };
 
-// SidebarItem Component
+// SidebarItem Component (no changes needed here)
 const SidebarItem = ({ isOpen, icon, text, isSelectable = true, onClick, path, isDisabled = false }) => {
   const navigate = useNavigate();
   
@@ -545,7 +559,7 @@ const SidebarItem = ({ isOpen, icon, text, isSelectable = true, onClick, path, i
 // Prop Types
 Sidebar.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  setIsOpen: PropTypes.func.isRequired,
+  // setIsOpen: PropTypes.func.isRequired, // This prop is not being used in the provided code
 };
 
 SidebarItem.propTypes = {
