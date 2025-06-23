@@ -353,7 +353,7 @@ const Sidebar = ({ isOpen }) => {
             <div className="flex justify-between items-center mb-4">
               <button
                 onClick={() => !isDownloading && setShowPopup(false)} // Cross button: just close, discard temp changes
-                className={`px-3 py-1 bg-gray-600 rounded-lg hover:bg-gray-700 text-white ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`mt-2 px-4 py-2 bg-gray-400 rounded-lg hover:bg-gray-700 text-white ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
                 disabled={isDownloading}
               >
                 <MdOutlineClear />
