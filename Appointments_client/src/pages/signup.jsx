@@ -56,10 +56,6 @@ export default function SignupPage() {
       // Store user ID for the next step if needed(Store user ID localStorage for next signup step)
       localStorage.setItem('tempUserId', data.userId);
        localStorage.setItem('token', data.token);
-        // If your backend also sends businessName on login/signup, you can store it too:
-if (data.businessName) {
-  localStorage.setItem('businessName', data.businessName);
-}
       
       navigate("/dashboard"); // Redirect to the next signup page on success
     } catch (err) {
