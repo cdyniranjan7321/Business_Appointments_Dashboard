@@ -112,20 +112,6 @@ export default function Dashboard() {
               )}
             </div>
           )}
-
-          {/* Placeholder for other dynamic dashboard components */}
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="bg-white p-4 shadow rounded-lg">
-              <h3 className="font-semibold text-lg">Appointments Overview</h3>
-              <p className="text-gray-600">You have X appointments scheduled this week.</p>
-              {/* Fetch and display user's actual appointment count */}
-            </div>
-            <div className="bg-white p-4 shadow rounded-lg">
-              <h3 className="font-semibold text-lg">Recent Orders</h3>
-              <p className="text-gray-600">Last order: Order #1234 on June 15.</p>
-              {/* Fetch and display user's actual recent orders */}
-            </div>
-          </div>
         </div>
       </div>
     </div>
