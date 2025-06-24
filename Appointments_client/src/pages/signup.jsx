@@ -53,9 +53,14 @@ export default function SignupPage() {
         throw new Error(data.errors?.[0]?.msg || 'Signup failed');   // Throw error with server message or default message
       }
 
-      // Store user ID for the next step if needed(Store user ID localStorage for next signup step)
-      localStorage.setItem('tempUserId', data.userId);
-       localStorage.setItem('token', data.token);
+     // Store userId using the correct key 'userId'
+      localStorage.setItem('userId', data.userId);
+      localStorage.setItem('token', data.token);
+
+      // Optional: If your backend also sends businessName on signup, store it.
+      if (data.businessName) {
+        localStorage.setItem('businessName', data.businessName);
+      }
       
       navigate("/dashboard"); // Redirect to the next signup page on success
     } catch (err) {
