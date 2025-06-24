@@ -7,7 +7,7 @@ import { IoNotificationsOutline, IoHelpCircleOutline } from "react-icons/io5";
 import { FaBars } from "react-icons/fa";
 import PropTypes from "prop-types";
 
-const Navbar = ({ toggleSidebar, userData}) => {
+const Navbar = ({ toggleSidebar }) => {
   const [isSearchVisible, setIsSearchVisible] = useState(false); // State to control search bar visibility
 
   const toggleSearchBar = () => {
@@ -31,12 +31,6 @@ const Navbar = ({ toggleSidebar, userData}) => {
       {/* Right Section: Search Bar and Icons */}
       <div className="flex items-center space-x-1 sm:space-x-1">
         {/* Search Bar - Visible only when isSearchVisible is true */}
-        {/* Business Appointments Text - Hidden on small screens, visible on medium and larger */}
-        <span className="hidden sm:inline text-black font-medium ml-4">
-          {/* <--- CHANGE THIS LINE */}
-          {userData ? `Welcome, ${userData.businessName || userData.name || 'User'}` : 'Business Appointments'}
-        </span>
-
         {isSearchVisible && (
           <div className="flex items-center gap-2 border p-1 rounded-md w-[200px] lg:w-[200px] mr-4">
             <FaSearch className="text-gray-500" />
@@ -86,7 +80,6 @@ const Navbar = ({ toggleSidebar, userData}) => {
 // Add PropTypes validation
 Navbar.propTypes = {
   toggleSidebar: PropTypes.func.isRequired,
-  userData: PropTypes.object, 
 };
 
 export default Navbar;
