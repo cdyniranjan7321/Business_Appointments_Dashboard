@@ -44,7 +44,12 @@ export default function LogIn() {
 
       // Store user ID and verification status
       localStorage.setItem('userId', data.userId);
+      localStorage.setItem('token', data.token);
       localStorage.setItem('isVerified', data.isVerified);
+      // If your backend also sends businessName on login/signup, you can store it too:
+if (data.businessName) {
+  localStorage.setItem('businessName', data.businessName);
+}
 
       // Redirect to dashboard
       navigate("/dashboard");
