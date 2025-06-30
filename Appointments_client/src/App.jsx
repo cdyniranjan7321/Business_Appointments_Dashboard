@@ -1,4 +1,3 @@
-
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import SignupPage from './pages/signup'; 
 import BusinessSignupScreen from './pages/signup2'; // Import signup2 component
@@ -18,6 +17,7 @@ import Analytics from './pages/Analytics';
 import ProductDetailsPage from './pages/ProductDetailsPage';
 import Settings from './pages/Settings';
 import Help from './pages/Help';
+import Builder from './pages/Builder'
 
 
 function App() {
@@ -62,6 +62,7 @@ function App() {
         <Route path="/customers/:customerId" element={<CustomerPage/>}/>
         <Route path="/settings" element={<Settings /> }/>
         <Route path="/help" element={<Help /> } />
+        <Route path="/builder" element={<Builder />} />
         {/* Add more routes as needed */}
      
        

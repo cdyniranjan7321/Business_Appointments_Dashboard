@@ -11,11 +11,91 @@ import Hover from "../assets/Hover.webp";
 import vantage from "../assets/vantage.webp";
 import canopy from "../assets/canopy.webp";
 import loft from "../assets/loft.webp";
+import PropTypes from 'prop-types';
+import { useNavigate } from 'react-router-dom';
+
+
+const TemplatePreview = ({ template, onClose }) => {
+  const navigate = useNavigate();
+
+  const handleCreateWebsite = () => {
+    navigate('/builder', { state: { selectedTemplate: template } });
+  };
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold">{template.name}</h2>
+            <button 
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <img 
+                src={template.image} 
+                alt={template.name} 
+                className="w-full rounded-lg shadow-md"
+              />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Description</h3>
+              <p className="text-gray-700 mb-4">{template.description}</p>
+              
+              <div className="space-y-4">
+                <button
+                  onClick={() => window.open("https://complete-website-mern.vercel.app/", "_blank")}
+                  className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition flex items-center justify-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  Preview Template
+                </button>
+                
+                <button
+                  onClick={handleCreateWebsite}
+                  className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 transition flex items-center justify-center"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Create Website with this Template
+                </button>
+                
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-2">Template Features:</h4>
+                  <ul className="list-disc pl-5 space-y-1">
+                    <li>Responsive design</li>
+                    <li>Easy customization</li>
+                    <li>Modern UI/UX</li>
+                    <li>Fast loading</li>
+                    <li>SEO optimized</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Apps = () => {
   const [isOpen, setIsOpen] = useState(true);
   const [searchInput, setSearchInput] = useState("");
   const [filteredTemplates, setFilteredTemplates] = useState([]);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   const templateRefs = useRef([]);
 
   const toggleSidebar = () => {
@@ -53,18 +133,25 @@ const Apps = () => {
     }
   };
 
-  // Modified function to handle template click based on template name
-  const handleTemplateClick = (templateName) => {
-    if (templateName === "Template 2") {
-      window.location.href = "https://complete-website-mern.vercel.app/";
-      // Alternatively, if you want to open in a new tab:
-      // window.open("https://complete-website-mern.vercel.app/", "_blank");
+  const handleTemplateClick = (template) => {
+    setSelectedTemplate(template);
+    if (template.name === "Template 2") {
+      setShowPreview(true);
     } else {
-      // For other templates, you can either do nothing or implement a different action.
-      // For now, it will just log to the console for demonstration.
-      console.log(`${templateName} was clicked!`);
-      alert(`${templateName} was clicked!`); // You can remove this alert in production
+      alert(`${template.name} was clicked!`);
     }
+  };
+
+  const handleCreateWebsite = () => {
+    // Here you would typically implement the website creation logic
+    // For now, we'll just show an alert and close the preview
+    alert(`Creating a new website with ${selectedTemplate.name}`);
+    setShowPreview(false);
+    
+    // In a real app, you might:
+    // 1. Create a new project in your database
+    // 2. Redirect to a website builder page
+    // 3. Initialize the template for editing
   };
 
   const templates = [
@@ -194,8 +281,7 @@ const Apps = () => {
                 key={index}
                 ref={(el) => (templateRefs.current[index] = el)}
                 className="bg-white rounded-lg shadow-md overflow-hidden mt-10 transform transition-all duration-300 hover:scale-105 hover:shadow-2xl cursor-pointer"
-                // Pass the template name to the click handler
-                onClick={() => handleTemplateClick(template.name)}
+                onClick={() => handleTemplateClick(template)}
               >
                 <img
                   src={template.image}
@@ -207,10 +293,9 @@ const Apps = () => {
                   <p className="text-gray-600 mt-2">{template.description}</p>
                   <button
                     className="mt-4 bg-green-400 text-white px-4 py-2 rounded hover:bg-blue-400"
-                    // Also pass the template name to the button's click handler
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent the parent div's onClick from firing
-                      handleTemplateClick(template.name);
+                      e.stopPropagation();
+                      handleTemplateClick(template);
                     }}
                   >
                     Use This Template
@@ -221,8 +306,29 @@ const Apps = () => {
           </div>
         </div>
       </div>
+
+      {/* Template Preview Modal */}
+      <AnimatePresence>
+        {showPreview && selectedTemplate && (
+          <TemplatePreview
+            template={selectedTemplate}
+            onClose={() => setShowPreview(false)}
+            onCreateWebsite={handleCreateWebsite}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 export default Apps;
+
+TemplatePreview.propTypes = {
+  template: PropTypes.shape({
+    name: PropTypes.string.isRequired,
+    image: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+  }).isRequired,
+  onClose: PropTypes.func.isRequired,
+  onCreateWebsite: PropTypes.func.isRequired,
+};
