@@ -46,10 +46,11 @@ export default function LogIn() {
       localStorage.setItem('userId', data.userId);
       localStorage.setItem('token', data.token);
       localStorage.setItem('isVerified', data.isVerified);
-      // If your backend also sends businessName on login/signup, you can store it too:
-if (data.businessName) {
-  localStorage.setItem('businessName', data.businessName);
-}
+      localStorage.setItem('businessName', data.businessName);
+    
+    // Store sidebar preferences
+    localStorage.setItem('navigation', JSON.stringify(data.navigation));
+    localStorage.setItem('pinnedApps', JSON.stringify(data.pinnedApps));
 
       // Redirect to dashboard
       navigate("/dashboard");
