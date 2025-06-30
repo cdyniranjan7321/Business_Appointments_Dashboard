@@ -392,7 +392,9 @@ app.post(
                 userId: user._id.toHexString(), // Convert ObjectId to string
                 isVerified: user.isVerified,
                 token, // Send the token
-                businessName: user.businessName // Send businessName if available
+                businessName: user.businessName, // Send businessName if available
+                navigation: user.sidebarPreferences?.navigation || [],
+                pinnedApps: user.sidebarPreferences?.pinnedApps || {}
             });
         } catch (error) {
             console.error('Login error:', error);
