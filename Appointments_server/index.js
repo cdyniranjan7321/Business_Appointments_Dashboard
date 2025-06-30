@@ -165,60 +165,8 @@ app.post('/api/auth/signup', [
       createdAt: new Date(),        // Current timestamp
       //verified: false               // Default verification status
       // You can add more default fields here, e.g., default businessName
-      businessName: 'My Business Dashboard', // Default value
-      sidebarPreferences: {
-    navigation: [], // Start with empty array (only default items)
-    pinnedApps: {
-      messages: false, // Default pinned apps (all false)
-      projects: false,
-      news: false,
-      notes: false
-    }
-  }
+      businessName: 'My Business Dashboard' // Default value
     };
-    
-// Add these new endpoints:
-
-// GET user preferences
-app.get('/api/user/preferences', verifyToken, async (req, res) => {
-  try {
-    const user = await usersCollection.findOne(
-      { _id: new ObjectId(req.userId) },
-      { projection: { sidebarPreferences: 1 } }
-    );
-    
-    if (!user) return res.status(404).json({ message: 'User not found' });
-    
-    res.status(200).json(user.sidebarPreferences || {
-      navigation: [],
-      pinnedApps: {}
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// UPDATE user preferences
-app.put('/api/user/preferences', verifyToken, async (req, res) => {
-  try {
-    const { navigation, pinnedApps } = req.body;
-    
-    await usersCollection.updateOne(
-      { _id: new ObjectId(req.userId) },
-      { 
-        $set: { 
-          'sidebarPreferences.navigation': navigation || [],
-          'sidebarPreferences.pinnedApps': pinnedApps || {},
-          updatedAt: new Date()
-        } 
-      }
-    );
-    
-    res.status(200).json({ message: 'Preferences updated successfully' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
 
     // Insert new user into database
     const result = await usersCollection.insertOne(newUser);
@@ -392,9 +340,7 @@ app.post(
                 userId: user._id.toHexString(), // Convert ObjectId to string
                 isVerified: user.isVerified,
                 token, // Send the token
-                businessName: user.businessName, // Send businessName if available
-                navigation: user.sidebarPreferences?.navigation || [],
-                pinnedApps: user.sidebarPreferences?.pinnedApps || {}
+                businessName: user.businessName // Send businessName if available
             });
         } catch (error) {
             console.error('Login error:', error);
