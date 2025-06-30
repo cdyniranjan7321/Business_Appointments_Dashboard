@@ -51,7 +51,7 @@ const TemplatePreview = ({ template, onClose }) => {
               
               <div className="space-y-4">
                 <button
-                  onClick={() => window.open("https://complete-website-mern.vercel.app/", "_blank")}
+                  onClick={() => window.open("https://barber-website-xi.vercel.app/", "_blank")}
                   className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition flex items-center justify-center"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
