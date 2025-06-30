@@ -5,6 +5,7 @@ import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { HiOutlineMail, HiOutlinePhone } from 'react-icons/hi';
 import { MdLocationOn } from 'react-icons/md';
 
+
 // ======================
 // PROP TYPE DEFINITIONS
 // ======================
