@@ -25,46 +25,45 @@ import { PiFolderSimpleUserDuotone } from "react-icons/pi";
 import { MdOutlineClear } from "react-icons/md";
 import PropTypes from "prop-types";
 
-// Default sidebar items (always visible)
+// Default items (always shown for new users)
 const defaultItems = [
   { id: 1, icon: <FaHome />, text: "Home", path: "/dashboard" },
   { id: 2, icon: <FaCog />, text: "Settings", path: "/settings" },
-  { id: 3, icon: <FiHelpCircle />, text: "Help", path: "/help"},
+  { id: 3, icon: <FiHelpCircle />, text: "Help", path: "/help" },
 ];
 
-// Optional items (can be added via the edit popup)
+// Optional items (can be added by user)
 const optionalItems = [
-  { id: 4, icon: <FaCalendarAlt />, text: "Appointments", path:"/booking" },
-  { id: 5, icon: <MdProductionQuantityLimits />, text: "Products", path:"/products" },
-  { id: 6, icon: <MdOutlineDiscount />, text: "Discounts", path:"/discount" },
-  { id: 7, icon: <FcServices />, text: "Services", path:"/services" },
-  { id: 8, icon: <HiOutlineSpeakerphone />, text: "Marketing Suite", path:"/marketing" },
-  { id: 9, icon: <FaAd />, text: "Social & Ads" },
-  { id: 10, icon: <PiFolderSimpleUserDuotone />, text: "Customers", path:"/customer" },
-  { id: 11, icon: <IoPeople />, text: "Staff", path:"/staff" },
-  { id: 12, icon: <RiShoppingBag4Fill />, text: "Orders", path:"/orders" },
-  { id: 13, icon: <SiGoogleanalytics />, text: "Analytics", path:"/analytics" },
+  { id: 4, icon: <FaCalendarAlt />, text: "Appointments", path: "/booking" },
+  { id: 5, icon: <MdProductionQuantityLimits />, text: "Products", path: "/products" },
+  { id: 6, icon: <MdOutlineDiscount />, text: "Discounts", path: "/discount" },
+  { id: 7, icon: <FcServices />, text: "Services", path: "/services" },
+  { id: 8, icon: <HiOutlineSpeakerphone />, text: "Marketing Suite", path: "/marketing" },
+  { id: 9, icon: <FaAd />, text: "Social & Ads", path: "/social" },
+  { id: 10, icon: <PiFolderSimpleUserDuotone />, text: "Customers", path: "/customer" },
+  { id: 11, icon: <IoPeople />, text: "Staff", path: "/staff" },
+  { id: 12, icon: <RiShoppingBag4Fill />, text: "Orders", path: "/orders" },
+  { id: 13, icon: <SiGoogleanalytics />, text: "Analytics", path: "/analytics" },
 ];
 
 // App items for the Apps section
 const appItems = [
   { id: 'messages', icon: <LuMessagesSquare />, text: "Messages", path: "/messages" },
-  { id: 'projects', icon: <SiCreatereactapp />, text:"Projects", path:"/projects" },
-  { id: 'news', icon: <FaNewspaper />, text:"News", path:"/news" },
-  { id: 'notes', icon: <FaNotesMedical />, text:"Notes", path:"/notes" },
+  { id: 'projects', icon: <SiCreatereactapp />, text: "Projects", path: "/projects" },
+  { id: 'news', icon: <FaNewspaper />, text: "News", path: "/news" },
+  { id: 'notes', icon: <FaNotesMedical />, text: "Notes", path: "/notes" },
 ];
 
 const Sidebar = ({ isOpen }) => {
   const navigate = useNavigate();
   
   // State management
-  const [showPopup, setShowPopup] = useState(false);
-  const [sidebarItems, setSidebarItems] = useState([]);
-  const [showNotification, setShowNotification] = useState(false);
-  const [showAppsPopup, setShowAppsPopup] = useState(false);
-  const [showAddAppsSubtitle, setShowAddAppsSubtitle] = useState(false);
+  const [sidebarItems, setSidebarItems] = useState([...defaultItems]);
   const [pinnedApps, setPinnedApps] = useState({});
   const [downloadedApps, setDownloadedApps] = useState([]);
+  const [showPopup, setShowPopup] = useState(false);
+  const [showAppsPopup, setShowAppsPopup] = useState(false);
+  const [showAddAppsSubtitle, setShowAddAppsSubtitle] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [tempSidebarSelections, setTempSidebarSelections] = useState([]);
@@ -73,7 +72,6 @@ const Sidebar = ({ isOpen }) => {
   useEffect(() => {
     const loadPreferences = async () => {
       try {
-        // First try to load from backend
         const response = await fetch('/api/user/preferences', {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -83,42 +81,21 @@ const Sidebar = ({ isOpen }) => {
         if (response.ok) {
           const data = await response.json();
           
-          // Build sidebar items from preferences
-          const navItems = optionalItems.filter(item => 
+          // Combine default items with user's selected items
+          const userSelectedItems = optionalItems.filter(item => 
             data.navigation?.includes(item.id)
           );
           
-          setSidebarItems([
-            defaultItems[0], // Home
-            ...navItems,
-            defaultItems[1], // Settings
-            defaultItems[2]  // Help
-          ]);
-
+          setSidebarItems([...defaultItems, ...userSelectedItems]);
           setPinnedApps(data.pinnedApps || {});
           setDownloadedApps(
             Object.keys(data.pinnedApps || {}).filter(app => data.pinnedApps[app])
           );
         } else {
-          // Fallback to localStorage if backend fails
-          const savedNav = JSON.parse(localStorage.getItem('navigation')) || [];
-          const savedPinned = JSON.parse(localStorage.getItem('pinnedApps')) || {};
-          
-          const navItems = optionalItems.filter(item => 
-            savedNav.includes(item.id)
-          );
-          
-          setSidebarItems([
-            defaultItems[0], // Home
-            ...navItems,
-            defaultItems[1], // Settings
-            defaultItems[2]  // Help
-          ]);
-
-          setPinnedApps(savedPinned);
-          setDownloadedApps(
-            Object.keys(savedPinned).filter(app => savedPinned[app])
-          );
+          // For new users, just show default items
+          setSidebarItems([...defaultItems]);
+          setPinnedApps({});
+          setDownloadedApps([]);
         }
       } catch (error) {
         console.error('Error loading preferences:', error);
@@ -128,26 +105,23 @@ const Sidebar = ({ isOpen }) => {
     loadPreferences();
   }, []);
 
-  // Save preferences when they change
-  const savePreferences = async (navIds, pinned) => {
+  // Save preferences to backend and localStorage
+  const savePreferences = async (selectedIds) => {
     try {
-      // Update local state immediately
-      const navItems = optionalItems.filter(item => navIds.includes(item.id));
-      setSidebarItems([
-        defaultItems[0], // Home
-        ...navItems,
-        defaultItems[1], // Settings
-        defaultItems[2]  // Help
-      ]);
-
-      setPinnedApps(pinned);
-      setDownloadedApps(Object.keys(pinned).filter(app => pinned[app]));
+      // Filter out default items (always included)
+      const userSelectedIds = selectedIds.filter(id => id > 3);
       
-      // Save to localStorage for quick access
-      localStorage.setItem('navigation', JSON.stringify(navIds));
-      localStorage.setItem('pinnedApps', JSON.stringify(pinned));
+      // Update local state
+      const userSelectedItems = optionalItems.filter(item => 
+        userSelectedIds.includes(item.id)
+      );
+      setSidebarItems([...defaultItems, ...userSelectedItems]);
 
-      // Save to backend for persistence
+      // Save to localStorage
+      localStorage.setItem('navigation', JSON.stringify(userSelectedIds));
+      localStorage.setItem('pinnedApps', JSON.stringify(pinnedApps));
+
+      // Save to backend
       await fetch('/api/user/preferences', {
         method: 'PUT',
         headers: {
@@ -155,8 +129,8 @@ const Sidebar = ({ isOpen }) => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          navigation: navIds,
-          pinnedApps: pinned
+          navigation: userSelectedIds,
+          pinnedApps: pinnedApps
         })
       });
     } catch (error) {
@@ -169,79 +143,64 @@ const Sidebar = ({ isOpen }) => {
     if (isDownloading) return;
     
     const newPinnedApps = { ...pinnedApps, [app]: !pinnedApps[app] };
-    savePreferences(
-      sidebarItems.filter(i => i.id > 3).map(i => i.id),
-      newPinnedApps
-    );
+    setPinnedApps(newPinnedApps);
+    
+    // Save preferences
+    const selectedIds = sidebarItems.map(item => item.id);
+    savePreferences(selectedIds);
   };
 
-  // Download an app with progress simulation
+  // Download an app
   const handleDownload = (appId) => {
-    if (isDownloading) return;
+    if (isDownloading || downloadedApps.includes(appId)) return;
     
-    if (!downloadedApps.includes(appId)) {
-      const app = appItems.find(item => item.id === appId);
-      
-      setIsDownloading(true);
-      setDownloadProgress({
-        appId,
-        progress: 0,
-        text: `Starting download of ${app.text}...`
-      });
-      
-      const interval = setInterval(() => {
-        setDownloadProgress(prev => {
-          const newProgress = prev.progress + Math.floor(Math.random() * 10) + 5;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            
-            // Auto-pin downloaded app
-            const newPinnedApps = { ...pinnedApps, [appId]: true };
-            savePreferences(
-              sidebarItems.filter(i => i.id > 3).map(i => i.id),
-              newPinnedApps
-            );
-            
-            setTimeout(() => {
-              setDownloadProgress(null);
-              setIsDownloading(false);
-            }, 1000);
-            
-            return {
-              ...prev,
-              progress: 100,
-              text: `${app.text} downloaded successfully!`
-            };
-          }
+    const app = appItems.find(item => item.id === appId);
+    
+    setIsDownloading(true);
+    setDownloadProgress({
+      appId,
+      progress: 0,
+      text: `Starting download of ${app.text}...`
+    });
+    
+    const interval = setInterval(() => {
+      setDownloadProgress(prev => {
+        const newProgress = prev.progress + Math.floor(Math.random() * 10) + 5;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          
+          // Auto-pin downloaded app
+          const newPinnedApps = { ...pinnedApps, [appId]: true };
+          setPinnedApps(newPinnedApps);
+          setDownloadedApps(prev => [...prev, appId]);
+          
+          // Save preferences
+          const selectedIds = sidebarItems.map(item => item.id);
+          savePreferences(selectedIds);
+          
+          setTimeout(() => {
+            setDownloadProgress(null);
+            setIsDownloading(false);
+          }, 1000);
+          
           return {
             ...prev,
-            progress: newProgress,
-            text: `Downloading ${app.text}... ${newProgress}%`
+            progress: 100,
+            text: `${app.text} downloaded successfully!`
           };
-        });
-      }, 300);
-    }
+        }
+        return {
+          ...prev,
+          progress: newProgress,
+          text: `Downloading ${app.text}... ${newProgress}%`
+        };
+      });
+    }, 300);
   };
 
   // Filter apps
   const pinnedAppItems = appItems.filter(item => pinnedApps[item.id]);
   const availableAppItems = appItems.filter(item => !downloadedApps.includes(item.id));
-
-  // Handle navigation
-  const handleAppClick = (path) => {
-    if (isDownloading) return;
-    if (path) navigate(path);
-  };
-
-  // Show welcome notification on dashboard
-  useEffect(() => {
-    if (window.location.pathname === "/dashboard") {
-      const timer = setTimeout(() => {
-        setShowNotification(true);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   return (
     <div className={`fixed left-0 top-0 h-screen ${isOpen ? "w-64" : "w-17"} bg-[#6FB434] text-white transition-all duration-300 pt-16 overflow-y-auto`}>
@@ -253,7 +212,7 @@ const Sidebar = ({ isOpen }) => {
             className={`cursor-pointer text-xl ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
             onClick={() => {
               if (!isDownloading) {
-                setTempSidebarSelections(sidebarItems.filter(item => item.id > 3).map(item => item.id));
+                setTempSidebarSelections(sidebarItems.map(item => item.id));
                 setShowPopup(true);
               }
             }}
@@ -272,7 +231,7 @@ const Sidebar = ({ isOpen }) => {
             text={item.text}
             path={item.path}
             isDisabled={isDownloading}
-            onClick={() => handleAppClick(item.path)}
+            onClick={() => !isDownloading && navigate(item.path)}
           />
         ))}
       </nav>
@@ -315,17 +274,15 @@ const Sidebar = ({ isOpen }) => {
               <div 
                 key={item.id} 
                 className={`flex items-center justify-between p-2 rounded-l-3xl bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group ${isDownloading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                onClick={() => !isDownloading && handleAppClick(item.path)}
+                onClick={() => !isDownloading && navigate(item.path)}
               >
                 <div className="flex items-center gap-2">
                   {React.cloneElement(item.icon, {
                     className: `w-5 h-5 text-white group-hover:text-[#6FB434]`,
                   })}
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium text-white group-hover:text-[#6FB434] group-hover:font-bold">
-                      {item.text}
-                    </span>
-                  </div>
+                  <span className="text-sm font-medium text-white group-hover:text-[#6FB434] group-hover:font-bold">
+                    {item.text}
+                  </span>
                 </div>
                 <button
                   onClick={(e) => {
@@ -357,7 +314,7 @@ const Sidebar = ({ isOpen }) => {
               <button
                 onClick={() => {
                   if (!isDownloading) {
-                    savePreferences(tempSidebarSelections, pinnedApps);
+                    savePreferences(tempSidebarSelections);
                     setShowPopup(false);
                   }
                 }}
@@ -368,6 +325,15 @@ const Sidebar = ({ isOpen }) => {
             </div>
             <h2 className="text-xl font-bold text-left mb-4 text-black">Edit Navigation</h2>
             <div className="flex-grow overflow-y-auto">
+              <h3 className="font-bold text-black mb-2">Default Items</h3>
+              {defaultItems.map((item) => (
+                <div key={item.id} className="flex items-center p-2 text-black">
+                  {item.icon}
+                  <span className="ml-2">{item.text}</span>
+                </div>
+              ))}
+              
+              <h3 className="font-bold text-black mt-4 mb-2">Optional Items</h3>
               {optionalItems.map((item) => (
                 <label key={item.id} className="flex justify-between items-center p-2 border-b border-gray-700">
                   <div className="flex items-center gap-2 text-black">
@@ -392,15 +358,6 @@ const Sidebar = ({ isOpen }) => {
                 </label>
               ))}
             </div>
-            <div className="mt-4">
-              <h3 className="text-lg font-bold text-black">Default Items</h3>
-              {defaultItems.map((item) => (
-                <div key={item.id} className="flex items-center p-2 text-black">
-                  {item.icon}
-                  <span className="ml-2">{item.text}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}
@@ -423,7 +380,7 @@ const Sidebar = ({ isOpen }) => {
                 <div 
                   key={item.id} 
                   className={`flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 ${isDownloading ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
-                  onClick={() => !isDownloading && handleAppClick(item.path)}
+                  onClick={() => !isDownloading && navigate(item.path)}
                 >
                   <div className="flex items-center gap-3">
                     {React.cloneElement(item.icon, {
@@ -450,19 +407,7 @@ const Sidebar = ({ isOpen }) => {
         </div>
       )}
 
-      {/* Notifications */}
-      {showNotification && (
-        <div className="fixed bottom-4 right-4 bg-yellow-200 p-4 rounded-lg shadow-lg flex items-center gap-4 z-50">
-          <span className="text-gray-800">Customize your sidebar using the Edit button</span>
-          <button 
-            onClick={() => !isDownloading && setShowNotification(false)} 
-            className={`text-red-600 hover:text-gray-700 ${isDownloading ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <MdOutlineClear />
-          </button>
-        </div>
-      )}
-
+      {/* Download Progress Notification */}
       {downloadProgress && (
         <div className="fixed bottom-4 left-4 bg-white p-4 rounded-lg shadow-lg flex flex-col gap-2 z-50 w-64">
           <div className="flex justify-between items-center">
@@ -494,20 +439,12 @@ const Sidebar = ({ isOpen }) => {
 
 // SidebarItem Component
 const SidebarItem = ({ isOpen, icon, text, isSelectable = true, onClick, path, isDisabled = false }) => {
-  const navigate = useNavigate();
-  
-  const handleClick = () => {
-    if (isDisabled) return;
-    onClick?.();
-    path && navigate(path);
-  };
-
   return (
     <div
       className={`flex items-center gap-2 p-2 rounded-l-3xl cursor-pointer bg-transparent hover:bg-[#f0f8ff] hover:ml-2 transition-all duration-300 group ${
         isDisabled ? "opacity-50 cursor-not-allowed" : ""
       }`}
-      onClick={handleClick}
+      onClick={onClick}
     >
       {React.cloneElement(icon, {
         className: `w-5 h-5 text-white group-hover:text-[#6FB434]`,
