@@ -297,13 +297,13 @@ const getInitialComponentData = (type) => {
     ],
     styles: {
       backgroundColor: "#FFFFFF",
-      titleColor: "#1E1E1E",
-      subtitleColor: "#4B5563",
-      textColor: "#4B5563",
-      cardTextColor: "#16A34A",
-      cardDescriptionColor: "#90BD95",
-      buttonBgColor: "#16A34A",
-      buttonTextColor: "#FFFFFF"
+      titleColor: "#1E1E1E",  // Dark color for title
+      subtitleColor: "#4B5563", // Subtitle color
+      textColor: "#6B7280", // Secondary text color
+      cardTextColor: "#16A34A", // Green for service titles
+      cardDescriptionColor: "#90BD95", // Light green for descriptions
+      buttonBgColor: "#16A34A", // Green button
+      buttonTextColor: "#FFFFFF" // White button text
     }
   };
   break;
@@ -619,17 +619,26 @@ const ComponentPreview = ({ component, onClick }) => {
   return (
     <div className="section-container my-16 px-4 sm:px-6" style={{ backgroundColor: styles.backgroundColor }}>
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-          {/* Text Content */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-0">
+          {/* Text Content - Match exact classes from reference */}
           <div className="md:w-1/2">
             <div className="text-left md:w-4/5">
-              <p className="subtitle" style={{ color: styles.subtitleColor }}>
+              <p 
+                className="subtitle text-sm font-medium uppercase tracking-wider" 
+                style={{ color: styles.subtitleColor }}
+              >
                 {component.subtitle}
               </p>
-              <h2 className="title" style={{ color: styles.titleColor }}>
+              <h2 
+                className="title text-3xl md:text-4xl font-bold mt-2 mb-4" 
+                style={{ color: styles.titleColor }}
+              >
                 {component.title}
               </h2>
-              <p className="my-5 leading-[30px] text-base" style={{ color: styles.textColor }}>
+              <p 
+                className="my-5 leading-[30px] text-base" 
+                style={{ color: styles.textColor }}
+              >
                 {component.description}
               </p>
               <button 
@@ -644,7 +653,7 @@ const ComponentPreview = ({ component, onClick }) => {
             </div>
           </div>
 
-          {/* Services Grid */}
+          {/* Services Grid - Keep existing */}
           <div className="md:w-1/2">
             <div className="grid sm:grid-cols-2 grid-cols-1 gap-8 items-center">
               {component.items.map((service) => (
@@ -1846,11 +1855,15 @@ case "banner":
   return `
     <section class="py-16 px-4 sm:px-6" style="background-color: ${styles.backgroundColor}">
       <div class="max-w-7xl mx-auto">
-        <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-0">
           <div class="md:w-1/2">
             <div class="text-left md:w-4/5">
-              <p class="subtitle" style="color: ${styles.subtitleColor}">${comp.subtitle}</p>
-              <h2 class="title" style="color: ${styles.titleColor}">${comp.title}</h2>
+              <p class="subtitle text-sm font-medium uppercase tracking-wider" style="color: ${styles.subtitleColor}">
+                ${comp.subtitle}
+              </p>
+              <h2 class="title text-3xl md:text-4xl font-bold mt-2 mb-4" style="color: ${styles.titleColor}">
+                ${comp.title}
+              </h2>
               <p class="my-5 leading-[30px] text-base" style="color: ${styles.textColor}">
                 ${comp.description}
               </p>
