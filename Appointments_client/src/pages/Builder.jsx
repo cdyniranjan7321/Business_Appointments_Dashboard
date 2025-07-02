@@ -89,6 +89,19 @@ const HeroPropTypes = {
   imageUrl: PropTypes.string,
 };
 
+const AppointmentPropTypes = {
+  ...ComponentPropTypes,
+  title: PropTypes.string.isRequired,
+  subtitle: PropTypes.string.isRequired,
+  description: PropTypes.string.isRequired,
+  button: ButtonPropTypes.isRequired,
+  imageUrl: PropTypes.string,
+  workingDays: PropTypes.shape({
+    weekdays: PropTypes.string.isRequired,
+    weekend: PropTypes.string.isRequired,
+  }).isRequired,
+};
+
 const ServicesPropTypes = {
   ...ComponentPropTypes,
   title: PropTypes.string.isRequired,
@@ -142,14 +155,17 @@ const validateComponentData = (component) => {
     case 'navbar':
       PropTypes.checkPropTypes(NavbarPropTypes, component, 'prop', 'NavbarComponent');
       break;
-      case 'banner':
+    case 'banner':
       PropTypes.checkPropTypes(BannerPropTypes, component, 'prop', 'BannerComponent');
       break;
-      case 'categores':
+    case 'categores':
       PropTypes.checkPropTypes(CategoriesPropTypes, component, 'prop', 'CategoriesComponent');
       break;
     case 'hero':
       PropTypes.checkPropTypes(HeroPropTypes, component, 'prop', 'HeroComponent');
+      break;
+    case 'appointment':
+      PropTypes.checkPropTypes(AppointmentPropTypes, component, 'prop', 'AppointmentComponent');
       break;
     case 'services':
       PropTypes.checkPropTypes(ServicesPropTypes, component, 'prop', 'ServicesComponent');
@@ -259,6 +275,33 @@ const getInitialComponentData = (type) => {
         styles: { titleColor: "#FFFFFF", subtitleColor: "#E5E7EB" },
       };
       break;
+      case "appointment":
+  component = {
+    ...base,
+    title: "Book Your Appointment, Skip the Wait",
+    subtitle: "Opening hours",
+    description: "With our easy online booking system, you can choose your preferred time and barber, ensuring a seamless, appointment-only experience. No more waiting in line—just arrive, relax, and enjoy top-notch service!",
+    button: { 
+      text: "Book Now", 
+      url: "/appointment/book" 
+    },
+    workingDays: {
+      weekdays: "SUN - FRI\n8AM - 10PM",
+      weekend: "SAT\nClosed"
+    },
+    styles: {
+      backgroundColor: "#FFFFFF",
+      titleColor: "#1E1E1E",
+      subtitleColor: "#16A34A",
+      descriptionColor: "#6B7280",
+      buttonBgColor: "#16A34A",
+      buttonTextColor: "#FFFFFF",
+      timeCardBgColor: "#FFFFFF",
+      timeCardTextColor: "#16A34A",
+      timeCardSubtextColor: "#90BD95"
+    }
+  };
+  break;
     case "services":
   component = {
     ...base,
@@ -615,6 +658,94 @@ const ComponentPreview = ({ component, onClick }) => {
             </div>
           </div>
         );
+        case "appointment":
+  return (
+    <div className="section-container" style={{ backgroundColor: styles.backgroundColor }}>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-16">
+        {/* Time Cards Container */}
+        <div className="relative md:w-1/2">
+          {/* Weekdays Time Card */}
+          <div 
+            className="shadow-[7px_12px_43px_0_#00000023] rounded-[30px] w-[260px] h-[112px] text-center space-y-2 cursor-pointer hover:border hover:border-indigo-600 transition-all duration-200 flex flex-col justify-center"
+            style={{ 
+              backgroundColor: styles.timeCardBgColor,
+              color: styles.timeCardTextColor,
+              marginBottom: "1rem"
+            }}
+          >
+            <h5 className="text-[20px] font-bold">{component.workingDays.weekdays.split('\n')[0]}</h5>
+            <p className="text-[16px] font-semibold" style={{ color: styles.timeCardSubtextColor }}>
+              {component.workingDays.weekdays.split('\n')[1]}
+            </p>
+          </div>
+
+          {/* Weekend Time Card */}
+          <div 
+            className="shadow-[7px_12px_43px_0_#00000023] rounded-[30px] w-[260px] h-[112px] text-center space-y-2 cursor-pointer hover:border hover:border-indigo-600 transition-all duration-200 flex flex-col justify-center"
+            style={{ 
+              backgroundColor: styles.timeCardBgColor,
+              color: styles.timeCardTextColor
+            }}
+          >
+            <h5 className="text-[20px] font-bold">{component.workingDays.weekend.split('\n')[0]}</h5>
+            <p className="text-[16px] font-semibold" style={{ color: styles.timeCardSubtextColor }}>
+              {component.workingDays.weekend.split('\n')[1]}
+            </p>
+          </div>
+        </div>
+
+        {/* Content Section */}
+        <div className="md:w-[55%]">
+          <div className="text-left md:w-5/5 space-y-10">
+            <p 
+              className="subtitle !font-bold" 
+              style={{ 
+                color: styles.subtitleColor,
+                fontSize: "0.875rem",
+                fontWeight: "700",
+                textTransform: "uppercase",
+                letterSpacing: "0.1em"
+              }}
+            >
+              {component.subtitle}
+            </p>
+            <h2 
+              className="title" 
+              style={{ 
+                color: styles.titleColor,
+                fontSize: "2.25rem",
+                fontWeight: "700",
+                lineHeight: "1.2"
+              }}
+            >
+              {component.title}
+            </h2>
+            <p 
+              className="my-5 leading-[30px]" 
+              style={{ 
+                color: styles.descriptionColor,
+                fontSize: "1rem",
+                lineHeight: "1.875rem"
+              }}
+            >
+              {component.description}
+            </p>
+            <button
+              className="font-semibold btn px-10 py-3 rounded-full"
+              style={{
+                backgroundColor: styles.buttonBgColor,
+                color: styles.buttonTextColor,
+                fontSize: "1rem",
+                fontWeight: "600"
+              }}
+            >
+              {component.button.text}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
       case "services":
   return (
     <div className="section-container my-16 px-4 sm:px-6" style={{ backgroundColor: styles.backgroundColor }}>
@@ -821,6 +952,7 @@ ComponentPreview.propTypes = {
     PropTypes.shape(BannerPropTypes),
     PropTypes.shape(CategoriesPropTypes),
     PropTypes.shape(HeroPropTypes),
+    PropTypes.shape(AppointmentPropTypes),
     PropTypes.shape(ServicesPropTypes),
     PropTypes.shape(AboutPropTypes),
     PropTypes.shape(FooterPropTypes)
@@ -1297,6 +1429,163 @@ case "banner":
             </div>
           </div>
         );
+        case "appointment":
+  return (
+    <div>
+      <h3 className="font-semibold mb-3">Appointment Settings</h3>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Content</h4>
+        <label className="block mb-1 text-sm">Title</label>
+        <input
+          type="text"
+          value={component.title}
+          onChange={(e) => handleInputChange("title", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="Book Your Appointment, Skip the Wait"
+        />
+        <label className="block mb-1 text-sm">Subtitle</label>
+        <input
+          type="text"
+          value={component.subtitle}
+          onChange={(e) => handleInputChange("subtitle", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="Opening hours"
+        />
+        <label className="block mb-1 text-sm">Description</label>
+        <textarea
+          value={component.description}
+          onChange={(e) => handleInputChange("description", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          rows="4"
+          placeholder="With our easy online booking system..."
+        />
+      </div>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Working Hours</h4>
+        <label className="block mb-1 text-sm">Weekdays</label>
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={component.workingDays.weekdays.split('\n')[0]}
+            onChange={(e) => {
+              const updated = {...component.workingDays};
+              updated.weekdays = `${e.target.value}\n${updated.weekdays.split('\n')[1]}`;
+              handleNestedInputChange("workingDays", "weekdays", updated.weekdays);
+            }}
+            className="w-1/2 p-2 border rounded"
+            placeholder="SUN - FRI"
+          />
+          <input
+            type="text"
+            value={component.workingDays.weekdays.split('\n')[1]}
+            onChange={(e) => {
+              const updated = {...component.workingDays};
+              updated.weekdays = `${updated.weekdays.split('\n')[0]}\n${e.target.value}`;
+              handleNestedInputChange("workingDays", "weekdays", updated.weekdays);
+            }}
+            className="w-1/2 p-2 border rounded"
+            placeholder="8AM - 10PM"
+          />
+        </div>
+        <label className="block mb-1 text-sm">Weekend</label>
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={component.workingDays.weekend.split('\n')[0]}
+            onChange={(e) => {
+              const updated = {...component.workingDays};
+              updated.weekend = `${e.target.value}\n${updated.weekend.split('\n')[1]}`;
+              handleNestedInputChange("workingDays", "weekend", updated.weekend);
+            }}
+            className="w-1/2 p-2 border rounded"
+            placeholder="SAT"
+          />
+          <input
+            type="text"
+            value={component.workingDays.weekend.split('\n')[1]}
+            onChange={(e) => {
+              const updated = {...component.workingDays};
+              updated.weekend = `${updated.weekend.split('\n')[0]}\n${e.target.value}`;
+              handleNestedInputChange("workingDays", "weekend", updated.weekend);
+            }}
+            className="w-1/2 p-2 border rounded"
+            placeholder="Closed"
+          />
+        </div>
+      </div>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Button</h4>
+        <label className="block mb-1 text-sm">Button Text</label>
+        <input
+          type="text"
+          value={component.button.text}
+          onChange={(e) => handleNestedInputChange("button", "text", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="Book Now"
+        />
+        <label className="block mb-1 text-sm">Button URL</label>
+        <input
+          type="text"
+          value={component.button.url}
+          onChange={(e) => handleNestedInputChange("button", "url", e.target.value)}
+          className="w-full p-2 border rounded"
+          placeholder="/appointment/book"
+        />
+      </div>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Styling</h4>
+        <ColorInput
+          label="Background Color"
+          value={component.styles.backgroundColor || "#FFFFFF"}
+          onChange={(v) => handleStyleChange("backgroundColor", v)}
+        />
+        <ColorInput
+          label="Title Color"
+          value={component.styles.titleColor || "#1E1E1E"}
+          onChange={(v) => handleStyleChange("titleColor", v)}
+        />
+        <ColorInput
+          label="Subtitle Color"
+          value={component.styles.subtitleColor || "#16A34A"}
+          onChange={(v) => handleStyleChange("subtitleColor", v)}
+        />
+        <ColorInput
+          label="Description Color"
+          value={component.styles.descriptionColor || "#6B7280"}
+          onChange={(v) => handleStyleChange("descriptionColor", v)}
+        />
+        <ColorInput
+          label="Button Background"
+          value={component.styles.buttonBgColor || "#16A34A"}
+          onChange={(v) => handleStyleChange("buttonBgColor", v)}
+        />
+        <ColorInput
+          label="Button Text Color"
+          value={component.styles.buttonTextColor || "#FFFFFF"}
+          onChange={(v) => handleStyleChange("buttonTextColor", v)}
+        />
+        <ColorInput
+          label="Time Card Background"
+          value={component.styles.timeCardBgColor || "#FFFFFF"}
+          onChange={(v) => handleStyleChange("timeCardBgColor", v)}
+        />
+        <ColorInput
+          label="Time Card Text Color"
+          value={component.styles.timeCardTextColor || "#16A34A"}
+          onChange={(v) => handleStyleChange("timeCardTextColor", v)}
+        />
+        <ColorInput
+          label="Time Card Subtext Color"
+          value={component.styles.timeCardSubtextColor || "#90BD95"}
+          onChange={(v) => handleStyleChange("timeCardSubtextColor", v)}
+        />
+      </div>
+    </div>
+  );
       case "services":
   return (
     <div>
@@ -1700,6 +1989,7 @@ CustomizationPanel.propTypes = {
     PropTypes.shape(NavbarPropTypes),
     PropTypes.shape(BannerPropTypes),
     PropTypes.shape(HeroPropTypes),
+    PropTypes.shape(AppointmentPropTypes),
     PropTypes.shape(ServicesPropTypes),
     PropTypes.shape(AboutPropTypes),
     PropTypes.shape(FooterPropTypes)
@@ -1851,6 +2141,54 @@ case "banner":
               </div>
             </section>
           `;
+          case "appointment":
+  return `
+    <section class="py-16 px-4" style="background-color: ${styles.backgroundColor}">
+      <div class="max-w-screen-2xl mx-auto">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-16">
+          <!-- Time Cards Container -->
+          <div class="relative md:w-1/2">
+            <!-- Weekdays Time Card -->
+            <div class="shadow-[7px_12px_43px_0_#00000023] rounded-[30px] w-[260px] h-[112px] text-center space-y-2 cursor-pointer hover:border hover:border-indigo-600 transition-all duration-200 flex flex-col justify-center"
+                 style="background-color: ${styles.timeCardBgColor}; color: ${styles.timeCardTextColor}; margin-bottom: 1rem">
+              <h5 class="text-[20px] font-bold">${comp.workingDays.weekdays.split('\n')[0]}</h5>
+              <p class="text-[16px] font-semibold" style="color: ${styles.timeCardSubtextColor}">
+                ${comp.workingDays.weekdays.split('\n')[1]}
+              </p>
+            </div>
+
+            <!-- Weekend Time Card -->
+            <div class="shadow-[7px_12px_43px_0_#00000023] rounded-[30px] w-[260px] h-[112px] text-center space-y-2 cursor-pointer hover:border hover:border-indigo-600 transition-all duration-200 flex flex-col justify-center"
+                 style="background-color: ${styles.timeCardBgColor}; color: ${styles.timeCardTextColor}">
+              <h5 class="text-[20px] font-bold">${comp.workingDays.weekend.split('\n')[0]}</h5>
+              <p class="text-[16px] font-semibold" style="color: ${styles.timeCardSubtextColor}">
+                ${comp.workingDays.weekend.split('\n')[1]}
+              </p>
+            </div>
+          </div>
+
+          <!-- Content Section -->
+          <div class="md:w-[55%]">
+            <div class="text-left md:w-5/5 space-y-10">
+              <p class="subtitle !font-bold" style="color: ${styles.subtitleColor}; font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em">
+                ${comp.subtitle}
+              </p>
+              <h2 class="title" style="color: ${styles.titleColor}; font-size: 2.25rem; font-weight: 700; line-height: 1.2">
+                ${comp.title}
+              </h2>
+              <p class="my-5 leading-[30px]" style="color: ${styles.descriptionColor}; font-size: 1rem; line-height: 1.875rem">
+                ${comp.description}
+              </p>
+              <a href="${comp.button.url}" class="font-semibold btn px-10 py-3 rounded-full inline-block"
+                 style="background-color: ${styles.buttonBgColor}; color: ${styles.buttonTextColor}; font-size: 1rem; font-weight: 600">
+                ${comp.button.text}
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
         case "services":
   return `
     <section class="py-16 px-4 sm:px-6" style="background-color: ${styles.backgroundColor}">
@@ -2021,6 +2359,7 @@ ${components.map(generateComponentHTML).join("\n")}
     { type: "banner", name: "Banner" },
     { type: "categories", name: "Categories" },
     { type: "hero", name: "Hero Section" },
+    { type: "appointment", name: "Appointment" },
     { type: "services", name: "Services" },
     { type: "about", name: "About Us" },
     { type: "footer", name: "Footer" },
