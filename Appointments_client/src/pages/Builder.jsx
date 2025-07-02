@@ -26,12 +26,12 @@ const LogoPropTypes = PropTypes.shape({
   imageUrl: PropTypes.string,
 });
 
-const ServiceItemPropTypes = PropTypes.shape({
-  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
-  icon: PropTypes.string,
-  title: PropTypes.string.isRequired,
-  description: PropTypes.string.isRequired,
-});
+//const ServiceItemPropTypes = PropTypes.shape({
+  //id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+  //icon: PropTypes.string,
+  //title: PropTypes.string.isRequired,
+  //description: PropTypes.string.isRequired,
+// });
 
 const StylesPropTypes = PropTypes.shape({
   backgroundColor: PropTypes.string,
@@ -93,7 +93,16 @@ const ServicesPropTypes = {
   ...ComponentPropTypes,
   title: PropTypes.string.isRequired,
   subtitle: PropTypes.string,
-  items: PropTypes.arrayOf(ServiceItemPropTypes).isRequired,
+  description: PropTypes.string,
+  button: ButtonPropTypes.isRequired,
+  items: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+      title: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+      imageUrl: PropTypes.string
+    })
+  ).isRequired
 };
 
 const AboutPropTypes = {
@@ -251,27 +260,53 @@ const getInitialComponentData = (type) => {
       };
       break;
     case "services":
-      component = {
-        ...base,
-        title: "Our Services",
-        subtitle: "What we offer to help you succeed.",
-        items: [
-          {
-            id: 1,
-            icon: "💻",
-            title: "Web Development",
-            description: "Modern and responsive websites tailored to your needs.",
-          },
-          {
-            id: 2,
-            icon: "🎨",
-            title: "UI/UX Design",
-            description: "Intuitive and beautiful user interfaces.",
-          },
-        ],
-        styles: { backgroundColor: "#F9FAFB" },
-      };
-      break;
+  component = {
+    ...base,
+    title: "Our Grooming Journey And Services",
+    subtitle: "Our Story & Services",
+    description: "At THE BARBER, we started with a passion for perfecting your look. With skill, precision, and style, we create a grooming experience that leaves you confident and refreshed.",
+    button: {
+      text: "Call Us",
+      url: "tel:+1234567890"
+    },
+    items: [
+      {
+        id: 1,
+        title: "5+ YEARS EXPERIENCE",
+        description: "Expert grooming with precision, style, and care",
+        imageUrl: "/images/home/services/icon1.png"
+      },
+      {
+        id: 2,
+        title: "CUSTOMER SATISFACTION",
+        description: "Committed to excellence, ensuring satisfaction every visit",
+        imageUrl: "/images/home/services/icon2.png"
+      },
+      {
+        id: 3,
+        title: "PREMIUM",
+        description: "Only the finest products for exceptional grooming results",
+        imageUrl: "/images/home/services/icon3.png"
+      },
+      {
+        id: 4,
+        title: "LOYALTY REWARDS",
+        description: "Earn points with every visit for exclusive perks",
+        imageUrl: "/images/home/services/icon4.png"
+      }
+    ],
+    styles: {
+      backgroundColor: "#FFFFFF",
+      titleColor: "#1E1E1E",
+      subtitleColor: "#4B5563",
+      textColor: "#4B5563",
+      cardTextColor: "#16A34A",
+      cardDescriptionColor: "#90BD95",
+      buttonBgColor: "#16A34A",
+      buttonTextColor: "#FFFFFF"
+    }
+  };
+  break;
     case "about":
       component = {
         ...base,
@@ -581,43 +616,62 @@ const ComponentPreview = ({ component, onClick }) => {
           </div>
         );
       case "services":
-        return (
-          <div 
-            className="p-6 rounded"
-            style={{ backgroundColor: styles.backgroundColor }}
-          >
-            <h2 
-              className="text-2xl font-bold text-center mb-6"
-              style={{ color: styles.textColor }}
-            >
-              {component.title}
-            </h2>
-            {component.subtitle && (
-              <p 
-                className="text-center mb-8"
-                style={{ color: styles.textColor }}
-              >
+  return (
+    <div className="section-container my-16 px-4 sm:px-6" style={{ backgroundColor: styles.backgroundColor }}>
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          {/* Text Content */}
+          <div className="md:w-1/2">
+            <div className="text-left md:w-4/5">
+              <p className="subtitle" style={{ color: styles.subtitleColor }}>
                 {component.subtitle}
               </p>
-            )}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <h2 className="title" style={{ color: styles.titleColor }}>
+                {component.title}
+              </h2>
+              <p className="my-5 leading-[30px] text-base" style={{ color: styles.textColor }}>
+                {component.description}
+              </p>
+              <button 
+                className="font-semibold btn px-10 py-3 rounded-full"
+                style={{
+                  backgroundColor: styles.buttonBgColor,
+                  color: styles.buttonTextColor
+                }}
+              >
+                {component.button.text}
+              </button>
+            </div>
+          </div>
+
+          {/* Services Grid */}
+          <div className="md:w-1/2">
+            <div className="grid sm:grid-cols-2 grid-cols-1 gap-8 items-center">
               {component.items.map((service) => (
                 <div 
                   key={service.id} 
-                  className="p-4 rounded shadow"
-                  style={{ 
-                    backgroundColor: styles.cardBgColor || "#FFFFFF",
-                    color: styles.textColor || "#111827"
-                  }}
+                  className="shadow-md rounded-sm py-5 px-4 text-center space-y-2 cursor-pointer hover:border hover:border-indigo-600 transition-all duration-200"
+                  style={{ color: styles.cardTextColor }}
                 >
-                  <div className="text-3xl mb-2">{service.icon}</div>
-                  <h3 className="text-xl font-semibold">{service.title}</h3>
-                  <p className="text-gray-600">{service.description}</p>
+                  {service.imageUrl ? (
+                    <img src={service.imageUrl} alt="" className="mx-auto" />
+                  ) : (
+                    <div className="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                      <ImageIcon className="w-8 h-8 text-gray-400" />
+                    </div>
+                  )}
+                  <h5 className="pt-3 font-semibold">{service.title}</h5>
+                  <p className="px-2" style={{ color: styles.cardDescriptionColor }}>
+                    {service.description}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
-        );
+        </div>
+      </div>
+    </div>
+  );
       case "about":
         return (
           <div 
@@ -1235,113 +1289,166 @@ case "banner":
           </div>
         );
       case "services":
-        return (
-          <div>
-            <h3 className="font-semibold mb-3">Services Section</h3>
-            <div className="mb-4 p-3 border rounded-lg">
-              <h4 className="font-medium mb-2">Content</h4>
-              <label className="block mb-1 text-sm">Section Title</label>
-              <input
-                type="text"
-                value={component.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                className="w-full p-2 border rounded mb-2"
-              />
-              <label className="block mb-1 text-sm">Section Subtitle</label>
-              <input
-                type="text"
-                value={component.subtitle}
-                onChange={(e) => handleInputChange("subtitle", e.target.value)}
-                className="w-full p-2 border rounded mb-2"
-              />
-            </div>
-            <div className="mb-4 p-3 border rounded-lg">
-              <h4 className="font-medium mb-2">Styling</h4>
-              <ColorInput
-                label="Background Color"
-                value={component.styles.backgroundColor || "#F9FAFB"}
-                onChange={(v) => handleStyleChange("backgroundColor", v)}
-              />
-              <ColorInput
-                label="Text Color"
-                value={component.styles.textColor || "#111827"}
-                onChange={(v) => handleStyleChange("textColor", v)}
-              />
-              <ColorInput
-                label="Card Background"
-                value={component.styles.cardBgColor || "#FFFFFF"}
-                onChange={(v) => handleStyleChange("cardBgColor", v)}
-              />
-            </div>
-            <div className="mb-4 p-3 border rounded-lg">
-              <h4 className="font-medium mb-2">Service Items</h4>
-              {component.items.map((item, index) => (
-                <div key={item.id} className="mb-3 p-2 border rounded">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="font-medium">Service {index + 1}</span>
-                    <button
-                      onClick={() => {
-                        const updatedItems = component.items.filter((_, i) => i !== index);
-                        handleInputChange("items", updatedItems);
-                      }}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                  <label className="block mb-1 text-xs">Icon (emoji)</label>
-                  <input
-                    type="text"
-                    value={item.icon}
-                    onChange={(e) => {
-                      const updatedItems = [...component.items];
-                      updatedItems[index].icon = e.target.value;
-                      handleInputChange("items", updatedItems);
-                    }}
-                    className="w-full p-2 border rounded mb-1"
-                    maxLength="2"
-                  />
-                  <label className="block mb-1 text-xs">Title</label>
-                  <input
-                    type="text"
-                    value={item.title}
-                    onChange={(e) => {
-                      const updatedItems = [...component.items];
-                      updatedItems[index].title = e.target.value;
-                      handleInputChange("items", updatedItems);
-                    }}
-                    className="w-full p-2 border rounded mb-1"
-                  />
-                  <label className="block mb-1 text-xs">Description</label>
-                  <textarea
-                    value={item.description}
-                    onChange={(e) => {
-                      const updatedItems = [...component.items];
-                      updatedItems[index].description = e.target.value;
-                      handleInputChange("items", updatedItems);
-                    }}
-                    className="w-full p-2 border rounded"
-                    rows="2"
-                  />
-                </div>
-              ))}
+  return (
+    <div>
+      <h3 className="font-semibold mb-3">Services Settings</h3>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Content</h4>
+        <label className="block mb-1 text-sm">Subtitle</label>
+        <input
+          type="text"
+          value={component.subtitle}
+          onChange={(e) => handleInputChange("subtitle", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="Our Story & Services"
+        />
+        <label className="block mb-1 text-sm">Title</label>
+        <input
+          type="text"
+          value={component.title}
+          onChange={(e) => handleInputChange("title", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="Our Grooming Journey And Services"
+        />
+        <label className="block mb-1 text-sm">Description</label>
+        <textarea
+          value={component.description}
+          onChange={(e) => handleInputChange("description", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          rows="4"
+        />
+        <label className="block mb-1 text-sm">Button Text</label>
+        <input
+          type="text"
+          value={component.button.text}
+          onChange={(e) => handleNestedInputChange("button", "text", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+        />
+        <label className="block mb-1 text-sm">Button URL</label>
+        <input
+          type="text"
+          value={component.button.url}
+          onChange={(e) => handleNestedInputChange("button", "url", e.target.value)}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Service Items</h4>
+        {component.items.map((item, index) => (
+          <div key={item.id} className="mb-3 p-2 border rounded">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-medium">Service {index + 1}</span>
               <button
                 onClick={() => {
-                  const newItem = {
-                    id: Date.now(),
-                    icon: "⭐",
-                    title: "New Service",
-                    description: "Service description",
-                  };
-                  handleInputChange("items", [...component.items, newItem]);
+                  const updatedItems = component.items.filter((_, i) => i !== index);
+                  handleInputChange("items", updatedItems);
                 }}
-                className="w-full p-2 bg-gray-100 rounded hover:bg-gray-200"
+                className="text-red-500 hover:text-red-700"
               >
-                <Plus size={16} className="inline mr-1" /> Add Service
+                <Trash2 size={16} />
               </button>
             </div>
+            <label className="block mb-1 text-xs">Title</label>
+            <input
+              type="text"
+              value={item.title}
+              onChange={(e) => {
+                const updatedItems = [...component.items];
+                updatedItems[index].title = e.target.value;
+                handleInputChange("items", updatedItems);
+              }}
+              className="w-full p-2 border rounded mb-1"
+            />
+            <label className="block mb-1 text-xs">Description</label>
+            <input
+              type="text"
+              value={item.description}
+              onChange={(e) => {
+                const updatedItems = [...component.items];
+                updatedItems[index].description = e.target.value;
+                handleInputChange("items", updatedItems);
+              }}
+              className="w-full p-2 border rounded mb-1"
+            />
+            <ImageUploadInput
+              label="Icon Image"
+              imageUrl={item.imageUrl}
+              onImageUpload={(base64) => {
+                const updatedItems = [...component.items];
+                updatedItems[index].imageUrl = base64;
+                handleInputChange("items", updatedItems);
+              }}
+              onUrlChange={(url) => {
+                const updatedItems = [...component.items];
+                updatedItems[index].imageUrl = url;
+                handleInputChange("items", updatedItems);
+              }}
+            />
           </div>
-        );
+        ))}
+        <button
+          onClick={() => {
+            const newItem = {
+              id: Date.now(),
+              title: "NEW SERVICE",
+              description: "Service description",
+              imageUrl: ""
+            };
+            handleInputChange("items", [...component.items, newItem]);
+          }}
+          className="w-full p-2 bg-gray-100 rounded hover:bg-gray-200"
+        >
+          <Plus size={16} className="inline mr-1" /> Add Service Item
+        </button>
+      </div>
+      
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Styling</h4>
+        <ColorInput
+          label="Background Color"
+          value={component.styles.backgroundColor || "#FFFFFF"}
+          onChange={(v) => handleStyleChange("backgroundColor", v)}
+        />
+        <ColorInput
+          label="Title Color"
+          value={component.styles.titleColor || "#1E1E1E"}
+          onChange={(v) => handleStyleChange("titleColor", v)}
+        />
+        <ColorInput
+          label="Subtitle Color"
+          value={component.styles.subtitleColor || "#4B5563"}
+          onChange={(v) => handleStyleChange("subtitleColor", v)}
+        />
+        <ColorInput
+          label="Text Color"
+          value={component.styles.textColor || "#4B5563"}
+          onChange={(v) => handleStyleChange("textColor", v)}
+        />
+        <ColorInput
+          label="Service Title Color"
+          value={component.styles.cardTextColor || "#16A34A"}
+          onChange={(v) => handleStyleChange("cardTextColor", v)}
+        />
+        <ColorInput
+          label="Service Description Color"
+          value={component.styles.cardDescriptionColor || "#90BD95"}
+          onChange={(v) => handleStyleChange("cardDescriptionColor", v)}
+        />
+        <ColorInput
+          label="Button Background"
+          value={component.styles.buttonBgColor || "#16A34A"}
+          onChange={(v) => handleStyleChange("buttonBgColor", v)}
+        />
+        <ColorInput
+          label="Button Text Color"
+          value={component.styles.buttonTextColor || "#FFFFFF"}
+          onChange={(v) => handleStyleChange("buttonTextColor", v)}
+        />
+      </div>
+    </div>
+  );
       case "about":
         return (
           <div>
@@ -1736,39 +1843,47 @@ case "banner":
             </section>
           `;
         case "services":
-          return `
-            <section class="py-16 px-4" style="${generateInlineStyles({
-              backgroundColor: styles.backgroundColor,
-            })}">
-              <div class="max-w-4xl mx-auto text-center">
-                <h2 class="text-3xl font-bold" style="${generateInlineStyles({
-                  color: styles.textColor,
-                })}">${comp.title}</h2>
-                ${comp.subtitle ? `<p class="mt-4 text-lg" style="${generateInlineStyles({
-                  color: styles.textColor,
-                })}">${comp.subtitle}</p>` : ""}
-              </div>
-              <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
-                ${comp.items
-                  .map(
-                    (item) => `
-                  <div class="p-6 rounded-lg shadow-md" style="${generateInlineStyles({
-                    backgroundColor: styles.cardBgColor || "#FFFFFF",
-                  })}">
-                    <div class="text-4xl mb-4">${item.icon}</div>
-                    <h3 class="text-xl font-semibold" style="${generateInlineStyles({
-                      color: styles.textColor,
-                    })}">${item.title}</h3>
-                    <p class="mt-2" style="${generateInlineStyles({
-                      color: styles.textColor,
-                    })}">${item.description}</p>
-                  </div>
-                `
-                  )
-                  .join("")}
-              </div>
-            </section>
-          `;
+  return `
+    <section class="py-16 px-4 sm:px-6" style="background-color: ${styles.backgroundColor}">
+      <div class="max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div class="md:w-1/2">
+            <div class="text-left md:w-4/5">
+              <p class="subtitle" style="color: ${styles.subtitleColor}">${comp.subtitle}</p>
+              <h2 class="title" style="color: ${styles.titleColor}">${comp.title}</h2>
+              <p class="my-5 leading-[30px] text-base" style="color: ${styles.textColor}">
+                ${comp.description}
+              </p>
+              <a href="${comp.button.url}" class="font-semibold btn px-10 py-3 rounded-full inline-block" 
+                 style="background-color: ${styles.buttonBgColor}; color: ${styles.buttonTextColor}">
+                ${comp.button.text}
+              </a>
+            </div>
+          </div>
+
+          <div class="md:w-1/2">
+            <div class="grid sm:grid-cols-2 grid-cols-1 gap-8 items-center">
+              ${comp.items.map(service => `
+                <div class="shadow-md rounded-sm py-5 px-4 text-center space-y-2 cursor-pointer hover:border hover:border-indigo-600 transition-all duration-200" style="color: ${styles.cardTextColor}">
+                  ${service.imageUrl ? `
+                    <img src="${service.imageUrl}" alt="" class="mx-auto" />
+                  ` : `
+                    <div class="w-16 h-16 mx-auto bg-gray-200 rounded-full flex items-center justify-center">
+                      <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                      </svg>
+                    </div>
+                  `}
+                  <h5 class="pt-3 font-semibold">${service.title}</h5>
+                  <p class="px-2" style="color: ${styles.cardDescriptionColor}">${service.description}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
         case "about":
           return `
             <section class="py-16 px-4" style="${generateInlineStyles({
