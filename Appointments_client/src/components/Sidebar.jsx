@@ -50,9 +50,9 @@ const optionalItems = [
 // App items for the Apps section
 const appItems = [
   { id: 'messages', icon: <LuMessagesSquare />, text: "Messages", description: "Chat and notifications" },
-  { id: 'projects', icon: <SiCreatereactapp />, text:"Projects", description: "Create website & projects", path:"/apps"},
-  { id: 'news', icon: <FaNewspaper />, text:"News", description: "Latest updates" },
-  { id: 'notes', icon: <FaNotesMedical />, text:"Notes", description: "Documents and files"},
+  { id: 'projects', icon: <SiCreatereactapp />, text: "Projects", description: "Create website & projects", path: "/apps" },
+  { id: 'news', icon: <FaNewspaper />, text: "News", description: "Latest updates" },
+  { id: 'notes', icon: <FaNotesMedical />, text: "Notes", description: "Documents and files"},
 ];
 
 const Sidebar = ({ isOpen }) => {
@@ -79,28 +79,40 @@ const Sidebar = ({ isOpen }) => {
 
   // Load saved items from localStorage
   useEffect(() => {
-    const savedItems = JSON.parse(localStorage.getItem("sidebarItems"));
-    const savedPinnedApps = JSON.parse(localStorage.getItem("pinnedApps"));
-    const savedDownloadedApps = JSON.parse(localStorage.getItem("downloadedApps"));
-    
-    if (savedItems) {
-      setSidebarItems([defaultItems[0], ...savedItems, defaultItems[1], defaultItems[2]]);
-    }
-    if (savedPinnedApps) {
-      setPinnedApps(savedPinnedApps);
-    }
-    if (savedDownloadedApps) {
-      setDownloadedApps(savedDownloadedApps);
-    }
-  }, []);
+  const savedItems = JSON.parse(localStorage.getItem("sidebarItems")) || [];
+  const savedPinnedApps = JSON.parse(localStorage.getItem("pinnedApps")) || {
+    messages: false,
+    projects: false,
+    news: false,
+    notes: false
+  };
+  const savedDownloadedApps = JSON.parse(localStorage.getItem("downloadedApps")) || [];
+  
+  // Ensure all app IDs are initialized in pinnedApps
+  const completePinnedApps = {
+    messages: false,
+    projects: false,
+    news: false,
+    notes: false,
+    ...savedPinnedApps
+  };
+
+  setSidebarItems([defaultItems[0], ...savedItems, defaultItems[1], defaultItems[2]]);
+  setPinnedApps(completePinnedApps);
+  setDownloadedApps(savedDownloadedApps);
+}, []);
 
   // Save items to localStorage when they change
   useEffect(() => {
-    const currentOptionalItems = sidebarItems.filter((item) => item.id > 3);
-    localStorage.setItem("sidebarItems", JSON.stringify(currentOptionalItems));
-    localStorage.setItem("pinnedApps", JSON.stringify(pinnedApps));
-    localStorage.setItem("downloadedApps", JSON.stringify(downloadedApps));
-  }, [sidebarItems, pinnedApps, downloadedApps]);
+  const currentOptionalItems = sidebarItems.filter((item) => item.id > 3);
+  localStorage.setItem("sidebarItems", JSON.stringify(currentOptionalItems));
+  
+  // Stringify the complete pinnedApps state
+  localStorage.setItem("pinnedApps", JSON.stringify(pinnedApps));
+  
+  // Ensure downloadedApps is always an array
+  localStorage.setItem("downloadedApps", JSON.stringify(Array.isArray(downloadedApps) ? downloadedApps : []));
+}, [sidebarItems, pinnedApps, downloadedApps]);
 
   // Show welcome notification on dashboard
   useEffect(() => {
@@ -142,49 +154,52 @@ const Sidebar = ({ isOpen }) => {
 
   // Download an app with progress simulation
   const handleDownload = (appId) => {
-    if (isDownloading) return; // Prevent multiple downloads at once
+  if (isDownloading) return;
+  
+  if (!downloadedApps.includes(appId)) {
+    const app = appItems.find(item => item.id === appId);
     
-    if (!downloadedApps.includes(appId)) {
-      const app = appItems.find(item => item.id === appId);
-      
-      // Set downloading state
-      setIsDownloading(true);
-      
-      // Show download started notification
-      setDownloadProgress({
-        appId,
-        progress: 0,
-        text: `Starting download of ${app.text}...`
-      });
-      
-      // Simulate download progress
-      const interval = setInterval(() => {
-        setDownloadProgress(prev => {
-          const newProgress = prev.progress + Math.floor(Math.random() * 10) + 5;
-          if (newProgress >= 100) {
-            clearInterval(interval);
-            // Add to downloadedApps AND pin it automatically
-            setDownloadedApps(prev => [...prev, appId]);
-            setPinnedApps(prev => ({ ...prev, [appId]: true })); // Auto-pin
-            setTimeout(() => {
-              setDownloadProgress(null);
-              setIsDownloading(false); // Re-enable buttons after download completes
-            }, 1000);
-            return {
-              ...prev,
-              progress: 100,
-              text: `${app.text} downloaded successfully!`
-            };
-          }
+    setIsDownloading(true);
+    
+    setDownloadProgress({
+      appId,
+      progress: 0,
+      text: `Starting download of ${app.text}...`
+    });
+    
+    const interval = setInterval(() => {
+      setDownloadProgress(prev => {
+        const newProgress = prev.progress + Math.floor(Math.random() * 10) + 5;
+        if (newProgress >= 100) {
+          clearInterval(interval);
+          setDownloadedApps(prev => [...prev, appId]);
+          setPinnedApps(prev => ({ 
+            ...prev, 
+            [appId]: true 
+          }));
+          setTimeout(() => {
+            setDownloadProgress(null);
+            setIsDownloading(false);
+          }, 1000);
           return {
             ...prev,
-            progress: newProgress,
-            text: `Downloading ${app.text}... ${newProgress}%`
+            progress: 100,
+            text: `${app.text} downloaded successfully!`
           };
-        });
-      }, 300);
-    }
-  };
+        }
+        return {
+          ...prev,
+          progress: newProgress,
+          text: `Downloading ${app.text}... ${newProgress}%`
+        };
+      });
+    }, 300);
+  }
+};
+useEffect(() => {
+  console.log("Current downloaded apps:", downloadedApps);
+  console.log("Current pinned apps:", pinnedApps);
+}, [downloadedApps, pinnedApps]);
 
   // Filter apps
   const pinnedAppItems = appItems.filter(item => pinnedApps[item.id]);
