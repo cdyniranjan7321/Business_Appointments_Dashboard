@@ -1,14 +1,16 @@
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [userData, setUserData] = useState(null);
   const [loadingUserData, setLoadingUserData] = useState(true);
   const [errorUserData, setErrorUserData] = useState(null);
+  const [isNewUser, setIsNewUser] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Animation states
   const [contentLoaded, setContentLoaded] = useState(false);
@@ -19,6 +21,13 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    // Check if user came from signup flow
+    if (location.state?.fromSignup) {
+      setIsNewUser(true);
+      // Clear the state so it doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+
     const fetchUserData = async () => {
       const userId = localStorage.getItem('userId');
       const token = localStorage.getItem('token');
@@ -47,9 +56,7 @@ export default function Dashboard() {
         }
 
         setUserData(data.user);
-        // Trigger content animation after a small delay
         setTimeout(() => setContentLoaded(true), 100);
-        // Trigger stats animation after content is loaded
         setTimeout(() => setStatsLoaded(true), 300);
       } catch (err) {
         setErrorUserData(err.message);
@@ -65,7 +72,7 @@ export default function Dashboard() {
     };
 
     fetchUserData();
-  }, [navigate]);
+  }, [navigate, location.state]);
 
   if (loadingUserData) {
     return (
@@ -103,10 +110,10 @@ export default function Dashboard() {
 
   // Mock stats data - replace with your actual data
   const stats = [
-    { name: 'Total Appointments', value: 24, change: '+12%', changeType: 'positive' },
-    { name: 'New Customers', value: 8, change: '+5%', changeType: 'positive' },
-    { name: 'Revenue', value: 'रु 4,230', change: '-2%', changeType: 'negative' },
-    { name: 'Satisfaction', value: '92%', change: '+3%', changeType: 'positive' },
+    { name: 'Total Appointments', value: isNewUser ? 0 : 24, change: isNewUser ? '0%' : '+12%', changeType: isNewUser ? 'neutral' : 'positive' },
+    { name: 'New Customers', value: isNewUser ? 1 : 8, change: isNewUser ? '+100%' : '+5%', changeType: 'positive' },
+    { name: 'Revenue', value: isNewUser ? 'रु 0' : 'रु 4,230', change: isNewUser ? '0%' : '-2%', changeType: isNewUser ? 'neutral' : 'negative' },
+    { name: 'Satisfaction', value: isNewUser ? '--' : '92%', change: isNewUser ? '--' : '+3%', changeType: isNewUser ? 'neutral' : 'positive' },
   ];
 
   return (
@@ -124,9 +131,38 @@ export default function Dashboard() {
           {/* Welcome Section */}
           <div className={`transition-all duration-500 transform ${contentLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
             <h2 className="text-3xl font-bold text-gray-800">
-              Welcome back, <span className="text-blue-600">{userData?.businessName || userData?.name || 'User'}</span>!
+              {isNewUser ? (
+                <>
+                  Welcome, <span className="text-blue-600">{userData?.businessName || userData?.name || 'User'}</span>! 👋
+                  <p className="mt-2 text-lg text-gray-600">We're thrilled to have you on board!</p>
+                </>
+              ) : (
+                <>
+                  Welcome back, <span className="text-blue-600">{userData?.businessName || userData?.name || 'User'}</span>!
+                  <p className="mt-2 text-gray-600">Here's what's happening with your business today.</p>
+                </>
+              )}
             </h2>
-            <p className="mt-2 text-gray-600">Here's what's happening with your business today.</p>
+            
+            {isNewUser && (
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-blue-800">Get started with your dashboard</h3>
+                    <div className="mt-2 text-sm text-blue-700">
+                      <p>• Set up your business profile</p>
+                      <p>• Add your services and availability</p>
+                      <p>• Invite your first clients</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Stats Grid */}
@@ -140,46 +176,94 @@ export default function Dashboard() {
                 <p className="text-sm font-medium text-gray-500">{stat.name}</p>
                 <div className="mt-2 flex items-baseline">
                   <p className="text-2xl font-semibold text-gray-900">{stat.value}</p>
-                  <span className={`ml-2 text-sm font-medium ${stat.changeType === 'positive' ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.change}
-                  </span>
+                  {stat.change !== '--' && (
+                    <span className={`ml-2 text-sm font-medium ${
+                      stat.changeType === 'positive' ? 'text-green-600' : 
+                      stat.changeType === 'negative' ? 'text-red-600' : 'text-gray-500'
+                    }`}>
+                      {stat.change}
+                    </span>
+                  )}
                 </div>
-                <div className="mt-4">
-                  <div className={`h-2 rounded-full overflow-hidden ${stat.changeType === 'positive' ? 'bg-green-100' : 'bg-red-100'}`}>
-                    <div 
-                      className={`h-full ${stat.changeType === 'positive' ? 'bg-green-500' : 'bg-red-500'}`}
-                      style={{ width: `${Math.abs(parseInt(stat.change))}%` }}
-                    ></div>
+                {stat.name !== 'Satisfaction' && (
+                  <div className="mt-4">
+                    <div className={`h-2 rounded-full overflow-hidden ${
+                      stat.changeType === 'positive' ? 'bg-green-100' : 
+                      stat.changeType === 'negative' ? 'bg-red-100' : 'bg-gray-100'
+                    }`}>
+                      <div 
+                        className={`h-full ${
+                          stat.changeType === 'positive' ? 'bg-green-500' : 
+                          stat.changeType === 'negative' ? 'bg-red-500' : 'bg-gray-300'
+                        }`}
+                        style={{ width: `${Math.min(100, Math.abs(parseInt(stat.change)))}%` }}
+                      ></div>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
 
-          {/* Recent Activity Section */}
-          <div className={`mt-8 bg-white rounded-xl shadow-sm p-6 transition-all duration-500 delay-200 ${contentLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-              <button className="text-sm text-blue-600 hover:text-blue-800 transition-colors">View all</button>
-            </div>
-            
-            <div className="mt-4 space-y-4">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="flex items-start pb-4 border-b border-gray-100 last:border-0 last:pb-0">
-                  <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          {/* New User Guide or Recent Activity */}
+          {isNewUser ? (
+            <div className={`mt-8 bg-white rounded-xl shadow-sm p-6 transition-all duration-500 delay-200 ${contentLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Start Guide</h3>
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-blue-200 transition-colors">
+                  <div className="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center mb-3">
+                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">New appointment scheduled</p>
-                    <p className="text-sm text-gray-500">Customer #{item} booked a session for tomorrow</p>
-                    <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
-                  </div>
+                  <h4 className="font-medium text-gray-900">Complete Profile</h4>
+                  <p className="mt-1 text-sm text-gray-600">Add your business details to get started</p>
                 </div>
-              ))}
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-blue-200 transition-colors">
+                  <div className="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center mb-3">
+                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                    </svg>
+                  </div>
+                  <h4 className="font-medium text-gray-900">Add Services</h4>
+                  <p className="mt-1 text-sm text-gray-600">Create your service offerings</p>
+                </div>
+                <div className="border border-gray-100 rounded-lg p-4 hover:border-blue-200 transition-colors">
+                  <div className="bg-blue-50 w-12 h-12 rounded-full flex items-center justify-center mb-3">
+                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <h4 className="font-medium text-gray-900">Set Availability</h4>
+                  <p className="mt-1 text-sm text-gray-600">Define when you're available for appointments</p>
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className={`mt-8 bg-white rounded-xl shadow-sm p-6 transition-all duration-500 delay-200 ${contentLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
+                <button className="text-sm text-blue-600 hover:text-blue-800 transition-colors">View all</button>
+              </div>
+              
+              <div className="mt-4 space-y-4">
+                {[1, 2, 3].map((item) => (
+                  <div key={item} className="flex items-start pb-4 border-b border-gray-100 last:border-0 last:pb-0">
+                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-900">New appointment scheduled</p>
+                      <p className="text-sm text-gray-500">Customer #{item} booked a session for tomorrow</p>
+                      <p className="text-xs text-gray-400 mt-1">2 hours ago</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className={`mt-8 grid gap-4 grid-cols-2 md:grid-cols-4 transition-all duration-500 delay-300 ${contentLoaded ? 'opacity-100' : 'opacity-0'}`}>
