@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import PropTypes from "prop-types";
 import { Plus, Trash2, Settings, Code, Upload, Image as ImageIcon } from "lucide-react";
-import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube } from 'react-icons/fa';
+import { FaFacebookF, FaTwitter, FaInstagram, FaYoutube, FaStar } from 'react-icons/fa';
 import { HiOutlineMail, HiOutlinePhone } from 'react-icons/hi';
 import { MdLocationOn } from 'react-icons/md';
 
@@ -351,14 +351,24 @@ const getInitialComponentData = (type) => {
   };
   break;
     case "about":
-      component = {
-        ...base,
-        title: "About Us",
-        text: "We are a team of passionate developers, designers, and strategists dedicated to creating amazing digital experiences.",
-        imageUrl: "https://placehold.co/600x400/F3F4F6/333333?text=About+Us",
-        styles: { backgroundColor: "#FFFFFF" },
-      };
-      break;
+  component = {
+    ...base,
+    title: "What Our Customers Say",
+    subtitle: "About us",
+    text: "“Visiting THE BARBER was an exceptional experience! The precision, attention to detail, and top-notch service left me feeling confident and refreshed.”",
+    imageUrl: "https://placehold.co/600x400/F3F4F6/333333?text=About+Us",
+    rating: 4.9,
+    reviewCount: "18.6k",
+    styles: {
+      backgroundColor: "#FFFFFF",
+      titleColor: "#1E1E1E",
+      subtitleColor: "#4B5563",
+      textColor: "#6B7280",
+      ratingColor: "#F59E0B",
+      reviewTextColor: "#807E7E"
+    }
+  };
+  break;
     case "footer":
   component = {
     ...base,
@@ -813,32 +823,70 @@ const ComponentPreview = ({ component, onClick }) => {
     </div>
   );
       case "about":
-        return (
-          <div 
-            className="flex flex-col md:flex-row gap-6 p-6 rounded"
-            style={{ backgroundColor: styles.backgroundColor }}
-          >
-            <div className="flex-1">
-              <h2 
-                className="text-2xl font-bold mb-4"
-                style={{ color: styles.textColor }}
-              >
-                {component.title}
-              </h2>
-              <p style={{ color: styles.textColor }}>{component.text}</p>
-            </div>
-            {component.imageUrl && (
-              <div className="flex-1">
-                <img 
-                  src={component.imageUrl} 
-                  alt="About Us" 
-                  className="w-full rounded-lg" 
-                />
-              </div>
-            )}
+  return (
+    <div 
+      className="flex flex-col md:flex-row gap-6 p-6 rounded"
+      style={{ backgroundColor: component.styles.backgroundColor }}
+    >
+      {/* Image section (left side - original builder layout) */}
+      <div className="flex-1">
+        {component.imageUrl ? (
+          <img 
+            src={component.imageUrl} 
+            alt="About Us" 
+            className="w-full rounded-lg" 
+          />
+        ) : (
+          <div className="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+            <ImageIcon className="text-gray-400 w-16 h-16" />
           </div>
-        );
-      // Add to your ComponentPreview switch case
+        )}
+      </div>
+
+      {/* Text section (right side - updated from provided code) */}
+      <div className="flex-1">
+        <div className="space-y-4">
+          <p className="subtitle" style={{ color: component.styles.subtitleColor }}>
+            {component.subtitle}
+          </p>
+          <h2 
+            className="text-2xl font-bold"
+            style={{ color: component.styles.titleColor }}
+          >
+            {component.title}
+          </h2>
+          <blockquote 
+            className="my-4"
+            style={{ color: component.styles.textColor }}
+          >
+            {component.text}
+          </blockquote>
+          
+          {/* Rating section */}
+          <div className="space-y-1">
+            <h5 
+              className="text-lg font-semibold"
+              style={{ color: component.styles.titleColor }}
+            >
+              Customer Feedback
+            </h5>
+            <div className="flex items-center gap-2">
+              <FaStar style={{ color: component.styles.ratingColor }} /> 
+              <span 
+                className="font-medium"
+                style={{ color: component.styles.titleColor }}
+              >
+                {component.rating}
+              </span> 
+              <span style={{ color: component.styles.reviewTextColor }}>
+                ({component.reviewCount} Reviews)
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 case "footer":
   return (
     <footer 
@@ -1748,51 +1796,100 @@ case "banner":
     </div>
   );
       case "about":
-        return (
-          <div>
-            <h3 className="font-semibold mb-3">About Section</h3>
-            <div className="mb-4 p-3 border rounded-lg">
-              <h4 className="font-medium mb-2">Content</h4>
-              <label className="block mb-1 text-sm">Title</label>
-              <input
-                type="text"
-                value={component.title}
-                onChange={(e) => handleInputChange("title", e.target.value)}
-                className="w-full p-2 border rounded mb-2"
-              />
-              <label className="block mb-1 text-sm">Description</label>
-              <textarea
-                value={component.text}
-                onChange={(e) => handleInputChange("text", e.target.value)}
-                className="w-full p-2 border rounded mb-2"
-                rows="5"
-              />
-            </div>
-            <div className="mb-4 p-3 border rounded-lg">
-              <h4 className="font-medium mb-2">Styling</h4>
-              <ColorInput
-                label="Background Color"
-                value={component.styles.backgroundColor || "#FFFFFF"}
-                onChange={(v) => handleStyleChange("backgroundColor", v)}
-              />
-              <ColorInput
-                label="Text Color"
-                value={component.styles.textColor || "#111827"}
-                onChange={(v) => handleStyleChange("textColor", v)}
-              />
-            </div>
-            <div className="mb-4 p-3 border rounded-lg">
-              <h4 className="font-medium mb-2">Media</h4>
-              <ImageUploadInput
-                label="About Image"
-                imageUrl={component.imageUrl}
-                onImageUpload={(base64) => handleInputChange("imageUrl", base64)}
-                onUrlChange={(url) => handleInputChange("imageUrl", url)}
-              />
-            </div>
-          </div>
-        );
-      // Add to your CustomizationPanel switch case
+  return (
+    <div>
+      <h3 className="font-semibold mb-3">About Us Settings</h3>
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Content</h4>
+        <label className="block mb-1 text-sm">Subtitle</label>
+        <input
+          type="text"
+          value={component.subtitle}
+          onChange={(e) => handleInputChange("subtitle", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="About us"
+        />
+        <label className="block mb-1 text-sm">Title</label>
+        <input
+          type="text"
+          value={component.title}
+          onChange={(e) => handleInputChange("title", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          placeholder="What Our Customers Say"
+        />
+        <label className="block mb-1 text-sm">Testimonial Text</label>
+        <textarea
+          value={component.text}
+          onChange={(e) => handleInputChange("text", e.target.value)}
+          className="w-full p-2 border rounded mb-2"
+          rows="3"
+          placeholder="Customer testimonial quote"
+        />
+        <label className="block mb-1 text-sm">Rating</label>
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          max="5"
+          value={component.rating}
+          onChange={(e) => handleInputChange("rating", parseFloat(e.target.value))}
+          className="w-full p-2 border rounded mb-2"
+        />
+        <label className="block mb-1 text-sm">Review Count</label>
+        <input
+          type="text"
+          value={component.reviewCount}
+          onChange={(e) => handleInputChange("reviewCount", e.target.value)}
+          className="w-full p-2 border rounded"
+          placeholder="18.6k"
+        />
+      </div>
+
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Media</h4>
+        <ImageUploadInput
+          label="About Image"
+          imageUrl={component.imageUrl}
+          onImageUpload={(base64) => handleInputChange("imageUrl", base64)}
+          onUrlChange={(url) => handleInputChange("imageUrl", url)}
+        />
+      </div>
+
+      <div className="mb-4 p-3 border rounded-lg">
+        <h4 className="font-medium mb-2">Styling</h4>
+        <ColorInput
+          label="Background Color"
+          value={component.styles.backgroundColor || "#FFFFFF"}
+          onChange={(v) => handleStyleChange("backgroundColor", v)}
+        />
+        <ColorInput
+          label="Title Color"
+          value={component.styles.titleColor || "#1E1E1E"}
+          onChange={(v) => handleStyleChange("titleColor", v)}
+        />
+        <ColorInput
+          label="Subtitle Color"
+          value={component.styles.subtitleColor || "#4B5563"}
+          onChange={(v) => handleStyleChange("subtitleColor", v)}
+        />
+        <ColorInput
+          label="Text Color"
+          value={component.styles.textColor || "#6B7280"}
+          onChange={(v) => handleStyleChange("textColor", v)}
+        />
+        <ColorInput
+          label="Rating Color"
+          value={component.styles.ratingColor || "#F59E0B"}
+          onChange={(v) => handleStyleChange("ratingColor", v)}
+        />
+        <ColorInput
+          label="Review Text Color"
+          value={component.styles.reviewTextColor || "#807E7E"}
+          onChange={(v) => handleStyleChange("reviewTextColor", v)}
+        />
+      </div>
+    </div>
+  );
 case "footer":
   return (
     <div>
@@ -2236,29 +2333,43 @@ case "banner":
     </section>
   `;
         case "about":
-          return `
-            <section class="py-16 px-4" style="${generateInlineStyles({
-              backgroundColor: styles.backgroundColor,
-            })}">
-              <div class="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 items-center">
-                <div class="flex-1">
-                  <h2 class="text-3xl font-bold" style="${generateInlineStyles({
-                    color: styles.textColor,
-                  })}">${comp.title}</h2>
-                  <div class="mt-6" style="${generateInlineStyles({
-                    color: styles.textColor,
-                  })}">${comp.text}</div>
-                </div>
-                ${
-                  comp.imageUrl
-                    ? `<div class="flex-1">
-                        <img src="${comp.imageUrl}" alt="About Us" class="w-full rounded-lg shadow-lg" />
-                      </div>`
-                    : ""
-                }
-              </div>
-            </section>
-          `;
+  return `
+    <div class="flex flex-col md:flex-row gap-6 p-6 rounded" style="background-color: ${styles.backgroundColor}">
+      <!-- Image section (left side - original builder layout) -->
+      <div class="flex-1">
+        ${comp.imageUrl ? `
+          <img src="${comp.imageUrl}" alt="About Us" class="w-full rounded-lg" />
+        ` : `
+          <div class="w-full h-64 bg-gray-200 rounded-lg flex items-center justify-center">
+            <svg class="text-gray-400 w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
+          </div>
+        `}
+      </div>
+
+      <!-- Text section (right side - updated from provided code) -->
+      <div class="flex-1">
+        <div class="space-y-4">
+          <p class="subtitle" style="color: ${styles.subtitleColor}">${comp.subtitle}</p>
+          <h2 class="text-2xl font-bold" style="color: ${styles.titleColor}">${comp.title}</h2>
+          <blockquote class="my-4" style="color: ${styles.textColor}">${comp.text}</blockquote>
+          
+          <!-- Rating section -->
+          <div class="space-y-1">
+            <h5 class="text-lg font-semibold" style="color: ${styles.titleColor}">Customer Feedback</h5>
+            <div class="flex items-center gap-2">
+              <svg class="w-5 h-5" style="color: ${styles.ratingColor}" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path>
+              </svg>
+              <span class="font-medium" style="color: ${styles.titleColor}">${comp.rating}</span>
+              <span style="color: ${styles.reviewTextColor}">(${comp.reviewCount} Reviews)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
         case "footer":
   return `
     <footer style="background-color: ${styles.backgroundColor}; padding: 2.5rem 0; margin-top: 2.5rem;">
