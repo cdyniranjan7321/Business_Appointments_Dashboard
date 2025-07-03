@@ -2408,15 +2408,15 @@ case "banner":
           <h4 class="text-lg font-semibold mb-4" style="color: ${styles.textColor}">Contact Us</h4>
           <ul class="space-y-2" style="color: ${styles.textColor}">
             <li class="flex items-center space-x-2">
-              <i class="fas fa-map-marker-alt" style="color: ${styles.highlightColor}"></i>
+              <i class="material-icons" style="color: ${styles.highlightColor}">location_on</i>
               <span>${comp.contactInfo.address}</span>
             </li>
             <li class="flex items-center space-x-2">
-              <i class="fas fa-envelope" style="color: ${styles.highlightColor}"></i>
+              <i class="material-icons" style="color: ${styles.highlightColor}">email</i>
               <span>${comp.contactInfo.email}</span>
             </li>
             <li class="flex items-center space-x-2">
-              <i class="fas fa-phone" style="color: ${styles.highlightColor}"></i>
+              <i class="material-icons" style="color: ${styles.highlightColor}">phone</i>
               <span>${comp.contactInfo.phone}</span>
             </li>
           </ul>
@@ -2439,6 +2439,10 @@ case "banner":
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Custom Website</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Add Font Awesome for social icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Add Material Icons for contact icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     body { 
@@ -2446,12 +2450,30 @@ case "banner":
       margin: 0;
       padding: 0;
     }
+    
+    /* Fix for Material Icons */
+    .material-icons {
+      font-family: 'Material Icons';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 24px;
+      line-height: 1;
+      letter-spacing: normal;
+      text-transform: none;
+      display: inline-block;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
   </style>
 </head>
 <body>
 ${components.map(generateComponentHTML).join("\n")}
 </body>
 </html>`;
+
 
     const blob = new Blob([html], { type: "text/html" });
     const url = URL.createObjectURL(blob);
